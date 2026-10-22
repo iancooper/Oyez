@@ -433,7 +433,7 @@ Requirement and acceptance-criteria IDs refer to `requirements.md`. § numbers r
 - **Covers:** NFR-7, NFR-8, PROMPT step 6
 - **Test (Review, then Manual):**
   - **Review checklist:** these documents exist and are accurate:
-    - `README.md`: what Oyez is, a quick start, and links.
+    - `README.md`: what Oyez is, a quick start, and links. (An early README was added in phase 0. T-38 updates it to match what was built, and removes the "in development" notice.)
     - `docs/writing-announcements.md`: the format, the counting rules, previews, scheduling, and per-channel targeting.
     - `docs/setup.md`: setting up each platform and GitHub's secrets and variables, following T-36.
     - `docs/operations.md`: resolving an indeterminate channel, renewing the LinkedIn token, bumping `LinkedIn-Version`, updating X pricing, and the TLD list.
