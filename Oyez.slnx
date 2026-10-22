@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Oyez.Adapters/Oyez.Adapters.csproj" />
+    <Project Path="src/Oyez.Cli/Oyez.Cli.csproj" />
+    <Project Path="src/Oyez.Core/Oyez.Core.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Oyez.Adapters.Tests/Oyez.Adapters.Tests.csproj" />
+    <Project Path="tests/Oyez.Cli.Tests/Oyez.Cli.Tests.csproj" />
+    <Project Path="tests/Oyez.Core.Tests/Oyez.Core.Tests.csproj" />
+  </Folder>
+</Solution>
