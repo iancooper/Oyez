@@ -40,7 +40,7 @@ Requirement and acceptance-criteria IDs refer to `requirements.md`. § numbers r
   - Add `.gitignore` and `.editorconfig`.
 - **Done when:** `dotnet build` and `dotnet test` pass from a clean clone. Remove the spike's test command and query once T-17 replaces them.
 
-### [ ] T-1 CI workflow and Dependabot
+### [x] T-1 CI workflow and Dependabot
 - **Covers:** NFR-5, §8 (`ci.yml`)
 - **Test (Review, then Manual):**
   - **Review checklist:**
