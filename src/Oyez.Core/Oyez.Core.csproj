@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <PackageReference Include="Paramore.Brighter" />
+    <PackageReference Include="Paramore.Brighter.Extensions.DependencyInjection" />
+    <PackageReference Include="Paramore.Darker" />
+    <PackageReference Include="Paramore.Darker.AspNetCore" />
+    <PackageReference Include="Paramore.Darker.QueryLogging" />
+  </ItemGroup>
+</Project>

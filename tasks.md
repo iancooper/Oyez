@@ -25,7 +25,7 @@ Requirement and acceptance-criteria IDs refer to `requirements.md`. § numbers r
 
 ## Phase 0 — Foundation
 
-### [ ] T-0 Solution skeleton, with Brighter and Darker wired up
+### [x] T-0 Solution skeleton, with Brighter and Darker wired up
 - **Covers:** NFR-2, NFR-3, §2, §4.10, §10
 - **Test (Unit):** `CompositionSpikeTests`
   - Register Brighter and Darker as in §4.10.
@@ -36,6 +36,7 @@ Requirement and acceptance-criteria IDs refer to `requirements.md`. § numbers r
   - Add `global.json`, pinning SDK 10.0.4xx.
   - Add `Directory.Build.props`: `net10.0`, nullable enabled, warnings as errors, implicit usings.
   - Add `Directory.Packages.props` (central package management), with exact versions as checked on NuGet: Brighter 10.8.x, Darker 4.1.x, System.CommandLine 2.0.x, xunit.v3, and Microsoft.Extensions.TimeProvider.Testing.
+  - *As built:* tests run on Microsoft Testing Platform (`global.json` → `test.runner`), because xunit.v3 4.x no longer supports VSTest on the .NET 10 SDK. So `Microsoft.NET.Test.Sdk` isn't needed. The two test projects that have no tests yet ignore exit code 8 (zero tests ran) until T-19 and T-28.
   - Add `.gitignore` and `.editorconfig`.
 - **Done when:** `dotnet build` and `dotnet test` pass from a clean clone. Remove the spike's test command and query once T-17 replaces them.
 

@@ -31,9 +31,9 @@ We work step by step. Each step ends with the user reviewing the output before w
 - Step 2 is done. The user approved `requirements.md` and was keen on FR-7.4/7.5 (drafting announcements from BrighterCommand releases); the design covers it as phase 2.
 - Step 3 is done. The user approved `design.md`, including Brighter for commands and Darker for queries (§4.10). Package names and versions were checked on NuGet on 2026-10-22 (§10); Darker's DI registration lives in `Paramore.Darker.AspNetCore`. The design also gained an `oyez check` command for testing credentials without posting.
 - Step 4 is done. The user approved `tasks.md` (T-0 to T-40, in 8 phases).
-- Step 5 has started. Current task: T-0.
+- Step 5 has started, on branch `phase-0-foundation`. T-0 is done: the solution skeleton builds, and a spike test sends a command through Brighter and a query through Darker. Registration is `AddOyezApplication()` in `src/Oyez.Core/Application/ServiceCollectionExtensions.cs`. Current task: T-1.
 - The GitHub repo `iancooper/Oyez` was made public on 2026-10-19 (it was still empty), so Actions minutes are free.
 
 ## Next action
 
-Do T-0 in `tasks.md`. Work one task at a time, test first, and commit at the end of each task.
+Do T-1 in `tasks.md`. Its manual test needs `main` and this branch pushed to GitHub and a PR opened, so ask the user before pushing. Work one task at a time, test first, and commit at the end of each task.

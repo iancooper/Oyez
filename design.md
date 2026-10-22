@@ -542,8 +542,7 @@ All third-party actions are pinned to commit SHAs, with the version in a comment
 - `Microsoft.Extensions.Logging.Console`
 
 **Tests**
-- `xunit.v3`
-- `Microsoft.NET.Test.Sdk`
+- `xunit.v3`, run on Microsoft Testing Platform (opted into in `global.json`), so `Microsoft.NET.Test.Sdk` isn't needed
 - `Microsoft.Extensions.TimeProvider.Testing`
 
 Versions were checked on NuGet on 2026-10-22 and are pinned with central package management in task T-0.
