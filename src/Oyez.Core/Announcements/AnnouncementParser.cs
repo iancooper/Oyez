@@ -33,6 +33,9 @@ namespace Oyez.Core.Announcements;
 internal static class AnnouncementParser
 {
     private const string SEPARATOR = "---";
+    private const string TITLE_KEY = "title";
+    private const string PUBLISH_KEY = "publish";
+    private const string CHANNELS_KEY = "channels";
 
     public static Result<Announcement> Parse(AnnouncementDocument document)
     {
@@ -41,7 +44,7 @@ internal static class AnnouncementParser
 
         return Result<Announcement>.Success(new Announcement(
             document.Id,
-            header.GetValueOrDefault("title", string.Empty),
+            header.GetValueOrDefault(TITLE_KEY, string.Empty),
             ParsePublishTime(header),
             ParseChannels(header),
             ToSegments(blocks.Skip(1)),
@@ -89,12 +92,12 @@ internal static class AnnouncementParser
     }
 
     private static DateTimeOffset? ParsePublishTime(Dictionary<string, string> header) =>
-        header.TryGetValue("publish", out var publish)
+        header.TryGetValue(PUBLISH_KEY, out var publish)
             ? DateTimeOffset.Parse(publish, CultureInfo.InvariantCulture, DateTimeStyles.AdjustToUniversal)
             : null;
 
     private static HashSet<ChannelId> ParseChannels(Dictionary<string, string> header) =>
-        header.TryGetValue("channels", out var names)
+        header.TryGetValue(CHANNELS_KEY, out var names)
             ? names.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(ToChannel).ToHashSet()
             : ChannelId.All.ToHashSet();
 
