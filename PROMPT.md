@@ -48,9 +48,18 @@ Layout: planning documents at the repo root, code in `src/`, tests in `tests/`, 
   - phases 1–3 of `tasks.md` were restructured so tests go through the module boundaries.
 
   A first attempt at T-2, which tested the parser directly, was discarded without being pushed.
-- T-2 is done: the `PreviewAnnouncement` query, with an internal parser and renderer. Darker only scans public handlers, so internal handlers are registered explicitly in `AddOyezApplication`. Tests share a never-disposed `NullLoggerFactory`, because Darker captures a logger factory in static state.
+- T-2 is done: the `PreviewAnnouncement` query, with an internal parser and renderer. Tests share a never-disposed `NullLoggerFactory`, because Darker captures a logger factory in static state.
+- After T-2, a code-smell review (a sub-agent following Brighter's `.claude/commands/refactor/smells.md`) found 15 issues. Six were fixed as `refactor:` commits:
+  1. licence headers;
+  2. `GenerateDocumentationFile` on for `src/` (via `src/Directory.Build.props`), so missing XML docs fail the build;
+  3. every Darker query handler in Core, public or internal, is registered by reflection;
+  4. header keys are constants;
+  5. three test smells;
+  6. `ChannelId.TryParse`.
+
+  The rest are recorded in `tasks.md`: under T-3, at the start of T-4 (the `IAmAChannelProfile` strategy refactor), and in the backlog.
 - The GitHub repo `iancooper/Oyez` was made public on 2026-10-19 (it was still empty), so Actions minutes are free.
 
 ## Next action
 
-A code-smell review of the code so far is running, at the user's request, using Brighter's `/refactor:code-smells` command. Act on its findings in `refactor:` commits, then write T-3's tests and stop for approval.
+T-3: write the tests, including the code-smell findings listed under T-3 in `tasks.md`, then stop for the user's approval.

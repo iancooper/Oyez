@@ -97,10 +97,15 @@ Parsing, counting, rendering and validation are internal to `Oyez.Core`. Every t
   - `When_an_announcement_has_several_problems_should_report_them_all`
   - `When_validating_without_ids_should_check_every_announcement`
   - `When_previewing_an_announcement_that_does_not_exist_should_report_it`
+- **Code-smell findings to resolve here:**
+  - An unknown channel currently becomes `default(ChannelId)` and is silently dropped. It must become a `ValidationError`.
+  - The preview handler uses `!` on `Load` and reads `.Value` without checking the `Result`. Return failures instead.
+  - A header line with no colon throws, and a missing title becomes an empty string. Extract an internal `AnnouncementHeader` that owns the known keys and their parsing.
 - **Done when:** the tests pass.
 
 ### [ ] T-4 Count links for X and Mastodon
 - **Covers:** FR-2.1, FR-2.2, §4.2
+- **Refactor first, in its own `refactor:` commit:** replace the renderer's `channel == WriteAs` conditional with the internal `IAmAChannelProfile` strategy and `RenderingPolicy` (§4.3), and make the renderer take its profiles through DI. This was found in the code-smell review, and it's what lets counting, preparation, limits and merging attach to profiles rather than add branches.
 - **Builds:** each post's `Count` in the preview, with links counted as 23. Internally, the URL matcher and the embedded IANA TLD list, with the list's date in a comment.
 - **Tests (Core):** observed as X and Mastodon post counts in the preview.
   - `When_a_post_contains_a_url_should_count_it_as_23_characters`: `https://…` and `http://…`, on both X and Mastodon
@@ -500,6 +505,13 @@ Every task in this phase tests a port implementation registered by `AddOyezAdapt
 ---
 
 ## Backlog (Could, not scheduled)
+
+**Refactoring, from the code-smell review after T-2:**
+- Rewrite the block-splitting loop in `AnnouncementParser` as a pipeline.
+- Remove package references that nothing uses yet, such as `Paramore.Darker.QueryLogging` and the unused ones in Adapters and Cli. Add them back when a task needs them.
+- Decide whether `Result<T>` is general-purpose. If it is, move `ValidationError` next to it.
+
+**Features:**
 
 - FR-1.6: text overrides for a single channel (`x.txt`, `linkedin.txt` and so on).
 - FR-7.5: `repository_dispatch` from the BrighterCommand repositories, if polling turns out to be too slow.
