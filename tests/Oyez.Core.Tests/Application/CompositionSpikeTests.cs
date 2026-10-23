@@ -5,7 +5,6 @@ using Paramore.Darker;
 
 namespace Oyez.Core.Tests.Application;
 
-// T-0 spike: proves Brighter and Darker are wired up. Removed in T-17.
 public class CompositionSpikeTests
 {
     private static ServiceProvider BuildProvider() =>
