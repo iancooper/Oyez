@@ -21,9 +21,16 @@ We work step by step. Each step ends with the user reviewing the output before w
 
 ## Conventions
 
-- **Test first.** Every task in `tasks.md` names the test that proves it is done, and we write that test before the code. What counts as a test depends on the task: a unit test, an integration test against a fake HTTP server, a manual check against a real account, or a review checklist for documents.
-- **One task at a time.** Mark a task done in `tasks.md` only when its test passes. Commit at the end of each task, naming the task ID. Update this file when a step or task changes status.
-- **Layout.** Planning documents live at the repo root, code in `src/`, tests in `tests/`, and user documentation in `README.md` and `docs/`.
+`CLAUDE.md` holds the working conventions, which follow Brighter's agent instructions. In short:
+- Test first, with an approval gate: write the tests, then stop for the user's approval before implementing.
+- Tests are named `When_…_should_…`, one per file, and go only through each module's public boundary.
+- Modules are narrow and deep. Parsing, counting, rendering and validation are internal to `Oyez.Core`, and are tested through its Darker queries and Brighter commands.
+- Commits come in two steps: `feat:` or `test:` for the behaviour, then `docs:` to tick the task. Structural changes go in their own `refactor:` commits.
+- Look for code smells, and refactor, at the end of each phase.
+- One branch and PR per phase. Ask before pushing, merging or deleting branches.
+- Pace: stop after each task for the user's review until they're happy with the approach, then work a phase at a time. **Current pace: task by task.**
+
+Layout: planning documents at the repo root, code in `src/`, tests in `tests/`, user documentation in `README.md` and `docs/`.
 
 ## Current state
 
@@ -34,9 +41,15 @@ We work step by step. Each step ends with the user reviewing the output before w
 - Step 5 has started. Phase 0 (T-0, T-1) is done and merged to `main` (PR #1). An early `README.md` was added afterwards in its own PR. T-38 updates it once Oyez is built.
   - T-0: solution skeleton. `AddOyezApplication()` in `src/Oyez.Core/Application/ServiceCollectionExtensions.cs` registers Brighter and Darker. A spike command and query (`Spike.cs`) prove the wiring and are removed in T-17. Tests run on Microsoft Testing Platform.
   - T-1: `ci.yml` (build, test, actionlint, SHA-pinned actions) and `dependabot.yml`.
-- Working practice: one branch and PR per phase (`phase-N-…`), one commit per task. Ask the user before pushing or merging.
+- `README.md` and an MIT `LICENSE` are in PR #2 (branch `add-readme`), which isn't merged yet.
+- Phase 1 is in progress on branch `phase-1-core-domain`, which was branched from `add-readme`. The user asked for Brighter's conventions, so:
+  - `CLAUDE.md` was added;
+  - the design gained module boundaries and `IAmA…` port names;
+  - phases 1–3 of `tasks.md` were restructured so tests go through the module boundaries.
+
+  A first attempt at T-2, which tested the parser directly, was discarded without being pushed.
 - The GitHub repo `iancooper/Oyez` was made public on 2026-10-19 (it was still empty), so Actions minutes are free.
 
 ## Next action
 
-Start phase 1 (T-2) on a new branch, `phase-1-core-domain`, created from the updated `main`. Ask the user whether to stop after each task or at the phase's PR. Work one task at a time, test first, and commit at the end of each task.
+T-2: write the tests, then stop for the user's approval. Once they're approved, implement them, reusing the parsing logic from the discarded attempt as an internal detail.

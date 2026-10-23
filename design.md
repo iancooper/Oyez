@@ -11,6 +11,14 @@ Oyez is a .NET 10 console application with a ports-and-adapters structure:
 - **Adapters** implement Core's other (driven) ports: one HTTP publisher per platform, file-system storage, the GitHub CLI, and the clock.
 - **Cli** is the composition root. It parses arguments, sends commands and queries, and prints results.
 
+**Module boundaries.** Each assembly is a narrow, deep module: a small public surface that hides substantial behaviour. Tests only go through that surface (§9). See `CLAUDE.md` for the conventions, which follow Brighter's.
+
+| Module | Public boundary | Internal detail |
+|---|---|---|
+| `Oyez.Core` | Brighter commands and events, and Darker queries, with their results; the ports (`IAmA…`) and the types in their signatures; `InMemory…` port implementations; configuration types; `AddOyezApplication` | Parsing, text counting, profiles, rendering, validation, cost estimation, the publishing workflow |
+| `Oyez.Adapters` | The port implementations (publishers, file stores, `gh`), and `AddOyezAdapters` to register them | HTTP handlers (retry, redaction), OAuth 1.0a signing, JSON shapes |
+| `Oyez.Cli` | The command line | Composition, output formatting |
+
 Oyez runs in GitHub Actions for previews on pull requests and for publishing. It runs locally for authentication, previews and debugging [FR-7, intent decision 6].
 
 ```mermaid
@@ -103,28 +111,29 @@ Thanks to everyone who contributed ...
 
 ### 4.1 Model
 
+**Public**, because these types appear in requests, results or port signatures:
+
 ```csharp
 public sealed record AnnouncementId(string Value);
-public sealed record Segment(int Number, string Text);          // Number starts at 1, for error messages
-public sealed record Announcement(
-    AnnouncementId Id, string Title, DateTimeOffset? PublishAt,
-    IReadOnlySet<ChannelId> Channels, IReadOnlyList<Segment> Segments,
-    string? WriteAsMarkdown);
-
-public readonly record struct ChannelId(string Value)            // "x", "mastodon", "linkedin", "writeas"
+public readonly record struct ChannelId                         // X, Mastodon, LinkedIn, WriteAs
+public sealed record AnnouncementDocument(AnnouncementId Id, string Text, string? WriteAsMarkdown);  // the raw files
 public sealed record Post(int Index, string Text, int Count);   // Count is measured by the channel's counter
-public sealed record Rendering(ChannelId Channel, string? Title, IReadOnlyList<Post> Posts, int Limit)
+public sealed record Rendering(ChannelId Channel, string? Title, IReadOnlyList<Post> Posts, int? Limit)
 {
-    public string Hash { get; }                                 // SHA-256 of the post texts (see §4.6)
+    public string Hash { get; }                                 // SHA-256 of the post texts (see §4.8)
 }
+public sealed record ValidationError(AnnouncementId Announcement, string Message, ChannelId? Channel, int? Segment);
+public sealed class Result<T>                                   // a value, or the ValidationErrors that prevented one
 ```
 
-`AnnouncementParser.Parse(id, text, writeAsMarkdown)` returns `Result<Announcement, IReadOnlyList<ValidationError>>`. A `ValidationError` carries the announcement ID, an optional channel, an optional segment number, and a message [NFR-7].
+**Internal**: `Announcement` (the parsed form), `Segment` and `AnnouncementParser`. `AnnouncementParser.Parse(document)` returns `Result<Announcement>`. A `ValidationError` carries the announcement ID, an optional channel, an optional segment number, and a message [NFR-7].
+
+Where a value has domain meaning, it gets its own type rather than a primitive. More such types, such as a character limit, are introduced when behaviour attaches to them.
 
 ### 4.2 Text counting [FR-2]
 
 ```csharp
-public interface ITextCounter { int Count(string text); }
+internal interface IAmATextCounter { int Count(string text); }
 ```
 
 **`UrlMatcher`** is shared by the counters. It finds:
@@ -140,19 +149,19 @@ X turns bare domains into links and counts them as 23 characters. If we didn't d
 | `LinkedInTextCounter` | Count UTF-16 code units of the text after preparation (escaping, §4.5). This deliberately overcounts characters outside the Basic Multilingual Plane, so we stay safely under the limit [FR-2.3]. |
 | Write.as | Has no counter and no limit. |
 
-Worked examples from the acceptance criteria become the unit tests: AC-3 and AC-4 for X, and AC-5 for Mastodon.
+The counters are internal. Their tests are the worked examples from the acceptance criteria (AC-3 and AC-4 for X, AC-5 for Mastodon), observed through the counts that the `PreviewAnnouncement` query reports.
 
 ### 4.3 Channel profiles
 
-A **profile** is the pure, platform-specific part of a channel: how to count, the limit, how to render, and how to prepare text. Adding a channel means adding a profile, a publisher and a configuration section [NFR-9].
+A **profile** is the pure, platform-specific part of a channel: how to count, the limit, how to render, and how to prepare text. Profiles are internal strategies. Adding a channel means adding a profile, a publisher and a configuration section [NFR-9].
 
 ```csharp
-public interface IChannelProfile
+internal interface IAmAChannelProfile
 {
     ChannelId Id { get; }
     RenderingPolicy Policy { get; }   // Thread | SinglePost | Document
     int? Limit { get; }               // null = no limit
-    ITextCounter? Counter { get; }
+    IAmATextCounter? Counter { get; }
     string Prepare(string text);      // LinkedIn escapes text; the others return it unchanged
 }
 ```
@@ -166,7 +175,7 @@ public interface IChannelProfile
 
 ### 4.4 Rendering [FR-3]
 
-`Renderer.Render(Announcement, IChannelProfile) → Rendering`. The method is pure and deterministic [FR-3.5].
+`Renderer.Render(Announcement, IAmAChannelProfile) → Rendering` (internal). The method is pure and deterministic [FR-3.5].
 
 - **Thread and SinglePost.** Merge segments greedily. Start with the first segment as the current post. For each following segment, form `candidate = current + "\n\n" + next`. If `Count(Prepare(candidate)) <= Limit`, the candidate becomes the current post. Otherwise, emit the current post and start a new one with `next` [FR-3.1–3.3].
   - X needs no special case [FR-3.4]. Segments are written close to 280 characters, so joining two almost always goes over the limit and each becomes its own post. If two short segments do fit together, they're merged, which saves a post. AC-8 uses segments of about 250 characters, so it gets one post per segment.
@@ -184,7 +193,7 @@ The text is counted after preparation [AC-10].
 
 ### 4.6 Validation [FR-5.2]
 
-`Validator.Validate(Announcement, profiles) → IReadOnlyList<ValidationError>`:
+`Validator.Validate(Announcement, profiles) → IReadOnlyList<ValidationError>` (internal):
 
 - **Header errors** come from the parser: a missing title, a bad time, an unknown channel or key.
 - **Segment check:** every segment must have `XTextCounter.Count ≤ 280`. This rule applies even when X isn't targeted, because segments are always written to the strictest limit [AC-6].
@@ -193,20 +202,24 @@ The text is counted after preparation [AC-10].
 
 ### 4.7 Ports
 
+The ports are public. Each has an `InMemory…` implementation in `Oyez.Core`, used by the tests and usable in production.
+
+The announcement store only reads and lists the raw files. Parsing them is domain logic, so it stays inside Core.
+
 ```csharp
-public interface IAnnouncementStore
+public interface IAmAnAnnouncementStore
 {
     IReadOnlyList<AnnouncementId> List();
-    Result<Announcement, IReadOnlyList<ValidationError>> Load(AnnouncementId id);
+    AnnouncementDocument? Load(AnnouncementId id);      // null if there is no such announcement
 }
 
-public interface IPublicationRecordStore
+public interface IAmAPublicationRecordStore
 {
     PublicationRecord Load(AnnouncementId id);    // returns an empty record if none exists
     void Save(AnnouncementId id, PublicationRecord record);
 }
 
-public interface IChannelPublisher
+public interface IAmAChannelPublisher
 {
     ChannelId Channel { get; }
     bool CreateIsIdempotent { get; }              // true when the platform honours an idempotency key
@@ -266,7 +279,7 @@ sequenceDiagram
   participant Cli as publish command
   participant S as PublishService
   participant St as Stores
-  participant P as IChannelPublisher
+  participant P as IAmAChannelPublisher
   Cli->>S: PublishDueAsync(now)
   S->>St: List() / Load(id)
   loop each due announcement (PublishAt null or <= now) that isn't fully published
@@ -353,7 +366,7 @@ In the composition root, Brighter and Darker each scan `Oyez.Core` for their han
 
 ### 5.1 HTTP pipeline [NFR-5, NFR-6]
 
-Each publisher is a typed `HttpClient` registered through `IHttpClientFactory`. Two handlers are written for Oyez, so Polly isn't needed [NFR-3]:
+Each publisher is a typed `HttpClient` registered through `IHttpClientFactory`, by `AddOyezAdapters`. Two internal handlers are written for Oyez, so Polly isn't needed [NFR-3]. Their behaviour is tested through the publishers:
 
 1. **`RetryHandler`.** It reads a per-request option, `Oyez.Idempotent` (`HttpRequestOptionsKey<bool>`):
    - **Idempotent requests** (GETs, Mastodon creates with an `Idempotency-Key`): up to 3 retries on 5xx responses, timeouts and `HttpRequestException`, with backoff of 1, 2 and 4 seconds.
@@ -410,10 +423,11 @@ In addition, `SecretRedactor` holds every secret value loaded at startup. The co
 - **`FileSystemAnnouncementStore`** reads `announcements/*/announcement.txt` and the optional `writeas.md`.
 - **`FileSystemPublicationRecordStore`** writes `published.json` atomically: it writes a temporary file and then renames it. Its JSON is camelCase and indented, for clean diffs.
 - Both take a root path, so tests use temporary folders. That means no extra dependency for abstracting the file system.
+- **`FileSystemAnnouncementStore`** returns the raw `AnnouncementDocument`. It doesn't parse.
 
 ### 5.7 GitHub CLI adapter
 
-`IGitHubSecrets` (implemented as `GhCli`) runs `gh secret set NAME` and `gh variable set NAME`. It passes the secret value on standard input, never as an argument, so it can't leak into process listings. Tests use a fake.
+`IAmAGitHubSecretStore` (implemented as `GhCli`) runs `gh secret set NAME` and `gh variable set NAME`. It passes the secret value on standard input, never as an argument, so it can't leak into process listings. Tests use a fake.
 
 ## 6. Command-line interface (`Oyez.Cli`)
 
@@ -510,18 +524,24 @@ All third-party actions are pinned to commit SHAs, with the version in a comment
 
 ## 9. Testing strategy [NFR-4]
 
+Tests follow Brighter's conventions (see `CLAUDE.md`):
+- They're written first, and each test is approved before it's implemented.
+- They're named `When_…_should_…`, one per file, with Arrange/Act/Assert sections.
+- They go only through each module's public boundary (§1). No test names an internal type.
+
 **Tools**
 
 - xUnit v3, with the built-in `Assert` (no assertion library is needed).
 - `Microsoft.Extensions.TimeProvider.Testing` for the clock.
-- A `FakeHttpMessageHandler`, written for Oyez, that records requests and returns scripted responses for each route.
+- `InMemory…` port implementations in `Oyez.Core`, in place of I/O.
+- A `FakeHttpMessageHandler`, written for Oyez, that records requests and returns scripted responses for each route. It's a test double for I/O only.
 
 **Test levels**
 
-| Level | Project | What it covers |
+| Level | Project | How it reaches the behaviour |
 |---|---|---|
-| Unit | `Oyez.Core.Tests` | Parser, counters, renderer, LinkedIn preparation, validator, cost estimate, `PublishService`, and the Brighter and Darker handlers, all with fake publishers and an in-memory record store. This is the bulk of the acceptance criteria: AC-1–10 and AC-15–17. |
-| Adapter | `Oyez.Adapters.Tests` | Each publisher against `FakeHttpMessageHandler`: the request shape, headers, parsing responses into `Posted`, `Rejected` or `Indeterminate`, and the retry rules. The OAuth 1.0a signer against X's published example. File stores in temporary folders. AC-11–13, AC-20. |
+| Core | `Oyez.Core.Tests` | Sends commands and runs queries through the real Brighter and Darker processors, built by `AddOyezApplication`, with `InMemory…` stores, in-memory publishers standing in for the platforms, and `FakeTimeProvider`. Parsing, counting, rendering and validation are observed through the `PreviewAnnouncement` and `ValidateAnnouncements` queries. Publishing is observed through `PublishDueAnnouncements`. This is the bulk of the acceptance criteria: AC-1–10 and AC-15–17. |
+| Adapter | `Oyez.Adapters.Tests` | Calls each port implementation, registered by `AddOyezAdapters`, against `FakeHttpMessageHandler`, temporary folders or a fake process runner. Checks the request shape and headers, the mapping of responses to `Posted`, `Rejected` or `Indeterminate`, the retry rules and redaction, and X's OAuth signature. The signature test uses X's published example, with a fixed clock and a fixed nonce injected through public seams. AC-11–13, AC-20. |
 | End-to-end | `Oyez.Cli.Tests` | The whole CLI, run in-process against a temporary repository and fake HTTP handlers registered through DI. Covers exit codes, the job summary, preview output and log redaction. AC-14, AC-18, AC-19. |
 | Review | — | A checklist for the workflow YAML (AC-21, first part). `actionlint` runs in CI. |
 | Manual | — | The first real announcement exercises all four channels (AC-21, second part). The LinkedIn sign-in is AC-22. To smoke-test one channel at a time, use `channels:` in an announcement. |
