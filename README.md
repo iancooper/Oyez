@@ -84,3 +84,7 @@ These planning documents describe it in full:
 | [`design.md`](design.md) | The architecture, the announcement format, the platform APIs, and the GitHub Actions workflows |
 | [`tasks.md`](tasks.md) | The build plan: test-first tasks, each with the test that proves it |
 | [`PROMPT.md`](PROMPT.md) | The current working state, for picking up where work stopped |
+
+## Licence
+
+Oyez is licensed under the [MIT License](LICENSE).

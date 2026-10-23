@@ -5,6 +5,7 @@
     <RootNamespace>Oyez.Cli</RootNamespace>
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>oyez</ToolCommandName>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\Oyez.Core\Oyez.Core.csproj" />
