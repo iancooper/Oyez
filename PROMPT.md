@@ -48,8 +48,9 @@ Layout: planning documents at the repo root, code in `src/`, tests in `tests/`, 
   - phases 1–3 of `tasks.md` were restructured so tests go through the module boundaries.
 
   A first attempt at T-2, which tested the parser directly, was discarded without being pushed.
+- T-2 is done: the `PreviewAnnouncement` query, with an internal parser and renderer. Darker only scans public handlers, so internal handlers are registered explicitly in `AddOyezApplication`. Tests share a never-disposed `NullLoggerFactory`, because Darker captures a logger factory in static state.
 - The GitHub repo `iancooper/Oyez` was made public on 2026-10-19 (it was still empty), so Actions minutes are free.
 
 ## Next action
 
-T-2: write the tests, then stop for the user's approval. Once they're approved, implement them, reusing the parsing logic from the discarded attempt as an internal detail.
+A code-smell review of the code so far is running, at the user's request, using Brighter's `/refactor:code-smells` command. Act on its findings in `refactor:` commits, then write T-3's tests and stop for approval.

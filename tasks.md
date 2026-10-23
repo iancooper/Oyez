@@ -62,7 +62,7 @@ Requirement and acceptance-criteria IDs refer to `requirements.md`. § numbers r
 
 Parsing, counting, rendering and validation are internal to `Oyez.Core`. Every task in this phase observes them through the Darker queries `PreviewAnnouncement` and `ValidateAnnouncements`, run against an `InMemoryAnnouncementStore`.
 
-### [ ] T-2 Preview an announcement
+### [x] T-2 Preview an announcement
 - **Covers:** FR-1.1–1.4, §3, §4.1, §4.7, §4.10, AC-1
 - **Builds:**
   - the public types `AnnouncementId`, `ChannelId`, `AnnouncementDocument`, `Rendering`, `Post` and `Result<T>`;
