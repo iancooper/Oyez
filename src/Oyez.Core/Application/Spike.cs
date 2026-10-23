@@ -28,14 +28,26 @@ using Paramore.Darker;
 
 namespace Oyez.Core.Application;
 
+/// <summary>A placeholder command that proves Brighter is wired up.</summary>
+/// <param name="text">The text to upper-case.</param>
 public sealed class SpikeCommand(string text) : Command(Id.Random())
 {
+    /// <summary>Gets the text to upper-case.</summary>
+    /// <value>The <see cref="string"/> passed to the constructor.</value>
     public string Text { get; } = text;
+
+    /// <summary>Gets or sets the handler's result.</summary>
+    /// <value>The upper-cased <see cref="Text"/>, once handled.</value>
     public string? Result { get; set; }
 }
 
+/// <summary>Handles <see cref="SpikeCommand"/>.</summary>
 public sealed class SpikeCommandHandler : RequestHandlerAsync<SpikeCommand>
 {
+    /// <summary>Upper-cases the command's text.</summary>
+    /// <param name="command">The <see cref="SpikeCommand"/> to handle.</param>
+    /// <param name="cancellationToken">Cancels the operation.</param>
+    /// <returns>The handled <see cref="SpikeCommand"/>.</returns>
     public override Task<SpikeCommand> HandleAsync(SpikeCommand command, CancellationToken cancellationToken = default)
     {
         command.Result = command.Text.ToUpperInvariant();
@@ -43,10 +55,18 @@ public sealed class SpikeCommandHandler : RequestHandlerAsync<SpikeCommand>
     }
 }
 
+/// <summary>A placeholder query that proves Darker is wired up.</summary>
+/// <param name="Left">The first number to add.</param>
+/// <param name="Right">The second number to add.</param>
 public sealed record SpikeQuery(int Left, int Right) : IQuery<int>;
 
+/// <summary>Handles <see cref="SpikeQuery"/>.</summary>
 public sealed class SpikeQueryHandler : QueryHandlerAsync<SpikeQuery, int>
 {
+    /// <summary>Adds the query's numbers.</summary>
+    /// <param name="query">The <see cref="SpikeQuery"/> to answer.</param>
+    /// <param name="cancellationToken">Cancels the operation.</param>
+    /// <returns>The sum of <see cref="SpikeQuery.Left"/> and <see cref="SpikeQuery.Right"/>.</returns>
     public override Task<int> ExecuteAsync(SpikeQuery query, CancellationToken cancellationToken = default) =>
         Task.FromResult(query.Left + query.Right);
 }
