@@ -29,7 +29,7 @@ public class PreviewHeaderKeyTests : IDisposable
 
         //Assert
         Assert.Equal("Release", result.Value.Title);
-        Assert.NotNull(result.Value.PublishAt);
+        Assert.Equal(new DateTimeOffset(2026, 11, 3, 9, 0, 0, TimeSpan.Zero), result.Value.PublishAt);
     }
 
     public void Dispose() => _host.Dispose();

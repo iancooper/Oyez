@@ -35,11 +35,9 @@ public class PreviewEveryChannelTests : IDisposable
         Assert.Null(preview.PublishAt);
         Assert.Equal(ChannelId.All, preview.Renderings.Select(r => r.Channel));
 
-        foreach (var channel in new[] { ChannelId.X, ChannelId.Mastodon, ChannelId.LinkedIn })
-        {
-            var posts = preview.Renderings.Single(r => r.Channel == channel).Posts;
-            Assert.Equal(["Brighter 10.3.0 is out!", "Thanks to everyone who contributed."], posts.Select(p => p.Text));
-        }
+        var postRenderings = preview.Renderings.Where(r => r.Channel != ChannelId.WriteAs);
+        Assert.All(postRenderings, rendering =>
+            Assert.Equal(["Brighter 10.3.0 is out!", "Thanks to everyone who contributed."], rendering.Posts.Select(p => p.Text)));
 
         var writeAs = preview.Renderings.Single(r => r.Channel == ChannelId.WriteAs);
         Assert.Equal("Brighter 10.3.0 released", writeAs.Title);

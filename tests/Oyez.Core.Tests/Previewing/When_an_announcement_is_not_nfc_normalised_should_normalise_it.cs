@@ -6,8 +6,10 @@ namespace Oyez.Core.Tests.Previewing;
 
 public class PreviewUnicodeNormalisationTests : IDisposable
 {
-    private const string DECOMPOSED = "Café";
-    private const string COMPOSED = "Café";
+    private const string COMBINING_ACUTE_ACCENT = "\u0301";
+    private const string E_WITH_ACUTE_ACCENT = "\u00e9";
+    private const string DECOMPOSED = "Cafe" + COMBINING_ACUTE_ACCENT;
+    private const string COMPOSED = "Caf" + E_WITH_ACUTE_ACCENT;
 
     private readonly OyezApplicationHost _host = new();
     private readonly AnnouncementId _id = new("2026-11-03-brighter-10-3-0");
