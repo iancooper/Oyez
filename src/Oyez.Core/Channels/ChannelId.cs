@@ -59,8 +59,9 @@ public readonly record struct ChannelId
     public static bool TryParse(string name, out ChannelId channel)
     {
         var normalised = name.Trim().ToLowerInvariant();
-        channel = All.FirstOrDefault(c => c.Value == normalised);
-        return channel.Value is not null;
+        var isChannel = All.Any(c => c.Value == normalised);
+        channel = isChannel ? new ChannelId(normalised) : default;
+        return isChannel;
     }
 
     /// <summary>Returns the channel's name.</summary>
