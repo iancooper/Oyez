@@ -23,9 +23,9 @@ THE SOFTWARE. */
 
 #endregion
 
+using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
 using Paramore.Brighter.Extensions.DependencyInjection;
-using Oyez.Core.Previewing;
 using Paramore.Darker;
 using Paramore.Darker.AspNetCore;
 
@@ -47,16 +47,25 @@ public static class ServiceCollectionExtensions
         var core = typeof(ServiceCollectionExtensions).Assembly;
 
         services.AddBrighter().AutoFromAssemblies([core]);
-        services.AddDarker()
-            .AddHandlersFromAssemblies(core)
-            .AddHandlers(RegisterQueryHandlers);
+        services.AddDarker().AddHandlers(registry => RegisterQueryHandlers(registry, core));
 
         return services;
     }
 
-    // Darker's assembly scan only finds public handlers; Oyez's handlers are internal, so they are registered here.
-    private static void RegisterQueryHandlers(IQueryHandlerRegistry registry)
+    // Darker's own assembly scan only finds public handlers, and most of Oyez's are internal.
+    private static void RegisterQueryHandlers(IQueryHandlerRegistry registry, Assembly assembly)
     {
-        registry.Register<PreviewAnnouncement, Result<Preview>, PreviewAnnouncementHandler>();
+        foreach (var (query, result, handler) in QueryHandlersIn(assembly))
+        {
+            registry.Register(query, result, handler);
+        }
     }
+
+    private static IEnumerable<(Type Query, Type Result, Type Handler)> QueryHandlersIn(Assembly assembly) =>
+        from type in assembly.GetTypes()
+        where type is { IsClass: true, IsAbstract: false }
+        from contract in type.GetInterfaces()
+        where contract.IsGenericType && contract.GetGenericTypeDefinition() == typeof(IQueryHandler<,>)
+        let arguments = contract.GetGenericArguments()
+        select (arguments[0], arguments[1], type);
 }
