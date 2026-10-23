@@ -25,6 +25,8 @@ THE SOFTWARE. */
 
 using Microsoft.Extensions.DependencyInjection;
 using Paramore.Brighter.Extensions.DependencyInjection;
+using Oyez.Core.Previewing;
+using Paramore.Darker;
 using Paramore.Darker.AspNetCore;
 
 namespace Oyez.Core.Application;
@@ -45,8 +47,16 @@ public static class ServiceCollectionExtensions
         var core = typeof(ServiceCollectionExtensions).Assembly;
 
         services.AddBrighter().AutoFromAssemblies([core]);
-        services.AddDarker().AddHandlersFromAssemblies(core);
+        services.AddDarker()
+            .AddHandlersFromAssemblies(core)
+            .AddHandlers(RegisterQueryHandlers);
 
         return services;
+    }
+
+    // Darker's assembly scan only finds public handlers; Oyez's handlers are internal, so they are registered here.
+    private static void RegisterQueryHandlers(IQueryHandlerRegistry registry)
+    {
+        registry.Register<PreviewAnnouncement, Result<Preview>, PreviewAnnouncementHandler>();
     }
 }
