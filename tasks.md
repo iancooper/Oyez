@@ -205,7 +205,7 @@ Parsing, counting, rendering and validation are internal to `Oyez.Core`. Every t
   - `When_counting_twitter_text_conformance_cases_should_match_for_x`: a `[Theory]` over cases from twitter-text's `conformance/validate.yml` (weighted tweets), including © and ®
 - **Done when:** the tests pass.
 
-### [ ] T-11d A post over its channel's limit
+### [x] T-11d A post over its channel's limit
 - **Covers:** FR-2.4, FR-5.2, §4.6
 - **Found by:** the Phase 1 code-smell review. Only X's segment check and LinkedIn's one-post check exist, so a channel configured with a smaller limit can render a post over it with no error.
 - **Tests (Core):** through `ValidateAnnouncements`.
