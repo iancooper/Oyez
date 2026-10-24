@@ -133,7 +133,7 @@ Parsing, counting, rendering and validation are internal to `Oyez.Core`. Every t
   - `When_a_post_mentions_a_local_account_should_count_it_literally_for_mastodon`
 - **Done when:** the tests pass.
 
-### [ ] T-7 Prepare text for LinkedIn
+### [x] T-7 Prepare text for LinkedIn
 - **Covers:** FR-2.3, FR-4.3.3, §4.5, AC-10
 - **Tests (Core):** observed as the LinkedIn rendering's text and count in the preview.
   - `When_a_post_has_reserved_characters_should_escape_them_for_linkedin` (AC-10): every character in `\ | { } @ [ ] ( ) < > # * _ ~`
