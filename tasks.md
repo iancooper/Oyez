@@ -142,7 +142,7 @@ Parsing, counting, rendering and validation are internal to `Oyez.Core`. Every t
   - `When_counting_for_linkedin_should_count_the_prepared_text`
 - **Done when:** the tests pass.
 
-### [ ] T-8 Limits and enabled channels from configuration
+### [x] T-8 Limits and enabled channels from configuration
 - **Covers:** FR-2.4, FR-8.1, NFR-9, §4.3, §7
 - **Builds:** public configuration types, bound in the CLI (T-28) from `oyez.json` and passed to `AddOyezApplication`. Each rendering in the preview carries its channel's limit.
 - **Tests (Core):**
