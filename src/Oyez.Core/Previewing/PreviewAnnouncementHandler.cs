@@ -31,16 +31,9 @@ namespace Oyez.Core.Previewing;
 internal sealed class PreviewAnnouncementHandler(IAmAnAnnouncementStore store)
     : QueryHandlerAsync<PreviewAnnouncement, Result<Preview>>
 {
-    public override Task<Result<Preview>> ExecuteAsync(PreviewAnnouncement query, CancellationToken cancellationToken = default)
-    {
-        var announcement = AnnouncementParser.Parse(store.Load(query.Id)!).Value;
+    public override Task<Result<Preview>> ExecuteAsync(PreviewAnnouncement query, CancellationToken cancellationToken = default) =>
+        Task.FromResult(store.ReadAnnouncement(query.Id).Map(ToPreview));
 
-        var preview = new Preview(
-            announcement.Id,
-            announcement.Title,
-            announcement.PublishAt,
-            Renderer.RenderTargetedChannels(announcement));
-
-        return Task.FromResult(Result<Preview>.Success(preview));
-    }
+    private static Preview ToPreview(Announcement announcement) =>
+        new(announcement.Id, announcement.Title, announcement.PublishAt, Renderer.RenderTargetedChannels(announcement));
 }

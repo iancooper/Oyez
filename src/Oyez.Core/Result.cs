@@ -69,4 +69,7 @@ public sealed class Result<T>
     public T Value => IsSuccess
         ? _value!
         : throw new InvalidOperationException("A failed result has no value.");
+
+    internal Result<TOut> Map<TOut>(Func<T, TOut> map) =>
+        IsSuccess ? Result<TOut>.Success(map(_value!)) : Result<TOut>.Failure(Errors);
 }
