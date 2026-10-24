@@ -29,9 +29,9 @@ internal static class TopLevelDomains
 {
     private const string RESOURCE_NAME = "tlds-alpha-by-domain.txt";
 
-    private static readonly Lazy<HashSet<string>> _all = new(Load);
+    private static readonly Lazy<HashSet<string>> TLDS = new(Load);
 
-    public static bool Contains(string label) => _all.Value.Contains(label);
+    public static bool Contains(string label) => TLDS.Value.Contains(label);
 
     // The embedded list is IANA's tlds-alpha-by-domain.txt, version 2026102400 (24 October 2026).
     private static HashSet<string> Load()

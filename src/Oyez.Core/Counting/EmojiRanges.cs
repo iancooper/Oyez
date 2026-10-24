@@ -30,7 +30,7 @@ internal static class EmojiRanges
     private const int REGIONAL_INDICATOR_START = 0x1F1E6;
     private const int REGIONAL_INDICATOR_END = 0x1F1FF;
 
-    private static readonly (int Start, int End)[] _pictographic =
+    private static readonly (int Start, int End)[] PICTOGRAPHIC_RANGES =
     [
         (0x00A9, 0x00A9), (0x00AE, 0x00AE), (0x203C, 0x203C), (0x2049, 0x2049), (0x2122, 0x2122),
         (0x2139, 0x2139), (0x2194, 0x2199), (0x21A9, 0x21AA), (0x231A, 0x231B), (0x2328, 0x2328),
@@ -54,7 +54,7 @@ internal static class EmojiRanges
         cluster.EnumerateRunes().Any(rune => IsPictographic(rune.Value) || IsRegionalIndicator(rune.Value));
 
     private static bool IsPictographic(int codePoint) =>
-        _pictographic.Any(range => codePoint >= range.Start && codePoint <= range.End);
+        PICTOGRAPHIC_RANGES.Any(range => codePoint >= range.Start && codePoint <= range.End);
 
     private static bool IsRegionalIndicator(int codePoint) =>
         codePoint is >= REGIONAL_INDICATOR_START and <= REGIONAL_INDICATOR_END;
