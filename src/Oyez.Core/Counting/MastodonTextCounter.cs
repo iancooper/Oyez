@@ -38,6 +38,6 @@ internal sealed partial class MastodonTextCounter : IAmATextCounter
     private static string WithoutMentionDomains(string text) =>
         RemoteMentionPattern().Replace(text, "${user}");
 
-    [GeneratedRegex(@"(?<user>(?<![\p{L}\p{N}_@./:-])@[\p{L}\p{N}_]+(?:[.-][\p{L}\p{N}_]+)*)@[\p{L}\p{N}](?:[\p{L}\p{N}.-]*[\p{L}\p{N}])?", RegexOptions.CultureInvariant)]
+    [GeneratedRegex($$"""(?<user>{{UrlMatcher.TOKEN_START}}@[\p{L}\p{N}_]+(?:[.-][\p{L}\p{N}_]+)*)@[\p{L}\p{N}](?:[\p{L}\p{N}.-]*[\p{L}\p{N}])?""", RegexOptions.CultureInvariant)]
     private static partial Regex RemoteMentionPattern();
 }
