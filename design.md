@@ -202,12 +202,15 @@ The text is counted after preparation [AC-10].
 
 ### 4.6 Validation [FR-5.2]
 
-`Validator.Validate(Announcement, profiles) → IReadOnlyList<ValidationError>` (internal):
+`Validator.Validate(Announcement) → IReadOnlyList<ValidationError>` (internal). It runs only when the announcement parsed; each targeted profile's policy reports the errors particular to its shape.
 
-- **Header errors** come from the parser: a missing title, a bad time, an unknown channel or key.
-- **Segment check:** every segment must have `XTextCounter.Count ≤ 280`. This rule applies even when X isn't targeted, because segments are always written to the strictest limit [AC-6].
+- **Header errors** come from the parser: a missing title, a bad or zoneless time, an unknown channel or key, a key that appears twice, a line with no colon, an empty `channels:` value, no segments, an empty segment, or an ID that isn't a valid folder name.
+- **Nowhere to publish:** at least one targeted channel must be enabled in configuration.
+- **Segment check:** for each targeted Thread or SinglePost channel, every segment must fit the channel's limit, counted on the prepared text. X is checked even when it isn't targeted, because segments are always written to the strictest limit [AC-6]; it is reported once either way.
 - **SinglePost check:** for each targeted channel with this policy, the rendering must have exactly one post.
 - **Document check:** a Write.as rendering must have a body that isn't empty. (A missing title is already a header error.)
+
+Preview fails only on header errors, so an announcement that is over a limit can still be previewed and fixed.
 
 ### 4.7 Ports
 
