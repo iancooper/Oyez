@@ -29,6 +29,12 @@ namespace Oyez.Core.Channels;
 
 internal static class ChannelProfileExtensions
 {
+    public static Rendering Render(this IAmAChannelProfile profile, Announcement announcement) =>
+        profile.Policy.Render(announcement, profile);
+
+    public static IEnumerable<ValidationError> Errors(this IAmAChannelProfile profile, Announcement announcement) =>
+        profile.Policy.Errors(announcement, profile);
+
     public static int Measure(this IAmAChannelProfile profile, string text) =>
         profile.Counter.Count(profile.Prepare(text));
 

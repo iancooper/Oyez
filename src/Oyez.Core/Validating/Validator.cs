@@ -37,7 +37,7 @@ internal sealed class Validator(IEnumerable<IAmAChannelProfile> profiles, Render
         var targeted = renderer.TargetedProfiles(announcement).ToList();
         var checkedProfiles = targeted.Prepend(_x).DistinctBy(profile => profile.Id);
         return NoTargetErrors(announcement, targeted)
-            .Concat(checkedProfiles.SelectMany(profile => RenderingErrors(announcement, profile)))
+            .Concat(checkedProfiles.SelectMany(profile => profile.Errors(announcement)))
             .ToList();
     }
 
@@ -45,7 +45,4 @@ internal sealed class Validator(IEnumerable<IAmAChannelProfile> profiles, Render
         targeted.Count == 0
             ? [new ValidationError(announcement.Id, "None of the channels this announcement targets is enabled, so nothing would be published. Enable one of them in configuration, or change the channels header.")]
             : [];
-
-    private IEnumerable<ValidationError> RenderingErrors(Announcement announcement, IAmAChannelProfile profile) =>
-        profile.Policy.Errors(announcement, profile, renderer.Render(announcement, profile));
 }

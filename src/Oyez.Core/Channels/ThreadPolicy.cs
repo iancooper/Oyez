@@ -32,6 +32,6 @@ internal sealed class ThreadPolicy : IAmARenderingPolicy
     public Rendering Render(Announcement announcement, IAmAChannelProfile profile) =>
         SegmentMerger.Render(announcement, profile);
 
-    public IEnumerable<ValidationError> Errors(Announcement announcement, IAmAChannelProfile profile, Rendering rendering) =>
+    public IEnumerable<ValidationError> Errors(Announcement announcement, IAmAChannelProfile profile) =>
         profile.OverLimitSegments(announcement);
 }
