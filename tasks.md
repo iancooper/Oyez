@@ -173,7 +173,7 @@ Parsing, counting, rendering and validation are internal to `Oyez.Core`. Every t
   - `When_an_announcement_is_valid_should_report_no_errors`
 - **Done when:** the tests pass.
 
-### [ ] T-11 Estimate the X cost
+### [x] T-11 Estimate the X cost
 - **Covers:** FR-5.3
 - **Tests (Core):** through the preview.
   - `When_previewing_a_thread_should_estimate_its_x_cost`: with prices from configuration, a 3-post thread where only post 1 has a URL costs $0.20 + 2 × $0.015 = $0.23
