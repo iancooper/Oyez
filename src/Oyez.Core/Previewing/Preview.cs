@@ -25,6 +25,7 @@ THE SOFTWARE. */
 
 using Oyez.Core.Announcements;
 using Oyez.Core.Channels;
+using Oyez.Core.Costing;
 
 namespace Oyez.Core.Previewing;
 
@@ -41,4 +42,4 @@ public sealed record Preview(
     string Title,
     DateTimeOffset? PublishAt,
     IReadOnlyList<Rendering> Renderings,
-    UsDollars? EstimatedXCost = null);
+    UsDollars? EstimatedXCost);

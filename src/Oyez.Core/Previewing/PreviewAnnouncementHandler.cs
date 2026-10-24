@@ -24,6 +24,7 @@ THE SOFTWARE. */
 #endregion
 
 using Oyez.Core.Announcements;
+using Oyez.Core.Channels;
 using Oyez.Core.Costing;
 using Paramore.Darker;
 

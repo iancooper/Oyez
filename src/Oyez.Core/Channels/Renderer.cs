@@ -23,25 +23,20 @@ THE SOFTWARE. */
 
 #endregion
 
-namespace Oyez.Core.Previewing;
+using Oyez.Core.Announcements;
 
-/// <summary>
-/// An amount of money in US dollars.
-/// </summary>
-/// <param name="Amount">The number of dollars.</param>
-public readonly record struct UsDollars(decimal Amount)
+namespace Oyez.Core.Channels;
+
+internal sealed class Renderer(IEnumerable<IAmAChannelProfile> profiles)
 {
-    /// <summary>
-    /// Adds two amounts.
-    /// </summary>
-    /// <param name="left">The first amount.</param>
-    /// <param name="right">The second amount.</param>
-    /// <returns>The sum of the two amounts.</returns>
-    public static UsDollars operator +(UsDollars left, UsDollars right) => new(left.Amount + right.Amount);
+    public IReadOnlyList<Rendering> RenderTargetedChannels(Announcement announcement) =>
+        TargetedProfiles(announcement).Select(profile => Render(announcement, profile)).ToList();
 
-    /// <summary>
-    /// Formats the amount with a dollar sign and three decimal places, such as <c>$0.230</c>.
-    /// </summary>
-    /// <returns>The formatted amount.</returns>
-    public override string ToString() => $"${Amount:0.000}";
+    public IEnumerable<IAmAChannelProfile> TargetedProfiles(Announcement announcement) =>
+        ChannelId.All
+            .Where(announcement.Channels.Contains)
+            .SelectMany(channel => profiles.Where(profile => profile.Id == channel && profile.IsEnabled));
+
+    public Rendering Render(Announcement announcement, IAmAChannelProfile profile) =>
+        profile.Policy.Render(announcement, profile);
 }
