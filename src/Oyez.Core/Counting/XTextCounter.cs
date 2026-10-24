@@ -23,11 +23,37 @@ THE SOFTWARE. */
 
 #endregion
 
+using System.Globalization;
+using System.Text;
+
 namespace Oyez.Core.Counting;
 
 internal sealed class XTextCounter : IAmATextCounter
 {
+    private const int EMOJI_WEIGHT = 2;
+    private const int HEAVY_WEIGHT = 2;
+    private const int LIGHT_WEIGHT = 1;
+
+    private static readonly (int Start, int End)[] _lightRanges =
+    [
+        (0x0000, 0x10FF), (0x2000, 0x200D), (0x2010, 0x201F), (0x2032, 0x2037)
+    ];
+
     private readonly UrlMatcher _urls = new(includeBareDomains: true);
 
-    public int Count(string text) => _urls.ReplaceWithPlaceholders(text).Length;
+    public int Count(string text) =>
+        Clusters(_urls.ReplaceWithPlaceholders(text.Normalize(NormalizationForm.FormC))).Sum(WeightOf);
+
+    private static IEnumerable<string> Clusters(string text)
+    {
+        var elements = StringInfo.GetTextElementEnumerator(text);
+        while (elements.MoveNext())
+            yield return (string)elements.Current;
+    }
+
+    private static int WeightOf(string cluster) =>
+        EmojiRanges.IsEmojiCluster(cluster) ? EMOJI_WEIGHT : cluster.EnumerateRunes().Sum(rune => WeightOf(rune.Value));
+
+    private static int WeightOf(int codePoint) =>
+        _lightRanges.Any(range => codePoint >= range.Start && codePoint <= range.End) ? LIGHT_WEIGHT : HEAVY_WEIGHT;
 }
