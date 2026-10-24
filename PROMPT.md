@@ -50,7 +50,7 @@ Layout: planning documents at the repo root, code in `src/`, tests in `tests/`, 
 - Step 5 has started. Phase 0 (T-0, T-1) is done and merged to `main` (PR #1). An early `README.md` was added afterwards in its own PR. T-38 updates it once Oyez is built.
   - T-0: solution skeleton. `AddOyezApplication()` in `src/Oyez.Core/Application/ServiceCollectionExtensions.cs` registers Brighter and Darker. A spike command and query (`Spike.cs`) prove the wiring and are removed in T-17. Tests run on Microsoft Testing Platform.
   - T-1: `ci.yml` (build, test, actionlint, SHA-pinned actions) and `dependabot.yml`.
-- `README.md` and an MIT `LICENSE` are in PR #2 (branch `add-readme`), which isn't merged yet.
+- `README.md` and an MIT `LICENSE` came in PR #2 (branch `add-readme`), which is merged.
 - Phase 1 is in progress on branch `phase-1-core-domain`, which was branched from `add-readme`. The user asked for Brighter's conventions, so:
   - `CLAUDE.md` was added;
   - the design gained module boundaries and `IAmA…` port names;
@@ -76,4 +76,4 @@ Layout: planning documents at the repo root, code in `src/`, tests in `tests/`, 
 
 ## Next action
 
-The user reviews Phase 1 as a batch and decides on the five behaviour gaps. Then open the Phase 1 PR (ask before pushing). Branch `phase-1-core-domain` was cut from `add-readme` (PR #2), so PR #2 should merge first, or the Phase 1 PR should target `add-readme`.
+The user reviews Phase 1 as a batch and decides on the five behaviour gaps. Then open the Phase 1 PR (ask before pushing). PR #2 (`add-readme`) is merged, so the Phase 1 PR targets `main`.
