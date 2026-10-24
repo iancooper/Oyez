@@ -34,7 +34,9 @@ internal sealed class Renderer(IEnumerable<IAmAChannelProfile> profiles)
         TargetedProfiles(announcement).Select(profile => Render(announcement, profile)).ToList();
 
     public IEnumerable<IAmAChannelProfile> TargetedProfiles(Announcement announcement) =>
-        profiles.Where(profile => profile.IsEnabled && announcement.Channels.Contains(profile.Id));
+        ChannelId.All
+            .Where(announcement.Channels.Contains)
+            .SelectMany(channel => profiles.Where(profile => profile.Id == channel && profile.IsEnabled));
 
     public Rendering Render(Announcement announcement, IAmAChannelProfile profile) =>
         profile.Policy.Render(announcement, profile);
