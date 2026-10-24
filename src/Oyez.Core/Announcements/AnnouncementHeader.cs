@@ -90,13 +90,13 @@ internal sealed class AnnouncementHeader
 
     private void AddKnownEntry(Dictionary<string, string> entries, string key, string value)
     {
-        if (KNOWN_KEYS.Contains(key, StringComparer.OrdinalIgnoreCase))
-        {
-            entries[key] = value;
-        }
-        else
+        if (!KNOWN_KEYS.Contains(key, StringComparer.OrdinalIgnoreCase))
         {
             Report($"The header key '{key}' isn't known. Use {string.Join(", ", KNOWN_KEYS)}.");
+        }
+        else if (!entries.TryAdd(key, value))
+        {
+            Report($"The header key '{key}' appears more than once. Remove the second '{key}' line.");
         }
     }
 
