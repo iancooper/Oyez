@@ -43,14 +43,8 @@ internal static class EmojiRanges
         codePoint == COMBINING_ENCLOSING_KEYCAP || RANGES.Value.Any(range => codePoint >= range.Start && codePoint <= range.End);
 
     // The embedded data is Unicode's emoji-data.txt, version 18.0.0 (30 January 2026).
-    private static (int Start, int End)[] Load()
-    {
-        using var stream = typeof(EmojiRanges).Assembly.GetManifestResourceStream(RESOURCE_NAME)
-                           ?? throw new InvalidOperationException($"The embedded resource {RESOURCE_NAME} is missing.");
-        using var reader = new StreamReader(stream);
-        var lines = reader.ReadToEnd().Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-        return lines.Select(ParseRange).OfType<(int Start, int End)>().ToArray();
-    }
+    private static (int Start, int End)[] Load() =>
+        EmbeddedResource.ReadLines(RESOURCE_NAME).Select(ParseRange).OfType<(int Start, int End)>().ToArray();
 
     private static (int Start, int End)? ParseRange(string line)
     {
