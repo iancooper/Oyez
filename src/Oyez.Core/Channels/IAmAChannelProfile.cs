@@ -30,7 +30,7 @@ namespace Oyez.Core.Channels;
 internal interface IAmAChannelProfile
 {
     ChannelId Id { get; }
-    RenderingPolicy Policy { get; }
+    IAmARenderingPolicy Policy { get; }
     bool IsEnabled { get; }
     int? Limit { get; }
     IAmATextCounter Counter { get; }

@@ -23,11 +23,13 @@ THE SOFTWARE. */
 
 #endregion
 
+using Oyez.Core.Announcements;
+using Oyez.Core.Validating;
+
 namespace Oyez.Core.Channels;
 
-internal enum RenderingPolicy
+internal interface IAmARenderingPolicy
 {
-    Thread,
-    SinglePost,
-    Document
+    Rendering Render(Announcement announcement, IAmAChannelProfile profile);
+    IEnumerable<ValidationError> Errors(Announcement announcement, Rendering rendering);
 }

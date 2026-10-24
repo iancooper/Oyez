@@ -31,7 +31,7 @@ namespace Oyez.Core.Channels;
 internal sealed class MastodonProfile(OyezOptions options) : IAmAChannelProfile
 {
     public ChannelId Id => ChannelId.Mastodon;
-    public RenderingPolicy Policy => RenderingPolicy.Thread;
+    public IAmARenderingPolicy Policy { get; } = new ThreadPolicy();
     public bool IsEnabled => options.Mastodon.Enabled;
     public int? Limit => options.Mastodon.Limit;
     public IAmATextCounter Counter { get; } = new MastodonTextCounter();

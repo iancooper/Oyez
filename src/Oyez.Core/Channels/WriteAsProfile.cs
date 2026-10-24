@@ -31,7 +31,7 @@ namespace Oyez.Core.Channels;
 internal sealed class WriteAsProfile(OyezOptions options) : IAmAChannelProfile
 {
     public ChannelId Id => ChannelId.WriteAs;
-    public RenderingPolicy Policy => RenderingPolicy.Document;
+    public IAmARenderingPolicy Policy { get; } = new DocumentPolicy();
     public bool IsEnabled => options.WriteAs.Enabled;
     public int? Limit => options.WriteAs.Limit;
     public IAmATextCounter Counter { get; } = new CodeUnitTextCounter();

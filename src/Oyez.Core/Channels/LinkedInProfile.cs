@@ -35,7 +35,7 @@ internal sealed partial class LinkedInProfile(OyezOptions options) : IAmAChannel
     private const string HASHTAG = @"(?<![\p{L}\p{N}_])#(?<tag>[\p{L}\p{N}_]+)";
 
     public ChannelId Id => ChannelId.LinkedIn;
-    public RenderingPolicy Policy => RenderingPolicy.SinglePost;
+    public IAmARenderingPolicy Policy { get; } = new SinglePostPolicy();
     public bool IsEnabled => options.LinkedIn.Enabled;
     public int? Limit => options.LinkedIn.Limit;
     public IAmATextCounter Counter { get; } = new CodeUnitTextCounter();

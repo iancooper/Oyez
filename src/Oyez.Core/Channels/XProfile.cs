@@ -31,7 +31,7 @@ namespace Oyez.Core.Channels;
 internal sealed class XProfile(OyezOptions options) : IAmAChannelProfile
 {
     public ChannelId Id => ChannelId.X;
-    public RenderingPolicy Policy => RenderingPolicy.Thread;
+    public IAmARenderingPolicy Policy { get; } = new ThreadPolicy();
     public bool IsEnabled => options.X.Enabled;
     public int? Limit => options.X.Limit;
     public IAmATextCounter Counter { get; } = new XTextCounter();

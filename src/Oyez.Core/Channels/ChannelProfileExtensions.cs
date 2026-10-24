@@ -32,4 +32,10 @@ internal static class ChannelProfileExtensions
 
     public static bool Fits(this IAmAChannelProfile profile, string text) =>
         profile.Limit is not { } limit || profile.Measure(text) <= limit;
+
+    public static Post PostFor(this IAmAChannelProfile profile, string text, int index)
+    {
+        var prepared = profile.Prepare(text);
+        return new Post(index, prepared, profile.Counter.Count(prepared));
+    }
 }

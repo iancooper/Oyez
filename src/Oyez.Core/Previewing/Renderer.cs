@@ -30,55 +30,12 @@ namespace Oyez.Core.Previewing;
 
 internal sealed class Renderer(IEnumerable<IAmAChannelProfile> profiles)
 {
-    private const string SEGMENT_SEPARATOR = "\n\n";
-
     public IReadOnlyList<Rendering> RenderTargetedChannels(Announcement announcement) =>
-        profiles
-            .Where(profile => profile.IsEnabled && announcement.Channels.Contains(profile.Id))
-            .Select(profile => Render(announcement, profile))
-            .ToList();
+        TargetedProfiles(announcement).Select(profile => Render(announcement, profile)).ToList();
 
-    private static Rendering Render(Announcement announcement, IAmAChannelProfile profile) =>
-        profile.Policy == RenderingPolicy.Document
-            ? RenderDocument(announcement, profile)
-            : RenderPosts(announcement, profile);
+    public IEnumerable<IAmAChannelProfile> TargetedProfiles(Announcement announcement) =>
+        profiles.Where(profile => profile.IsEnabled && announcement.Channels.Contains(profile.Id));
 
-    private static Rendering RenderDocument(Announcement announcement, IAmAChannelProfile profile) =>
-        new(profile.Id, announcement.Title, profile.Limit, [NewPost(profile, 0, announcement.WriteAsMarkdown ?? JoinSegments(announcement))]);
-
-    private static Rendering RenderPosts(Announcement announcement, IAmAChannelProfile profile) =>
-        new(profile.Id, null, profile.Limit, MergeSegments(announcement, profile).Select((text, index) => NewPost(profile, index, text)).ToList());
-
-    private static string JoinSegments(Announcement announcement) =>
-        string.Join(SEGMENT_SEPARATOR, announcement.Segments.Select(segment => segment.Text));
-
-    private static List<string> MergeSegments(Announcement announcement, IAmAChannelProfile profile)
-    {
-        var posts = new List<string>();
-        foreach (var segment in announcement.Segments)
-        {
-            Append(posts, segment.Text, profile);
-        }
-
-        return posts;
-    }
-
-    private static void Append(List<string> posts, string text, IAmAChannelProfile profile)
-    {
-        var candidate = posts.Count == 0 ? text : posts[^1] + SEGMENT_SEPARATOR + text;
-        if (posts.Count == 0 || !profile.Fits(candidate))
-        {
-            posts.Add(text);
-        }
-        else
-        {
-            posts[^1] = candidate;
-        }
-    }
-
-    private static Post NewPost(IAmAChannelProfile profile, int index, string text)
-    {
-        var prepared = profile.Prepare(text);
-        return new Post(index, prepared, profile.Counter.Count(prepared));
-    }
+    public Rendering Render(Announcement announcement, IAmAChannelProfile profile) =>
+        profile.Policy.Render(announcement, profile);
 }

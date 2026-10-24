@@ -31,37 +31,21 @@ namespace Oyez.Core.Validating;
 
 internal sealed class Validator(IEnumerable<IAmAChannelProfile> profiles, Renderer renderer)
 {
+    private readonly IAmAChannelProfile _x = profiles.Single(profile => profile.Id == ChannelId.X);
+
     public IReadOnlyList<ValidationError> Validate(Announcement announcement) =>
         SegmentErrors(announcement)
-            .Concat(renderer.RenderTargetedChannels(announcement).SelectMany(rendering => RenderingErrors(announcement, rendering)))
+            .Concat(renderer.TargetedProfiles(announcement).SelectMany(profile => RenderingErrors(announcement, profile)))
             .ToList();
 
-    private IEnumerable<ValidationError> SegmentErrors(Announcement announcement)
-    {
-        var x = profiles.Single(profile => profile.Id == ChannelId.X);
-        return x.Limit is { } limit
-            ? announcement.Segments.Where(segment => x.Measure(segment.Text) > limit).Select(segment => OverLimit(announcement, segment, limit))
+    private IEnumerable<ValidationError> SegmentErrors(Announcement announcement) =>
+        _x.Limit is { } limit
+            ? announcement.Segments.Where(segment => _x.Measure(segment.Text) > limit).Select(segment => OverLimit(announcement, segment, limit))
             : [];
-    }
 
     private static ValidationError OverLimit(Announcement announcement, Segment segment, int limit) =>
         new(announcement.Id, $"Segment {segment.Number} is over X's limit of {limit} characters. Shorten it, or split it into two segments.", ChannelId.X, segment.Number);
 
-    private IEnumerable<ValidationError> RenderingErrors(Announcement announcement, Rendering rendering) =>
-        profiles.Single(profile => profile.Id == rendering.Channel).Policy switch
-        {
-            RenderingPolicy.SinglePost => SinglePostErrors(announcement, rendering),
-            RenderingPolicy.Document => DocumentErrors(announcement, rendering),
-            _ => []
-        };
-
-    private static IEnumerable<ValidationError> SinglePostErrors(Announcement announcement, Rendering rendering) =>
-        rendering.Posts.Count == 1
-            ? []
-            : [new ValidationError(announcement.Id, $"The {rendering.Channel} rendering doesn't fit in one post: it needs {rendering.Posts.Count}, and {rendering.Channel} takes one. Shorten the announcement, or remove {rendering.Channel} from 'channels'.", rendering.Channel)];
-
-    private static IEnumerable<ValidationError> DocumentErrors(Announcement announcement, Rendering rendering) =>
-        rendering.Posts.All(post => string.IsNullOrWhiteSpace(post.Text))
-            ? [new ValidationError(announcement.Id, $"The {rendering.Channel} rendering has an empty body. Add text to the Markdown body, or remove it to build the body from the segments.", rendering.Channel)]
-            : [];
+    private IEnumerable<ValidationError> RenderingErrors(Announcement announcement, IAmAChannelProfile profile) =>
+        profile.Policy.Errors(announcement, renderer.Render(announcement, profile));
 }
