@@ -1,0 +1,267 @@
+# Testing
+
+- Use TDD where possible.
+- Write developer tests using xUnit.
+- Name test methods in the format: When_[condition]_should_[expected_behavior].
+- Name test classes `[Behavior]Tests` — the `When_` convention is for method names and file names only, never class names. For example `PipelineValidatorErrorAggregationTests`, `CommandProcessorPostBoxBulkClearAsyncTests`.
+- Prefer a test case per file.
+- If you have multiple test cases per file (e.g. shared complex set up), the class name should describe the behavior being tested across all tests, for example `CommandProcessorPostBoxBulkClearAsyncTests`.
+- Name test files for the test method in the file i.e. When_[condition]_should_[expected_behavior].cs
+- If you decide to use multiple test cases per file, for example shared complex set up, name the file after the happy path test method and the class after the shared behavior.
+- Ensure all new features and bug fixes include appropriate test coverage.
+
+## TDD Style
+
+**MANDATORY Tool**: ALWAYS use the `/test-first <behavior>` command (see [.claude/commands/tdd/test-first.md](../.claude/commands/tdd/test-first.md)) when writing new tests.
+
+- **DO NOT write test files manually** (using Write tool) and proceed to implementation
+- **DO NOT run tests without approval**
+- **STOP after writing the test and ASK FOR APPROVAL**
+- The user will review the test in their IDE, not in CLI output
+- The approval gate is **armed by default**. Assume it is armed unless a spec command has explicitly
+  told you the spec is in the `review-after` gear
+
+This ensures the approval step is never skipped by accident and tests are reviewed before
+implementation.
+
+- We write developer tests
+  - Failure of a test case implicates the most recent edit.
+  - Do not use mocks to isolate the System Under Test (SUT).
+    - We prefer developer tests that implicate the most recent edit, not isolation of classes.
+- Where possible, we are test first
+  - Red: Write a failing test
+  - **APPROVAL**: Get approval for the test before implementing
+  - Green: Make the test pass, commit any sins necessary to move fast
+  - Refactor: Improve the design of the code.
+- **Approval Workflow** (⛔ ARMED BY DEFAULT):
+  - When working on a feature, ALWAYS use `/test-first <behavior>` - do not write tests manually
+  - The skill will write the test and ASK FOR APPROVAL before proceeding
+  - The user will review the test in their IDE
+  - DO NOT run tests or start implementation without explicit user approval
+  - After approval, implement the minimum code to make the test pass
+  - You cannot bypass the gate on your own initiative. It is disarmed only by a deliberate,
+    recorded, scoped gear shift the user makes with `/spec:gear` — never by assumption, never by a
+    prose instruction in a scratch file, and never because the tasks look repetitive
+
+### When a new test passes on first run — characterisation
+
+Sometimes the test you write for a behaviour passes before you have written any code, because
+earlier work already delivers it. This is common when a spec takes one task per acceptance
+criterion. A green test has not yet shown that it can fail, so it has not yet shown that it guards
+anything. **Do not weaken, rewrite or delete it to get a failure, and do not treat the task as
+"already complete".**
+
+Instead, observe RED through a **named mutation** ([ADR 0071](../docs/adr/0071-tdd-review-gear.md),
+*Characterisation amendment*):
+
+1. Apply a temporary change to **production code, never to the test**. It should be the realistic
+   defect the test exists to catch, for example exact equality where the code uses assignability.
+2. Run the test. It must fail **on the assertion it is about**. A compile error, or an unrelated
+   exception thrown before the assertion is reached, does not count; pick a better mutation.
+3. **Revert the mutation** and confirm green. `git status` must show no production file still
+   modified.
+4. Run the **full test suite** for the affected project(s), as for any other test.
+5. Commit the test alone, as `test:`, noting the mutation in the message. The mutation is never
+   committed.
+
+In a spec, such tasks are labelled `CHARACTERISE` in `tasks.md` and name their mutation. If you meet
+an unexpected green with no named mutation, stop and ask. Choosing the mutation is part of
+reviewing the test, so do not improvise it.
+
+The same move applies to a guard test that is RED on arrival only because the code under test does
+not exist yet (a compile error). Once it is GREEN, apply the mutation that reintroduces the defect
+the test guards against, and confirm it fails for that reason.
+
+### The review gear
+
+Whether the approval pause fires is a **gear** ([ADR 0071](../docs/adr/0071-tdd-review-gear.md)),
+selected for the certainty you have and the blast radius you face — high value early in a spec, low
+value on a run of near-identical tasks whose shape has already been reviewed repeatedly.
+
+| Gear | Gate | Meaning |
+|------|------|---------|
+| `review-before` | ✅ armed | Each test reviewed in the IDE before implementation. **The default.** |
+| `review-after` | ➖ not armed | RED still proved first; reviewed as a batch afterwards. |
+
+- The gear lives in `specs/{spec}/.current-gear` — untracked working state, scoped to one spec and
+  optionally to one section of `tasks.md`, carrying the reason for the shift. Shift it with
+  `/spec:gear`, in either direction, at any time.
+- `/spec:implement` honours it; `/spec:ralph-implement` is always `review-after`. A **standalone
+  `/test-first` and `/bugfix:test` are always gated** — they do not read the gear file.
+- Absent, unparseable, unknown value, or a task outside the gear's scope all resolve to
+  `review-before`. Fail safe, never fail open.
+
+**What `review-after` does NOT remove.** Only the human pause. All of these hold in both gears:
+
+- **RED first** — the test is written and observed to fail *for the right reason* before any
+  production code exists, or, for a characterisation test, under its named mutation (see above).
+  Ungated is not test-after.
+- **The full regression suite**, not just the new test's own `--filter`.
+- **The two-commit shape** — a `feat:`/`test:` commit for the behaviour, then a separate `docs:`
+  commit ticking the task off in `tasks.md`.
+- **Every convention in this document** — naming, one test per file, TestDoubles one class per
+  file, a distinct request type per new test double, new closed generics registered with the test
+  project's logging `Initializer.cs`, no mocks for isolation, `InMemory*` for I/O.
+
+A run in `review-after` that drops any of these is defective — it is not "a different gear".
+- Where possible, avoid writing tests after.
+  - This will not give you scope control - only writing the code required by tests.
+    - You should only write the code necessary for a test to pass; do not write speculative code.
+  - It will not push you to focus on design of your classes for behavior.
+    - Pay attention to the usability of your class and method; it should be self-describing.
+  - We accept test after when working with I/O implementations, where test-first is impractical.
+- Tests should confirm the behavior of the SUT.
+  - A test is a specification-first exploration of the behavior of the system.
+    - A test provides an executable specification, of a given behavior.
+  - Tests should be coupled to the behavior of the system and not to the implementation details.
+    - It should be possible to refactor implementation details, without breaking tests.
+  - Tests should use the Arrange/Act/Assert structure; make it explicit with comments i.e. //Arrange //Act //Assert
+    - The Arrange should set up any pre-conditions for the test.
+    - The Arrange code should be within the constructor of the test class, if shared by multiple tests
+    - The Arrange code should use the Evident Data pattern.
+      - In Evident Data we highlight the state that impacts the test outcome.
+      - We may use the Test Data Builder pattern to hide noise, so as to focus on Evident Data.
+- The trigger for a new test is a new behavior.
+  - The trigger for a new test is NOT a new method.
+  - The next test should always be the most obvious step you can make towards implementing the requirement
+
+## Test Scope and Isolation
+
+- Only test exports from an assembly
+  - To be clear, this means an access modifier of public on methods on public classes.
+  - Do not test details, such as methods on internal classes, or private methods.
+- Do not expose more than is necessary from an assembly
+  - An assembly is a module, it's surface area should be as narrow as possible.
+  - Do not make export classes or methods from a module to test them; we only test exports from modules, not implementation details.
+  - By following the rules for only testing behaviors, you only need to write tests for the behaviors exposed from the module not its details.
+  - Private or Internal classes used in the implementation do not need tests - they are covered by the behavior that led to their creation.
+
+### Narrow and deep — and when widening the surface is legitimate
+
+- The goal these rules serve is a module that is **narrow and deep**, not wide and shallow: a small
+  surface hiding substantial behaviour. The rules above, and *No InternalsVisibleTo* below, all
+  forbid the same one thing — **coupling a test to the module's implementation details**.
+- Read that way, "do not export to test" is **conditional, not absolute**. What it forbids is
+  widening the surface to reach *inside*. Before widening, ask:
+  **is there a path through the module's existing exports to the behaviour under test?**
+  - If there is, widening is unjustified — test through that path.
+  - If there is not, exporting may be the only way to test the behaviour at all. Then widen
+    **honestly**: make it public, and record what was widened and why (in the ADR, or the PR).
+- **Having to widen is a design signal, not just a cost.** If no existing export reaches the
+  behaviour, the module's contract may be missing a name for something it already depends on
+  internally. Ask what the new export *says about the module* before assuming it is a testing
+  concession:
+  - A widening that other callers would genuinely want is a real term of the contract, and the fact
+    that a test wanted it first is incidental.
+  - A widening that only a test could ever want is a smell. The design is probably wrong somewhere
+    else, and the export is hiding that rather than fixing it.
+- The honest check, after the fact: does anything other than a test ever call it? If nothing ever
+  does, it was a testing concession after all, and should be revisited.
+
+## Tests Exercise the Production Path
+
+- **A test that drives a path production never takes has no value.** It does not protect behaviour; it pins an implementation, and it keeps that implementation alive by making its removal look like a regression.
+- Where a public seam can be reached in more than one way, a test must reach it the way production does — supplying the collaborators production supplies, obtained the way production obtains them. A hand-rolled stand-in for something the framework always provides tests a configuration no user has.
+- **When a design change removes a path that only tests were exercising, rewrite the tests onto the production path. Do not keep the path so that the tests keep passing.** Preserving a code path for its tests inverts the relationship: the tests exist to protect behaviour users depend on, not to protect themselves.
+- This is not a licence to weaken coverage. Rewriting a test onto the production path should assert the same property; if the property can no longer be asserted there, that is a finding about the design, not a reason to keep the old path.
+
+## No InternalsVisibleTo
+
+- **NEVER use `InternalsVisibleTo` to expose internal classes for testing.**
+- Internal classes should NOT be driven by unit tests directly.
+- Internal classes should emerge as implementation details through refactoring:
+  1. First, implement behavior in the public class (keep it simple)
+  2. As complexity grows, extract internal helper classes through refactoring
+  3. Tests always go through the public interface - internal classes are covered by those tests
+- If you need to inject a dependency for testing (e.g., randomness, I/O), make the interface **public** so it can be injected through the public API.
+- **`InternalsVisibleTo` is rejected because it makes `internal` a lie.** The comfort of `internal`
+  is that a member may be refactored freely, since every dependency on it lives inside the module.
+  Once tests in another assembly bind to it, that is false — refactoring breaks them. The member has
+  been made public in effect, just to a narrower audience, while the keyword still claims otherwise.
+  Prefer honesty: make it public and record the widening (see *Narrow and deep* above), which at
+  least forces the question of why it belongs on the module.
+- The goal is that tests are coupled to behavior, not implementation. Refactoring internals should never break tests.
+
+## Exploratory Tests for Implementation Details
+
+- You may write tests against a public class to explore and validate an algorithm or implementation detail during development.
+- Once you are confident the detail is correct, make the class `internal` and delete the exploratory tests.
+- The internal class must then be exercised indirectly through tests on the public classes that use it.
+- Do not leave exploratory tests in the codebase — they couple tests to implementation details and prevent refactoring.
+
+## Test Doubles
+
+- Use fakes or mocks for I/O for testing core libraries such as Paramore.Brighter or Paramore.Brighter.ServiceActivator
+  - Consider writing in-memory replacements for I/O, that could be used in a production system, over a fake or mock.
+  - Look for existing classes that use the naming convention InMemory*
+  - Use the naming convention InMemory for your own in-memory implementations.
+  - See [ADR 0023](../docs/adr/0023-reactor-and-nonblocking-io.md) for advice on how to replace I/O.
+- Do NOT use fakes or mocks for isolating a class.
+  - We use developer tests: isolation is to the most recent edit, not a class.
+  - Do not inject dependencies into a constructor or property for test isolation
+- You MAY use fakes or mocks (test doubles) for I/O or the strategy pattern. Prefer in-memory alternatives to fakes to mocks.
+  - You may use a test double to replace I/O as it is slow and has shared fixture making tests brittle.
+  - You should look at using an in-memory substitute if testing core functionality that can use a range of alternative I/O. For example you can use an in-memory substitute such as InMemoryMessageProducer or InMemoryOutbox.
+  - If you are testing the implementation of a messaging gateway (transport), outbox, inbox or other I/O adapter, you should create a suite of tests that use those directly to prove the implementation works. We separate these into test assemblies that require the dependency on a broker or database to run. This allows the core tests, that substitute I/O to run without additional dependencies, and indicates what dependencies you need to run a particular test suite.
+  or use of the strategy pattern to satisfy the open-closed principle.
+- Only add code needed to satisfy a behavioral requirement expressed in a test.
+  - Do not add speculative code, the need for which is not indicated by test.
+
+## Testing Middleware with Docker
+
+- When testing messaging gateways (Kafka, RabbitMQ, etc.) or databases, use Docker for test infrastructure
+- Docker Compose files for test infrastructure are located in the solution root (e.g., `docker-compose-kafka.yaml`)
+- Integration tests that require middleware should:
+  - Be in separate test assemblies (e.g., `Paramore.Brighter.Kafka.Tests`)
+  - Use docker-compose to spin up required infrastructure
+  - Test actual integration with the middleware, not mocked behavior
+  - Follow the same TDD workflow: write failing test, get approval, implement
+- Even when testing middleware, follow test-first practices:
+  - Write the integration test that exercises the behavior
+  - Get approval for the test
+  - Implement the code to make it pass
+  - This ensures you're building the right behavior from the start
+
+### Hand-written tests that use a generated pump must join its configuration's collection
+
+The generated `ConformanceDeferredPump` (one per provider configuration, under that configuration's
+`Generated/` folder) keeps its dispatch count, requeue count and `HandledCount` log in **static**
+counters. Every test that uses it calls `ConformanceDeferredPump.ResetDispatchCount()` in its
+constructor, and that clears the counters for **every** message, not only the test's own.
+
+xUnit runs test classes in different collections in parallel. So if two classes using the same pump
+run at once, one test's reset wipes the other's in-flight counts. The failures are intermittent and
+look like wrong counts (e.g. "Expected 0, Actual 1").
+
+- The generated tests are already safe. Each `test-configuration.json` sets a `CollectionName` for
+  every configuration, and the templates put every generated test in that collection, so tests
+  sharing a pump run one at a time.
+- **A hand-written test that uses a generated pump must join the same collection.** Put
+  `[Collection("<CollectionName>")]` on the class, with the `CollectionName` of the configuration
+  whose pump it imports. For example, a test using
+  `Paramore.Brighter.AWS.Tests.MessagingGateway.SqsStandard.ConformanceDeferredPump` takes
+  `[Collection("SqsStandard")]`.
+- Do not "fix" the race by removing the reset from a test or template. The reset is part of the
+  spec 0037 harness contract (task 3.2) and a generator test enforces it.
+- Before you accept a new test of this kind, run the full suite for the project more than once.
+  This race does not show up in a filtered run.
+
+### RabbitMQ: run each suite against the broker version it targets
+
+The two RabbitMQ suites do not target the same broker, and pointing one at the other's version
+produces a wall of red that is not a regression.
+
+- **`RMQ.Async` runs on 4.2 and 4.3+.** `RmqSubscription.isDurable` defaults to `true` there (#4355),
+  so a default subscription declares a queue 4.3 accepts.
+- **`RMQ.Sync` runs on 4.2 only.** It targets the RabbitMQ 3.x line through `RabbitMQ.Client` 6.x, so
+  its `isDurable` default is deliberately still `false`. RabbitMQ **4.3 removed transient
+  non-exclusive queues**, so on a 4.3+ broker every queue declaration is rejected with
+  `INTERNAL_ERROR - Feature 'transient_nonexcl_queues' is deprecated`. Measured against 4.3.5:
+  **46 failed / 35 passed / 3 skipped**. This applies to the package, not just its tests — a default
+  subscription from `Paramore.Brighter.MessagingGateway.RMQ.Sync` is rejected by 4.3+ too.
+
+`docker-compose-rmq.yaml` is pinned to 4.2 for this reason and CI uses it, so `rabbitmq-sync-ci` is
+green. **Check the broker version before reading a local RabbitMQ failure** — `docker ps` will show
+an unrelated 4.3 container holding 5672 on a developer machine. Do not "fix" the `isDurable: false`
+sites in `Paramore.Brighter.RMQ.Sync.Tests` to make a 4.3 run pass; they match the product default
+the package deliberately keeps.
