@@ -28,12 +28,12 @@ using Paramore.Darker;
 
 namespace Oyez.Core.Previewing;
 
-internal sealed class PreviewAnnouncementHandler(IAmAnAnnouncementStore store)
+internal sealed class PreviewAnnouncementHandler(IAmAnAnnouncementStore store, Renderer renderer)
     : QueryHandlerAsync<PreviewAnnouncement, Result<Preview>>
 {
     public override Task<Result<Preview>> ExecuteAsync(PreviewAnnouncement query, CancellationToken cancellationToken = default) =>
         Task.FromResult(store.ReadAnnouncement(query.Id).Map(ToPreview));
 
-    private static Preview ToPreview(Announcement announcement) =>
-        new(announcement.Id, announcement.Title, announcement.PublishAt, Renderer.RenderTargetedChannels(announcement));
+    private Preview ToPreview(Announcement announcement) =>
+        new(announcement.Id, announcement.Title, announcement.PublishAt, renderer.RenderTargetedChannels(announcement));
 }

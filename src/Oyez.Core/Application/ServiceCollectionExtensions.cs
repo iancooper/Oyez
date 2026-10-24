@@ -25,6 +25,8 @@ THE SOFTWARE. */
 
 using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
+using Oyez.Core.Channels;
+using Oyez.Core.Previewing;
 using Paramore.Brighter.Extensions.DependencyInjection;
 using Paramore.Darker;
 using Paramore.Darker.AspNetCore;
@@ -48,6 +50,12 @@ public static class ServiceCollectionExtensions
 
         services.AddBrighter().AutoFromAssemblies([core]);
         services.AddDarker().AddHandlers(registry => RegisterQueryHandlers(registry, core));
+
+        services.AddSingleton<IAmAChannelProfile, XProfile>();
+        services.AddSingleton<IAmAChannelProfile, MastodonProfile>();
+        services.AddSingleton<IAmAChannelProfile, LinkedInProfile>();
+        services.AddSingleton<IAmAChannelProfile, WriteAsProfile>();
+        services.AddSingleton<Renderer>();
 
         return services;
     }

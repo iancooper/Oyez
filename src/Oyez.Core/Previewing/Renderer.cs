@@ -28,18 +28,18 @@ using Oyez.Core.Channels;
 
 namespace Oyez.Core.Previewing;
 
-internal static class Renderer
+internal sealed class Renderer(IEnumerable<IAmAChannelProfile> profiles)
 {
-    public static IReadOnlyList<Rendering> RenderTargetedChannels(Announcement announcement) =>
-        ChannelId.All
-            .Where(announcement.Channels.Contains)
-            .Select(channel => Render(announcement, channel))
+    public IReadOnlyList<Rendering> RenderTargetedChannels(Announcement announcement) =>
+        profiles
+            .Where(profile => announcement.Channels.Contains(profile.Id))
+            .Select(profile => Render(announcement, profile))
             .ToList();
 
-    private static Rendering Render(Announcement announcement, ChannelId channel) =>
-        channel == ChannelId.WriteAs
-            ? RenderDocument(announcement, channel)
-            : RenderPosts(announcement, channel);
+    private static Rendering Render(Announcement announcement, IAmAChannelProfile profile) =>
+        profile.Policy == RenderingPolicy.Document
+            ? RenderDocument(announcement, profile.Id)
+            : RenderPosts(announcement, profile.Id);
 
     private static Rendering RenderDocument(Announcement announcement, ChannelId channel) =>
         new(channel, announcement.Title, [new Post(0, announcement.WriteAsMarkdown ?? string.Empty)]);
