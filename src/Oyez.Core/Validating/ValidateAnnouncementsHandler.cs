@@ -28,14 +28,17 @@ using Paramore.Darker;
 
 namespace Oyez.Core.Validating;
 
-internal sealed class ValidateAnnouncementsHandler(IAmAnAnnouncementStore store)
+internal sealed class ValidateAnnouncementsHandler(IAmAnAnnouncementStore store, Validator validator)
     : QueryHandlerAsync<ValidateAnnouncements, IReadOnlyList<ValidationError>>
 {
     public override Task<IReadOnlyList<ValidationError>> ExecuteAsync(ValidateAnnouncements query, CancellationToken cancellationToken = default)
     {
         var ids = query.Ids ?? store.List();
-        IReadOnlyList<ValidationError> errors = ids.SelectMany(id => store.ReadAnnouncement(id).Errors).ToList();
+        IReadOnlyList<ValidationError> errors = ids.SelectMany(id => ErrorsFor(store.ReadAnnouncement(id))).ToList();
 
         return Task.FromResult(errors);
     }
+
+    private IReadOnlyList<ValidationError> ErrorsFor(Result<Announcement> read) =>
+        read.IsSuccess ? validator.Validate(read.Value) : read.Errors;
 }
