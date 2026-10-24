@@ -31,6 +31,9 @@ namespace Oyez.Core.Channels;
 
 internal sealed partial class LinkedInProfile(OyezOptions options) : IAmAChannelProfile
 {
+    private const string RESERVED_CHARACTERS = @"[\\|{}@\[\]()<>#*_~]";
+    private const string HASHTAG = @"(?<![\p{L}\p{N}_])#(?<tag>[\p{L}\p{N}_]+)";
+
     public ChannelId Id => ChannelId.LinkedIn;
     public RenderingPolicy Policy => RenderingPolicy.SinglePost;
     public bool IsEnabled => options.LinkedIn.Enabled;
@@ -46,9 +49,9 @@ internal sealed partial class LinkedInProfile(OyezOptions options) : IAmAChannel
             ? $"{{hashtag|\\#|{match.Groups["tag"].Value}}}"
             : $"\\{match.Value}";
 
-    [GeneratedRegex(@"(?<![\p{L}\p{N}_])#(?<tag>[\p{L}\p{N}_]+)|[\\|{}@\[\]()<>#*_~]")]
+    [GeneratedRegex(HASHTAG + "|" + RESERVED_CHARACTERS)]
     private static partial Regex HashtagsAndReservedCharacters();
 
-    [GeneratedRegex(@"[\\|{}@\[\]()<>#*_~]")]
+    [GeneratedRegex(RESERVED_CHARACTERS)]
     private static partial Regex ReservedCharacters();
 }
