@@ -1,6 +1,6 @@
 # Oyez — Tasks
 
-These tasks build the design in `design.md`. They are ordered so that each one builds on the ones before it.
+These tasks build the design in [ADR 0001](../../docs/adr/0001-oyez-design.md). They are ordered so that each one builds on the ones before it.
 
 ## How to work through them
 
@@ -22,7 +22,7 @@ Follow the workflow and conventions in `CLAUDE.md`, which follow Brighter's agen
 | **Review** | A checklist in the task, checked by reading the work. `actionlint` runs too, where it applies. | — |
 | **Manual** | Steps run against real accounts or GitHub, with the expected result written down | — |
 
-Requirement and acceptance-criteria IDs refer to `requirements.md`. § numbers refer to sections of `design.md`.
+Requirement and acceptance-criteria IDs refer to `requirements.md`. § numbers refer to sections of ADR 0001.
 
 ---
 

@@ -480,3 +480,13 @@ $RECYCLE.BIN/
 
 # Vim temporary swap files
 *.swp
+
+# Ralph loop (/spec:ralph-implement)
+RALPH_STOP
+ralph.log
+
+# TDD review gear — untracked working state, not a spec artifact. See .claude/commands/spec/gear.md.
+specs/**/.current-gear
+
+# Spec review findings (/spec:review) — untracked working state, not a spec artifact.
+specs/**/review-*.md

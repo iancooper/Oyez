@@ -1,6 +1,25 @@
-# Oyez — Design
+---
+id: 0001-oyez-design
+title: "Oyez's design"
+status: Accepted
+author:
+  - "Ian Cooper"
+created: 2026-10-23
+summary: "The whole design for Oyez: module boundaries, the announcement format, counting, rendering and validation, the publishing workflow, the platform APIs, the CLI, configuration and the GitHub Actions workflows."
+tags:
+  - "architecture"
+  - "cqrs"
+  - "publish"
+  - "configuration"
+---
 
-This design implements `requirements.md`. Requirement IDs (FR-x, NFR-x, AC-x) appear in brackets where a part of the design meets them.
+# 1. Oyez's design
+
+Date: 2026-10-23
+
+This ADR is Oyez's design document. It was written as one document before Oyez adopted Brighter's `specs/` layout, so it covers the whole design rather than one decision; later decisions get their own ADRs.
+
+This design implements [`requirements.md`](../../specs/0001-oyez/requirements.md). Requirement IDs (FR-x, NFR-x, AC-x) appear in brackets where a part of the design meets them.
 
 ## 1. Overview
 

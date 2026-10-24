@@ -4,7 +4,7 @@ This file holds the plan and current state of the work, so a new session can pic
 
 ## What Oyez is
 
-Oyez is a small C# tool that replaces Buffer for posting Brighter release announcements to X, Mastodon, LinkedIn and Write.as. You write an announcement once, as segments that each fit the smallest limit (X), and Oyez merges them into larger posts for the platforms with higher limits. See `intent.md` for the full background.
+Oyez is a small C# tool that replaces Buffer for posting Brighter release announcements to X, Mastodon, LinkedIn and Write.as. You write an announcement once, as segments that each fit the smallest limit (X), and Oyez merges them into larger posts for the platforms with higher limits. See [`intent.md`](specs/0001-oyez/intent.md) for the full background.
 
 ## Plan
 
@@ -12,10 +12,10 @@ We work step by step. Each step ends with the user reviewing the output before w
 
 | # | Step | Output | Status |
 |---|------|--------|--------|
-| 1 | Intent: capture the problem, goals and findings from the initial discussion | `intent.md` | Done |
-| 2 | Requirements: functional, non-functional and acceptance criteria, derived from the intent | `requirements.md` | Done |
-| 3 | Design: a C# design that meets the requirements | `design.md` | Done |
-| 4 | Tasks: an ordered, test-first task list; each task names the test that proves it is done | `tasks.md` | Done |
+| 1 | Intent: capture the problem, goals and findings from the initial discussion | `specs/0001-oyez/intent.md` | Done |
+| 2 | Requirements: functional, non-functional and acceptance criteria, derived from the intent | `specs/0001-oyez/requirements.md` | Done |
+| 3 | Design: a C# design that meets the requirements | `docs/adr/0001-oyez-design.md` (ADR 0001) | Done |
+| 4 | Tasks: an ordered, test-first task list; each task names the test that proves it is done | `specs/0001-oyez/tasks.md` | Done |
 | 5 | Code: implement the tasks in order, test first | `src/`, `tests/` | In progress |
 | 6 | Documentation: user documentation for setup and use | `README.md`, `docs/` | Not started |
 
@@ -32,14 +32,13 @@ We work step by step. Each step ends with the user reviewing the output before w
 
 ## Review gear
 
-**review-after**, for the rest of phase 1 onwards. The user approved T-2 and T-3 and asked to move a phase at a time, like Brighter's `/spec:gear review-after` and `/spec:ralph-implement`:
-- the main agent (Opus) works the phase's tasks in order, handing each task's Red→Green→Refactor cycle to a fresh sub-agent (Sonnet);
-- the sub-agent writes the test and code, but never commits or edits `tasks.md`. The main agent makes the `feat:`/`test:`/`refactor:` commit, then the `docs:` commit;
-- at the end of the phase, a sub-agent runs a code-smell review (Brighter's `/refactor:smells`), the fixes go in as `refactor:` commits, and the user reviews the phase as a batch before its PR.
+`specs/0001-oyez/.current-gear` → **review-after**, spec-wide, driver `ralph`. Downshift with `/spec:gear review-before`.
 
-Only the per-test approval pause is removed. RED first, the full suite before every commit, the two-commit shape and every convention in `CLAUDE.md` still apply. To go back to approving each test, the user says so; then remove this section.
+The user approved T-2 and T-3 test by test, then (2026-10-24) asked to move a phase at a time with sub-agents. Run a phase with `/spec:ralph-implement`: the main agent (Opus) picks each task in order and hands its Red→Green→Refactor cycle to a fresh Sonnet sub-agent, which never commits or edits `tasks.md`; the main agent makes the change commit and then the `docs:` tick. At the end of a phase, run `/refactor:smells`, make the fixes as `refactor:` commits, and the user reviews the phase as a batch before its PR. Only the per-test approval pause is removed: RED first, the full suite before every commit, the two-commit shape and every convention in `CLAUDE.md` still apply.
 
-Layout: planning documents at the repo root, code in `src/`, tests in `tests/`, user documentation in `README.md` and `docs/`.
+The gear file is untracked (`.gitignore`), so a fresh clone has no gear file and resolves to review-before; recreate it with `/spec:gear review-after` if this section says so.
+
+Layout: Brighter's spec layout — the spec in `specs/0001-oyez/` (`specs/.current-spec`), designs as ADRs in `docs/adr/`, code in `src/`, tests in `tests/`, user documentation in `README.md` and `docs/`. Agent instructions in `.agent_instructions/` and commands in `.claude/commands/`, copied from Brighter.
 
 ## Current state
 
@@ -71,11 +70,12 @@ Layout: planning documents at the repo root, code in `src/`, tests in `tests/`, 
 - T-4 to T-11 are done, in the review-after gear, by Sonnet sub-agents. Phase 1's tasks are complete (103 tests). The T-4 refactor (`IAmAChannelProfile`) came first, in its own commit.
 - The Phase 1 code-smell review (T-3 to T-11) found 13 code smells and 3 test smells. Ten were fixed as `refactor:` commits. Two are deferred: test boilerplate to T-12, and profiles' options lookup to T-28. The user chose: braces on any multi-line control statement; ALL_CAPS for static readonly lookup tables (both in `CLAUDE.md`); and moving `UsDollars` to `Costing`. `design.md` was brought in line with the code.
 - The review also found five behaviour gaps. The user made them tasks T-11a to T-11d, at the end of Phase 1, and all four are done (128 tests). T-11c's sub-agent wrote production code before its tests; RED was recovered by running the tests against the previous code, as its commit records. The gaps were: an announcement naming only disabled channels; an empty `channels:` value; duplicate header keys; the hand-typed emoji table (keycaps miscount on X; © and ® unverified); and no general post-over-its-channel's-limit check.
-- After the Phase 1 PR: import Brighter's `.agent_instructions` and `/spec`, `/bugfix`, `/refactor` commands (with `tdd`, `adr`, `test-infra`), adopting Brighter's `specs/` layout, on a separate branch. The user chose this on 2026-10-24.
+- Phase 1 is merged to `main` (PR #3).
+- Brighter's tooling is being imported on branch `import-brighter-tooling` (the user chose this on 2026-10-24): `.agent_instructions/` and the `spec`, `bugfix`, `refactor`, `tdd`, `adr` and `test-infra` commands, copied unchanged from BrighterCommand/Brighter@be197af in one commit and adapted to Oyez in the next (so a later sync can diff against upstream). `box_provisioning.md`, `generated_tests.md` and `.claude/settings.json` were left out. The planning documents moved into `specs/0001-oyez/`, with all three approval markers, and `design.md` became ADR 0001 (`docs/adr/0001-oyez-design.md`, with `docs/adr/index.md` generated from its frontmatter).
 - The GitHub repo `iancooper/Oyez` was made public on 2026-10-19 (it was still empty), so Actions minutes are free.
 
 ## Next action
 
-Push `phase-1-core-domain` and open the Phase 1 PR against `main` (the user approved this on 2026-10-24). After it merges, import Brighter's tooling on a new branch (see above).
+Finish the tooling import, ask before pushing, and open its PR. Then start Phase 2 (T-12) with `/spec:ralph-implement`, in the review-after gear; T-12 begins with the deferred test-boilerplate refactor.
 
-Open points for the user, from the review: error messages name channels by ID (`x`, `linkedin`), so a display name may be wanted; © ® ™ count 2 on X following Unicode's data, unconfirmed by twitter-text's conformance file.
+Open points for the user, from the Phase 1 review: error messages name channels by ID (`x`, `linkedin`), so a display name may be wanted; © ® ™ count 2 on X following Unicode's data, unconfirmed by twitter-text's conformance file.
