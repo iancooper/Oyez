@@ -23,8 +23,6 @@ THE SOFTWARE. */
 
 #endregion
 
-using System.Globalization;
-
 namespace Oyez.Core.Counting;
 
 internal static class EmojiRanges
@@ -34,29 +32,21 @@ internal static class EmojiRanges
 
     private static readonly string[] EMOJI_PROPERTIES = ["Extended_Pictographic", "Emoji_Presentation"];
 
-    private static readonly Lazy<(int Start, int End)[]> RANGES = new(Load);
+    private static readonly Lazy<CodePointRange[]> RANGES = new(Load);
 
     public static bool IsEmojiCluster(string cluster) =>
         cluster.EnumerateRunes().Any(rune => IsEmoji(rune.Value));
 
     private static bool IsEmoji(int codePoint) =>
-        codePoint == COMBINING_ENCLOSING_KEYCAP || RANGES.Value.Any(range => codePoint >= range.Start && codePoint <= range.End);
+        codePoint == COMBINING_ENCLOSING_KEYCAP || RANGES.Value.Any(range => range.Contains(codePoint));
 
     // The embedded data is Unicode's emoji-data.txt, version 18.0.0 (30 January 2026).
-    private static (int Start, int End)[] Load() =>
-        EmbeddedResource.ReadLines(RESOURCE_NAME).Select(ParseRange).OfType<(int Start, int End)>().ToArray();
+    private static CodePointRange[] Load() =>
+        EmbeddedResource.ReadLines(RESOURCE_NAME).Select(ParseRange).OfType<CodePointRange>().ToArray();
 
-    private static (int Start, int End)? ParseRange(string line)
+    private static CodePointRange? ParseRange(string line)
     {
         var fields = line.Split('#')[0].Split(';', StringSplitOptions.TrimEntries);
-        return fields.Length == 2 && EMOJI_PROPERTIES.Contains(fields[1]) ? ToRange(fields[0]) : null;
-    }
-
-    private static (int Start, int End) ToRange(string codePoints)
-    {
-        var bounds = codePoints.Split("..");
-        var start = int.Parse(bounds[0], NumberStyles.HexNumber, CultureInfo.InvariantCulture);
-        var end = int.Parse(bounds[^1], NumberStyles.HexNumber, CultureInfo.InvariantCulture);
-        return (start, end);
+        return fields.Length == 2 && EMOJI_PROPERTIES.Contains(fields[1]) ? CodePointRange.Parse(fields[0]) : null;
     }
 }
