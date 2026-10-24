@@ -53,5 +53,5 @@ internal static class ChannelProfileExtensions
             : [];
 
     private static ValidationError OverLimit(Announcement announcement, Segment segment, ChannelId channel, int limit) =>
-        new(announcement.Id, $"Segment {segment.Number} is over {channel}'s limit of {limit} characters. Shorten it, or split it into two segments.", channel, segment.Number);
+        new(announcement.Id, $"Segment {segment.Number} is over {channel.DisplayName}'s limit of {limit} characters. Shorten it, or split it into two segments.", channel, segment.Number);
 }

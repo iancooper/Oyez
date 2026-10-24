@@ -38,5 +38,5 @@ internal sealed class SinglePostPolicy : IAmARenderingPolicy
     private static IEnumerable<ValidationError> MoreThanOnePostErrors(Announcement announcement, Rendering rendering) =>
         rendering.Posts.Count == 1
             ? []
-            : [new ValidationError(announcement.Id, $"The {rendering.Channel} rendering doesn't fit in one post: it needs {rendering.Posts.Count}, and {rendering.Channel} takes one. Shorten the announcement, or remove {rendering.Channel} from 'channels'.", rendering.Channel)];
+            : [new ValidationError(announcement.Id, $"The {rendering.Channel.DisplayName} rendering doesn't fit in one post: it needs {rendering.Posts.Count}, and {rendering.Channel.DisplayName} takes one. Shorten the announcement, or remove {rendering.Channel} from 'channels'.", rendering.Channel)];
 }

@@ -37,6 +37,6 @@ internal sealed class DocumentPolicy : IAmARenderingPolicy
 
     private static IEnumerable<ValidationError> EmptyBodyErrors(Announcement announcement, Rendering rendering) =>
         rendering.Posts.All(post => string.IsNullOrWhiteSpace(post.Text))
-            ? [new ValidationError(announcement.Id, $"The {rendering.Channel} rendering has an empty body. Add text to the Markdown body, or remove it to build the body from the segments.", rendering.Channel)]
+            ? [new ValidationError(announcement.Id, $"The {rendering.Channel.DisplayName} rendering has an empty body. Add text to the Markdown body, or remove it to build the body from the segments.", rendering.Channel)]
             : [];
 }
