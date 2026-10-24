@@ -23,6 +23,8 @@ THE SOFTWARE. */
 
 #endregion
 
+using Oyez.Core.Announcements;
+
 namespace Oyez.Core.Channels;
 
 internal static class ChannelProfileExtensions
@@ -38,4 +40,12 @@ internal static class ChannelProfileExtensions
         var prepared = profile.Prepare(text);
         return new Post(index, prepared, profile.Counter.Count(prepared));
     }
+
+    public static IEnumerable<ValidationError> OverLimitSegments(this IAmAChannelProfile profile, Announcement announcement) =>
+        profile.Limit is { } limit
+            ? announcement.Segments.Where(segment => profile.Measure(segment.Text) > limit).Select(segment => OverLimit(announcement, segment, profile.Id, limit))
+            : [];
+
+    private static ValidationError OverLimit(Announcement announcement, Segment segment, ChannelId channel, int limit) =>
+        new(announcement.Id, $"Segment {segment.Number} is over {channel}'s limit of {limit} characters. Shorten it, or split it into two segments.", channel, segment.Number);
 }

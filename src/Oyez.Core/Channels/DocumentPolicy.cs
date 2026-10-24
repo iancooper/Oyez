@@ -33,7 +33,7 @@ internal sealed class DocumentPolicy : IAmARenderingPolicy
     public Rendering Render(Announcement announcement, IAmAChannelProfile profile) =>
         new(profile.Id, announcement.Title, profile.Limit, [profile.PostFor(announcement.WriteAsMarkdown ?? SegmentMerger.Join(announcement), 0)]);
 
-    public IEnumerable<ValidationError> Errors(Announcement announcement, Rendering rendering) =>
+    public IEnumerable<ValidationError> Errors(Announcement announcement, IAmAChannelProfile profile, Rendering rendering) =>
         rendering.Posts.All(post => string.IsNullOrWhiteSpace(post.Text))
             ? [new ValidationError(announcement.Id, $"The {rendering.Channel} rendering has an empty body. Add text to the Markdown body, or remove it to build the body from the segments.", rendering.Channel)]
             : [];

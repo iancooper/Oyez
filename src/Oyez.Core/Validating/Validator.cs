@@ -36,7 +36,7 @@ internal sealed class Validator(IEnumerable<IAmAChannelProfile> profiles, Render
     {
         var targeted = renderer.TargetedProfiles(announcement).ToList();
         return NoTargetErrors(announcement, targeted)
-            .Concat(SegmentErrors(announcement))
+            .Concat(UntargetedXErrors(announcement, targeted))
             .Concat(targeted.SelectMany(profile => RenderingErrors(announcement, profile)))
             .ToList();
     }
@@ -46,14 +46,9 @@ internal sealed class Validator(IEnumerable<IAmAChannelProfile> profiles, Render
             ? [new ValidationError(announcement.Id, "None of the channels this announcement targets is enabled, so nothing would be published. Enable one of them in configuration, or change the channels header.")]
             : [];
 
-    private IEnumerable<ValidationError> SegmentErrors(Announcement announcement) =>
-        _x.Limit is { } limit
-            ? announcement.Segments.Where(segment => _x.Measure(segment.Text) > limit).Select(segment => OverLimit(announcement, segment, limit))
-            : [];
-
-    private static ValidationError OverLimit(Announcement announcement, Segment segment, int limit) =>
-        new(announcement.Id, $"Segment {segment.Number} is over X's limit of {limit} characters. Shorten it, or split it into two segments.", ChannelId.X, segment.Number);
+    private IEnumerable<ValidationError> UntargetedXErrors(Announcement announcement, List<IAmAChannelProfile> targeted) =>
+        targeted.Any(profile => profile.Id == ChannelId.X) ? [] : _x.OverLimitSegments(announcement);
 
     private IEnumerable<ValidationError> RenderingErrors(Announcement announcement, IAmAChannelProfile profile) =>
-        profile.Policy.Errors(announcement, renderer.Render(announcement, profile));
+        profile.Policy.Errors(announcement, profile, renderer.Render(announcement, profile));
 }
