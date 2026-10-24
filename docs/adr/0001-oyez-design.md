@@ -166,7 +166,7 @@ X turns bare domains into links and counts them as 23 characters. If we didn't d
 | `XTextCounter` | Follows twitter-text configuration v3 [FR-2.1]. NFC-normalise. Replace each URL with 23 units. Split the rest into grapheme clusters (`StringInfo`). A cluster that is an emoji (it contains an `Extended_Pictographic` code point; the ranges are embedded) counts 2. Otherwise each code point counts 1 if it's in X's light ranges (U+0000–U+10FF, U+2000–U+200D, U+2010–U+201F, U+2032–U+2037), and 2 if not. |
 | `MastodonTextCounter` | Replace each `http(s)` URL with 23 units. Replace each `@user@domain` mention with `@user`. Then count grapheme clusters [FR-2.2]. |
 | `LinkedInTextCounter` | Count UTF-16 code units of the text after preparation (escaping, §4.5). This deliberately overcounts characters outside the Basic Multilingual Plane, so we stay safely under the limit [FR-2.3]. |
-| Write.as | Has no counter and no limit. |
+| Write.as | Counts UTF-16 code units, for display only. It has no limit by default, and a configured one is shown but never enforced. |
 
 The counters are internal. Their tests are the worked examples from the acceptance criteria (AC-3 and AC-4 for X, AC-5 for Mastodon), observed through the counts that the `PreviewAnnouncement` query reports.
 
@@ -181,29 +181,29 @@ internal interface IAmAChannelProfile
     IAmARenderingPolicy Policy { get; }  // ThreadPolicy | SinglePostPolicy | DocumentPolicy
     bool IsEnabled { get; }              // from configuration
     int? Limit { get; }                  // null = no limit
-    IAmATextCounter Counter { get; }     // Write.as counts code units, though it has no limit
+    IAmATextCounter Counter { get; }     // Write.as counts code units, for display only
     string Prepare(string text);         // LinkedIn escapes text; the others return it unchanged
 }
 
 internal interface IAmARenderingPolicy
 {
     Rendering Render(Announcement announcement, IAmAChannelProfile profile);
-    IEnumerable<ValidationError> Errors(Announcement announcement, Rendering rendering);
+    IEnumerable<ValidationError> Errors(Announcement announcement, IAmAChannelProfile profile);
 }
 ```
 
-Each policy renders and also reports the errors particular to its shape (§4.6), so neither the `Renderer` nor the `Validator` branches on the kind of channel.
+Each policy renders and also reports the errors particular to its shape (§4.6), so neither the `Renderer` nor the `Validator` branches on the kind of channel. A policy that needs the rendering to find its errors renders it itself. Callers don't reach through to the policy: internal extensions on the profile, `profile.Render(announcement)` and `profile.Errors(announcement)`, hand the profile to its own policy.
 
 | Profile | Policy | Limit (default, from `oyez.json`) |
 |---|---|---|
 | `XProfile` | Thread | 280 |
 | `MastodonProfile` | Thread | 2,263 |
 | `LinkedInProfile` | SinglePost | 3,000 |
-| `WriteAsProfile` | Document | none |
+| `WriteAsProfile` | Document | none (a configured limit is shown, not enforced) |
 
 ### 4.4 Rendering [FR-3]
 
-`Renderer.Render(Announcement, IAmAChannelProfile) → Rendering` (internal) delegates to the profile's policy; Thread and SinglePost share a `SegmentMerger`. Renderings come out in `ChannelId.All` order. Rendering is pure and deterministic [FR-3.5].
+The internal `Renderer` picks the targeted, enabled profiles and renders each with `profile.Render(announcement) → Rendering`, which delegates to the profile's policy; Thread and SinglePost share a `SegmentMerger`. Renderings come out in `ChannelId.All` order. Rendering is pure and deterministic [FR-3.5].
 
 - **Thread and SinglePost.** Merge segments greedily. Start with the first segment as the current post. For each following segment, form `candidate = current + "\n\n" + next`. If `Count(Prepare(candidate)) <= Limit`, the candidate becomes the current post. Otherwise, emit the current post and start a new one with `next` [FR-3.1–3.3].
   - X needs no special case [FR-3.4]. Segments are written close to 280 characters, so joining two almost always goes over the limit and each becomes its own post. If two short segments do fit together, they're merged, which saves a post. AC-8 uses segments of about 250 characters, so it gets one post per segment.
@@ -225,7 +225,7 @@ The text is counted after preparation [AC-10].
 
 - **Header errors** come from the parser: a missing title, a bad or zoneless time, an unknown channel or key, a key that appears twice, a line with no colon, an empty `channels:` value, no segments, an empty segment, or an ID that isn't a valid folder name.
 - **Nowhere to publish:** at least one targeted channel must be enabled in configuration.
-- **Segment check:** for each targeted Thread or SinglePost channel, every segment must fit the channel's limit, counted on the prepared text. X is checked even when it isn't targeted, because segments are always written to the strictest limit [AC-6]; it is reported once either way.
+- **Segment check:** for each targeted Thread or SinglePost channel, every segment must fit the channel's limit, counted on the prepared text. X is checked even when it isn't targeted or is disabled, because segments are always written to the strictest limit [AC-6]. The validator checks X's profile alongside the targeted ones, de-duplicated by channel, so X is reported once by construction. Document channels have no segment check, so a configured Write.as limit is never enforced.
 - **SinglePost check:** for each targeted channel with this policy, the rendering must have exactly one post.
 - **Document check:** a Write.as rendering must have a body that isn't empty. (A missing title is already a header error.)
 
