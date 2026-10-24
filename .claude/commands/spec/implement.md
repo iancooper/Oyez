@@ -1,0 +1,423 @@
+---
+allowed-tools: Bash(cat:*), Bash(test:*), Bash(ls:*), Bash(echo:*), Bash(dotnet:*), Bash(git:*), Read, Write, Edit, Glob, Grep, AskUserQuestion
+description: Start TDD implementation from approved tasks
+argument-hint: [task-number] [--review-before|--review-after]
+---
+
+## Context
+
+Current spec directory: specs/
+
+**Workflow**: Issue → Requirements → ADR(s) → Tasks → **Tests → Code**
+
+**TDD Cycle**: 🔴 Red → ✅ User Approval → 🟢 Green → 🔵 Refactor
+(the approval step is armed or not according to the **review gear** — see Step 1a)
+
+> **Recommended model: `sonnet`.** Unlike the other `/spec:*` commands, `/spec:implement`
+> does its work in the **main agent** (the interactive approval gate must reach the user),
+> so there is no sub-agent to assign a model to — the session model is what runs. This is
+> implementation work, which the model policy puts on **sonnet**. Step 0 below actively
+> prompts you to switch if the session is on another model. See
+> `.claude/commands/spec/README.md` → "Sub-agents & model policy".
+
+## Critical Guidelines
+
+**ALWAYS follow these instructions when writing code:**
+- **Testing**: [.agent_instructions/testing.md](../../../.agent_instructions/testing.md)
+- **Code Style**: [.agent_instructions/code_style.md](../../../.agent_instructions/code_style.md)
+
+## The review gear
+
+Whether the approval gate fires is the **gear** ([ADR 0071](https://github.com/BrighterCommand/Brighter/blob/be197af20d0beb3478d8b2877daa036c83946cc4/docs/adr/0071-tdd-review-gear.md),
+full reference in [`gear.md`](gear.md)):
+
+| Gear | Gate | Meaning |
+|------|------|---------|
+| `review-before` | ✅ armed | Stop after each test and get approval in the IDE before implementing. **The default.** |
+| `review-after` | ➖ not armed | Prove RED, then implement without pausing. Reviewed as a batch afterwards. |
+
+The gear is held in `specs/{current-spec}/.current-gear` — **gitignored** working state, per spec,
+optionally scoped to one section of `tasks.md`. It is shifted with `/spec:gear`, or with the
+`--review-before` / `--review-after` flags on this command, which write the same file.
+
+**`review-after` removes the approval pause and nothing else.** RED-first, the full regression suite,
+the two-commit shape, and every test-authoring convention hold in both gears. Do not let a gear shift
+quietly take anything else with it.
+
+## Your Task
+
+### Step 0: Confirm the Session Model
+
+`/spec:implement` is interactive implementation work and the model policy puts it on
+**sonnet**. Check the session's current model:
+
+- **If already on sonnet**: continue silently to Step 1.
+- **If on any other model** (e.g. opus, haiku): use `AskUserQuestion` to ask whether to
+  switch to sonnet before starting — e.g. "This session is on {model}. `/spec:implement` is
+  recommended on sonnet. Switch to sonnet first?" with options to **switch** (tell the user to
+  run `/model sonnet`, since a command can't change the session model itself) or **continue on
+  the current model**. Respect the choice; do not switch on their behalf, and do not block if
+  they decline.
+
+This is a one-time check at the start of the command.
+
+### Step 1: Gather Context
+
+1. Read `specs/.current-spec` to determine the active specification directory
+2. Verify `.tasks-approved` exists in that directory
+3. Read `specs/{current-spec}/tasks.md` to see task list
+4. Read `specs/{current-spec}/.adr-list` to see all ADRs
+5. Read ADRs from `docs/adr/` to understand design decisions
+6. Parse `$ARGUMENTS`: an optional task number, and an optional `--review-before` /
+   `--review-after` flag. If a task number was given, focus on that task only.
+
+### Step 1a: Resolve the Review Gear
+
+**Do this before writing anything, and re-resolve it before every task** (the gear can be shifted
+from another terminal mid-run).
+
+**If a flag was passed**, shift the gear first — this is sugar for `/spec:gear`, and writes the same
+file:
+
+- `--review-after` requires a reason. If the user did not give one in their message, ask for one
+  with `AskUserQuestion` and offer to scope it to a section of `tasks.md` (a heading's text, or a
+  `tasks N-M` range for a flat list). Then write
+  `specs/{current-spec}/.current-gear` with `gear: review-after`, the optional `scope:`,
+  `driver: implement`, and a `shifted:` line carrying today's date and the reason.
+- `--review-before` writes `gear: review-before` with a `shifted:` line (or deletes the file).
+
+**Then resolve**, using exactly this order (the canonical algorithm, also in
+[`gear.md`](gear.md) — do not improvise):
+
+1. No `.current-gear` in the spec directory → **`review-before`**.
+2. File present but unparseable, or `gear:` is not one of the two known values →
+   **`review-before`**, and say so out loud. Fail safe, never fail open.
+3. `scope:` present and the selected task falls **outside** it → **`review-before`**. A `scope:`
+   that matches nothing in `tasks.md` (renamed heading, range past the end) is rule 2, not "no
+   scope" — resolve to `review-before` and say the scope did not match. See [`gear.md`](gear.md) →
+   *Reading a `scope:`*; `tasks.md` files are not uniformly structured, so do not assume phases.
+4. Otherwise → the gear named in the file.
+
+**Announce the resolved gear** in one line before starting, e.g.
+
+```
+Gear: ➖ review-after  (specs/0027-…/.current-gear, scoped to "Phase 5 — Provider rejection tests")
+Since: 2026-09-13 — Phase 4's six tests were all approved unchanged; the shape is settled
+Shift down at any time with /spec:gear review-before — it takes effect at the next task.
+```
+
+or, in the default case, `Gear: ✅ review-before (default — approval gate armed)`.
+
+### Step 2: Verify Prerequisites
+
+Check that all phases are approved:
+- Requirements: `.requirements-approved` exists
+- Design: `.design-approved` exists and all ADRs have Status "Accepted"
+- Tasks: `.tasks-approved` exists
+
+If not all approved, inform user and exit.
+
+### Step 3: Select Task
+
+Display current incomplete tasks from tasks.md.
+
+If task number provided, work on that specific task.
+Otherwise, suggest the next logical task to work on.
+
+### Step 4: TDD Implementation Cycle
+
+For each task, follow this strict workflow:
+
+#### 🔴 RED: Write a Failing Test
+
+1. **Read Testing Guidelines**: Review [.agent_instructions/testing.md](../../../.agent_instructions/testing.md)
+
+2. **Understand the Behavior**: Identify the specific behavior this task requires
+   - What is the expected behavior?
+   - What is the simplest test that demonstrates this behavior?
+
+3. **Write the Test** following these rules from testing.md:
+   - **Test naming**: `When_[condition]_should_[expected_behavior]`
+   - **File naming**: Prefer one test case per file named `When_[condition]_should_[expected_behavior].cs`
+   - **Structure**: Use Arrange/Act/Assert with explicit comments
+   - **Evident Data**: Highlight the state that impacts the test outcome
+   - **Test behavior, not implementation**: Test public exports only
+   - **No mocks for isolation**: Use developer tests that implicate the most recent edit
+   - **Use in-memory implementations**: For I/O, use InMemory* classes (e.g., InMemoryMessageProducer)
+   - **Only test public exports**: Don't test private or internal methods
+
+4. **Create/Update Test File**: Use Write or Edit tool to create the test
+
+5. **Run the Test**: Use Bash to run: `dotnet test [test-project] --filter "FullyQualifiedName~When_[test_name]"`
+   - Verify the test FAILS (Red)
+   - The failure should be for the expected reason (behavior doesn't exist yet)
+   - **`CHARACTERISE` task, test passes on first run**: an earlier task already delivers the
+     behaviour — that is expected, not a reason to rewrite the test. Apply the task's **named RED
+     mutation** (a temporary change to *production* code, never to the test), confirm the test fails
+     **on the assertion the task names**, **revert the mutation**, and confirm green again. That is
+     RED observed. No named mutation, or a mutation that fails some other way, is a stop-and-ask.
+     A `CHARACTERISE` test that fails on first run is simply RED — continue as normal.
+
+6. **Show Test to User**:
+   - Display the test code
+   - Explain what behavior it tests
+   - Show the test failure output — for a characterisation test, the green-on-arrival run **and**
+     the failure observed under the mutation, with the mutation named and confirmed reverted
+   - Explain why this is the next logical step
+
+#### ✅ USER APPROVAL: Get Approval for Test
+
+**This step runs when the resolved gear is `review-before`** (the default). Re-check the gear here —
+do not rely on a value resolved several tasks ago.
+
+**CRITICAL**: Before writing any implementation code, you MUST:
+
+1. Use AskUserQuestion tool to ask: "I've written a failing test for [behavior]. The test verifies that [expected behavior]. Should I proceed to make this test pass?"
+   For a characterisation test (green on arrival, RED observed via mutation) there is nothing to
+   implement: ask instead "I've written a characterisation test for [behavior]; it went red under
+   [mutation] and the mutation is reverted. Should I commit it?". On approval, run the **full test
+   suite** for the affected project(s), then go to Step 5.
+
+2. Wait for user approval
+
+3. If user requests changes to the test:
+   - Make the requested changes
+   - Re-run the test to verify it still fails correctly
+   - Ask for approval again
+
+**DO NOT proceed to implementation without explicit user approval of the test.**
+
+##### When the gear is `review-after`
+
+Skip the pause — and **only** the pause:
+
+1. Confirm RED is already proved: the test ran and failed **for the right reason** — on arrival,
+   or, for a `CHARACTERISE` task, under its named mutation (reverted). If it has not, go back and
+   prove it. `review-after` never licenses writing implementation first.
+2. Print one line recording that the pause was skipped and why, e.g.
+   `➖ review-after (Phase 5) — proceeding to GREEN without pausing`.
+3. Proceed to GREEN — or, for a characterisation test with nothing to implement, run the full
+   suite for the affected project(s) and go to Step 5.
+
+**Stop and ask anyway** if the test asserts something the task did not ask for, needs a design
+decision you cannot make from the ADRs, or duplicates an existing test. `review-after` is a default
+for the routine case, not a gag order.
+
+#### 🟢 GREEN: Make the Test Pass
+
+1. **Read Code Style Guidelines**: Review [.agent_instructions/code_style.md](../../../.agent_instructions/code_style.md)
+
+2. **Write Minimum Code** to make the test pass:
+   - Only write code necessary for the test to pass
+   - No speculative code
+   - "Commit any sins necessary to move fast" - don't worry about perfect design yet
+   - That comes in the Refactor step
+
+3. **Follow Code Style** from code_style.md:
+   - Use .NET C# naming conventions (PascalCase for public, camelCase for private)
+   - Use ALL_CAPS for constants with underscores
+   - Use expression-bodied members for simple properties/methods
+   - Use readonly for fields that don't change after construction
+   - Enable nullable reference types
+   - Follow Responsibility Driven Design principles
+   - Avoid primitive obsession
+   - Comments: XML docs on public members only; no comments inside method bodies — extract a method to express intent; no issue/spec references, history or notes to a reviewer ([documentation.md § Comments in Code](../../../.agent_instructions/documentation.md#comments-in-code))
+
+4. **Create/Update Implementation Files**: Use Write or Edit tool
+
+5. **Run the Test Again**: `dotnet test [test-project] --filter "FullyQualifiedName~When_[test_name]"`
+   - Verify the test PASSES (Green)
+
+6. **Run All Tests**: `dotnet test` to ensure no regressions
+
+7. **Show Results to User**:
+   - Show what code was added/changed
+   - Show the test now passes
+   - Show all tests still pass
+
+#### 🔵 REFACTOR: Improve the Design
+
+1. **Review the Code** for design improvements:
+   - Is it tidy and simple?
+   - Can complexity be reduced?
+   - Are there any code smells (Fowler's catalogue, as listed in
+     [`/refactor:smells`](../refactor/smells.md))? Fix a smell here only if it is a small, in-cycle
+     tidy of the code this task added. Anything larger is left for the user to schedule: once a task or
+     a section of `tasks.md` is complete and green, they may opt to run `/refactor:smells`, which
+     schedules refactorings as `/tidy-first` runs or `STRUCTURAL` tasks. Do not run it on their behalf.
+   - Does it follow Responsibility Driven Design?
+   - Does it avoid primitive obsession?
+   - Are methods small and focused?
+   - Is there duplicated knowledge?
+   - Is intention revealed clearly?
+
+2. **Apply "Tidy First" Principles**:
+   - Separate structural changes from behavioral changes
+   - Make structural improvements (renaming, extracting methods, moving code)
+   - Don't change behavior during refactoring
+
+3. **Make Refactoring Changes**: Use Edit tool to improve the design
+   - Keep methods small and focused on single responsibility
+   - Extract methods if more than one level of indentation
+   - Use expressive types instead of primitives
+   - Distribute behavior appropriately
+
+4. **Run All Tests After Each Refactoring**: Verify no behavioral changes
+   - Tests should still pass
+   - If a test breaks, the refactoring changed behavior (rollback)
+
+5. **Show Refactoring to User**:
+   - Explain what was refactored and why
+   - Show the improved design
+   - Confirm all tests still pass
+
+### Step 5: Commit the Change — Two Commits
+
+After completing Red-Green-Refactor for a behavior. **The two-commit shape is required in both
+gears** — the behaviour and the bookkeeping are separate concerns, and a reviewer reading the
+history should see the behaviour commit without a task-list tick mixed into it.
+
+1. **Commit one — the behaviour.** Stage only the test and implementation files:
+   ```bash
+   git add [test-file] [implementation-files]
+   git commit -m "feat: [behavior description]
+
+   - Test: When_[condition]_should_[expected_behavior]
+   - Implementation: [brief description]
+
+   Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
+   ```
+   Use `test:` instead of `feat:` when the task added only a test — including a characterisation
+   test — and `fix:` for a bug fix. For a characterisation test, add a
+   `- Characterisation — RED observed via: [mutation]` line. **Before staging, run
+   `git status --porcelain`** and confirm no production file is still modified by a mutation.
+
+2. **Commit two — the bookkeeping.** Use Edit to check off the completed task in
+   `specs/{current-spec}/tasks.md`, then commit that **alone**:
+   ```bash
+   git add specs/{current-spec}/tasks.md
+   git commit -m "docs: mark task [N] complete
+
+   Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
+   ```
+
+Never stage `.current-gear` — it is gitignored working state, not part of the change.
+
+### Step 6: Continue to Next Behavior
+
+**Re-resolve the gear (Step 1a) before the next task.** The user may have shifted it from another
+terminal while you were working, and a downshift must take effect at the very next task.
+
+- **Gear `review-before`**: ask the user "This behavior is complete. Should I continue to the next
+  test, or would you like to review?" — if continue, return to Step 4; if review, show progress and
+  wait.
+- **Gear `review-after`**: continue straight to the next task under the gear's scope without asking.
+  Stop and hand back when any of these holds:
+  - the gear has been shifted to `review-before` (say so, and say which task you stopped at),
+  - the next task falls outside the gear's `scope:`,
+  - no unchecked tasks remain,
+  - a task failed and you could not resolve it.
+
+  For a long unattended run over many tasks, `/spec:ralph-implement` is the better driver — it is
+  the same `tasks.md`, with a run bound, a kill-switch and per-task sub-agents.
+
+## Important Reminders
+
+### Test-First Requirements
+
+- **NEVER write implementation before writing a failing test** — in either gear
+- **Get user approval of the test before implementing whenever the gear is `review-before`** (the
+  default). Only a deliberate, scoped, reasoned `review-after` gear removes that pause, and it
+  removes nothing else
+- Each test should represent the smallest possible behavioral step
+- The next test should be the most obvious step toward implementing the requirement
+
+### What `review-after` does NOT remove
+
+- **RED first** — the test is observed failing for the right reason before any production code
+- **The full regression suite** — not just the new test's own `--filter`
+- **The two-commit shape** — `feat:`/`test:` for the behaviour, then a separate `docs:` for the
+  task-list tick
+- **The test-authoring conventions** — TestDoubles one class per file; a distinct request type per
+  new test double so assembly scans do not collide; the application built through the test
+  project's `OyezApplicationHost`; `When_[condition]_should_[behavior]` naming; no mocks for
+  isolation; `InMemory*` for I/O
+
+### Code Quality Requirements
+
+- Follow ALL guidelines in .agent_instructions/testing.md
+- Follow ALL guidelines in .agent_instructions/code_style.md
+- Keep changes small and incremental
+- Each Red-Green-Refactor cycle should take minutes, not hours
+- Commit frequently (after each successful cycle)
+
+### Test Scope
+
+- Only test public exports from assemblies
+- Don't test private or internal implementation details
+- Use in-memory implementations (InMemory*) for I/O, not mocks
+- Tests should be coupled to behavior, not implementation
+
+### Design Principles
+
+- Responsibility Driven Design: Focus on "knowing", "doing", "deciding"
+- Distribute behavior: Make objects smart
+- Preserve flexibility: Interior details should be changeable
+- Avoid primitive obsession: Use expressive types
+- Keep methods small: Single responsibility, minimal indentation
+
+## Example Session
+
+```
+Gear: ✅ review-before (default — approval gate armed)
+
+🔴 RED Phase:
+Creating test: When_message_is_invalid_should_send_to_dead_letter_queue.cs
+[Shows test code]
+Test fails with: "Method SendToDeadLetterQueue not found"
+
+✅ USER APPROVAL:
+Asking: Should I proceed to make this test pass?
+User: Yes, proceed
+
+🟢 GREEN Phase:
+Adding SendToDeadLetterQueue method to KafkaMessageConsumer
+[Shows implementation]
+Test now passes ✓
+All tests pass ✓
+
+🔵 REFACTOR Phase:
+Extracting message validation to IsValidMessage method
+Renaming variable for clarity
+[Shows refactored code]
+All tests still pass ✓
+
+✓ Committed: feat: add dead letter queue for invalid messages
+✓ Committed: docs: mark task 7 complete
+
+Ready for next behavior!
+```
+
+### The same task in `review-after`
+
+```
+Gear: ➖ review-after (specs/0027-…/.current-gear, scoped to "Phase 5 — Provider rejection tests")
+Since: 2026-09-13 — Phase 4's six tests were all approved unchanged; the shape is settled
+Shift down at any time with /spec:gear review-before — it takes effect at the next task.
+
+🔴 RED Phase:
+Creating test: When_message_is_invalid_should_send_to_dead_letter_queue.cs
+Test fails with: "Method SendToDeadLetterQueue not found"   ← RED proved
+
+➖ review-after (Phase 5) — proceeding to GREEN without pausing
+
+🟢 GREEN Phase: … test passes ✓ full suite passes ✓
+🔵 REFACTOR Phase: … all tests still pass ✓
+
+✓ Committed: feat: add dead letter queue for invalid messages
+✓ Committed: docs: mark task 7 complete
+
+Next task is task 8, still in Phase 5 — continuing.
+```
+
+Use Read, Write, Edit, Bash, and AskUserQuestion tools throughout the implementation process.

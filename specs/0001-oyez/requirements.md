@@ -1,6 +1,6 @@
 # Oyez — Requirements
 
-These requirements come from `intent.md`. Each one has an ID so that `design.md` and `tasks.md` can refer to it.
+These requirements come from `intent.md`. Each one has an ID so that the design ([ADR 0001](../../docs/adr/0001-oyez-design.md)) and `tasks.md` can refer to it.
 
 **Priority** uses MoSCoW:
 - **Must** — needed before we can cancel Buffer.

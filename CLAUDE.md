@@ -1,14 +1,18 @@
 # Oyez — instructions for agents
 
-Read `PROMPT.md` first. It holds the plan, the current state and the next action. The planning documents are `intent.md`, `requirements.md`, `design.md` and `tasks.md`.
+Read `PROMPT.md` first. It holds the plan, the current state and the next action.
 
-Oyez follows Brighter's agent instructions: <https://github.com/BrighterCommand/Brighter/tree/master/.agent_instructions>. Read `code_style.md`, `design_principles.md`, `testing.md` and the "Comments in Code" and "Licensing" sections of `documentation.md`. This file summarises them as they apply to Oyez, and records where Oyez differs. Where this file and Brighter's instructions disagree, this file wins.
+Oyez uses Brighter's spec layout. The current spec is named in `specs/.current-spec` (today `specs/0001-oyez/`, which holds `intent.md`, `requirements.md` and `tasks.md`, with its approval markers). Designs are ADRs in `docs/adr/`; Oyez's design is [ADR 0001](docs/adr/0001-oyez-design.md), and `§` numbers in the tasks refer to its sections.
+
+Oyez follows Brighter's agent instructions, copied into `.agent_instructions/`. Read `code_style.md`, `design_principles.md`, `testing.md` and the "Comments in Code" and "Licensing" sections of `documentation.md`. This file summarises them as they apply to Oyez, and records where Oyez differs. Where this file and `.agent_instructions/` disagree, this file wins.
+
+Brighter's commands are copied into `.claude/commands/`: `/spec:*` (requirements, design, tasks, approve, implement, ralph-implement, gear, review, status), `/bugfix:*`, `/refactor:*` (smells, tidy-first, tidy-comments), `/tdd:test-first` and `/adr`. They came from BrighterCommand/Brighter@be197af; the commit that adapted them to Oyez shows every local change, so a later sync can reapply it. `/test-infra` (Brighter's broker containers), `box_provisioning.md` and `generated_tests.md` were left out, and `/spec:show-me` (with its script and fixtures) is parked; see the backlog in `tasks.md`.
 
 ## Workflow
 
 - **Test first, with an approval gate.** For each behaviour:
   1. Write the failing test.
-  2. **Stop and ask the user to approve the test** before running it or writing any production code. The exception is when `PROMPT.md` sets the review gear to **review-after**: then the user reviews the phase as a batch at its end, and this pause is the only thing dropped.
+  2. **Stop and ask the user to approve the test** before running it or writing any production code. The exception is when the review gear is **review-after** (`specs/<current spec>/.current-gear`, set with `/spec:gear`, untracked; `PROMPT.md` notes it): then the user reviews the phase as a batch at its end, and this pause is the only thing dropped.
   3. Once approved, watch it fail for the right reason, then write the least code that makes it pass.
   4. Refactor.
 - **A test that passes first time** hasn't shown it can fail. Don't weaken it. Instead, apply a named mutation to *production* code, see the test fail on its assertion, revert the mutation, and say in the commit message which mutation you used.
@@ -18,7 +22,7 @@ Oyez follows Brighter's agent instructions: <https://github.com/BrighterCommand/
   - Structural changes (`refactor:`) never share a commit with behavioural ones, and come first ("Tidy First").
   - Run the full test suite before every commit.
 - **Look for code smells after each phase**, and refactor before opening the phase's PR.
-- **Pace.** Stop after each task for review until the user approves the approach, then work a phase at a time. `PROMPT.md` records the current pace.
+- **Pace.** Stop after each task for review until the user approves the approach, then work a phase at a time. The review gear records the current pace.
 - **Ask before pushing, merging or deleting branches.**
 
 ## Design

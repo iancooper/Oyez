@@ -1,0 +1,79 @@
+# Design Principles
+
+- Use Responsibility-Driven Design
+    - Focus on the responsibilities that a class has.
+    - "Responsibility-driven design specifies object behavior before object structure and other implementation considerations are determined. We have found that it minimizes the rework required for major design changes."
+    - Maximize Abstraction
+        - Elide the distinction between data and behavior.
+        - Think of responsibilities for "knowing", "doing", and "deciding"
+    - Distribute Behavior
+        - Promote a delegated control architecture
+        - Make objects smart— give them behaviors, not just data
+    - Preserve Flexibility
+        - Design objects so interior details can be readily changed
+    - Objects have roles.
+        - A role is the collection of an object's responsibilities, expressed as one phrase saying what the object does.
+        - If you cannot express it in one phrase, the object has too many responsibilities. Responsibility-driven design restates the single responsibility principle as the **single role principle**.
+        - An object may hold several responsibilities, and they may be of different kinds — knowing, doing and deciding.
+        - Common roles are stereotypes: information holder, structurer, service provider, coordinator, controller, interfacer
+        - Name an object's **collaborators** — the objects it works with to meet its responsibilities. Describing a role without them is half the picture, and a responsibility with no collaborator is either self-contained or in the wrong object.
+- Support optionality through interfaces.
+    - If an interface describes a role that an implementor provides, use the naming convention IAmA* e.g. `public interface IAmAProducerRegistry { }`
+    - Consider if a user might wish to override our implementation of a public class with theirs, for TDD, or extension.
+    - If so, provide an interface for them to override.
+    - It is acceptable in that case to use an interface, even if we have one implementation.
+    - For internal classes, only provide an interface if there is optionality.
+- When multiple implementations of one service type are meant to run **alongside** each other
+  rather than replace one another (e.g. a core validator plus an add-on package's validator, both
+  under `IAmAPipelineValidator`), the registration and resolution sides must agree, or the failure
+  is silent:
+    - **Registration**: register the "default"/first implementation with `TryAddSingleton<TService>`
+      (so an application can still substitute its own), and register each additional implementation
+      meant to run *beside* it with plain `AddSingleton<TService>` — never `TryAdd` for the
+      additional ones, since `TryAdd` tests the service type and will refuse to add a second
+      implementation of it.
+    - **Resolution**: every caller must resolve via `IEnumerable<TService>` /
+      `provider.GetServices<TService>()` and combine the results. A caller that resolves a single
+      instance via `GetService<TService>()`/`GetRequiredService<TService>()` silently gets
+      **whichever implementation was registered last** — Microsoft.Extensions.DependencyInjection's
+      unkeyed resolution is last-registration-wins, with no error, warning, or exception. This is
+      easy to get right in new call sites and just as easy to miss in existing ones (tests
+      especially) when a second implementation is added later.
+    - This is a deliberate, ADR-sanctioned pattern (see
+      [ADR 0074](https://github.com/BrighterCommand/Brighter/blob/be197af20d0beb3478d8b2877daa036c83946cc4/docs/adr/0074-lifetime-validation-evaluation-site.md)), not something to avoid —
+      but treat adding a second implementation under an existing service type as a breaking change
+      that requires sweeping **every** call site (`grep` for `GetService<TService>()` and
+      `GetRequiredService<TService>()` repo-wide, including tests) to the multi-resolve pattern, not
+      just the production call sites you touched.
+- Decide visibility by what belongs on the package boundary.
+    - A type is `public` if it belongs on its package's boundary — to be **used** from outside the assembly, or to be **tested** from outside it.
+    - A type is `internal` only when nothing outside its own assembly has a consumer for it. That is the exception, not the default: the great majority of types in `src/` are public.
+    - Our test projects are separate assemblies, so a type that needs a test of its own is on the boundary by that fact alone.
+    - **Never use `InternalsVisibleTo` to reach across packages.** There is no such attribute anywhere in this solution and none should be added: it hides a boundary type instead of admitting it is one. If a type must be reached from another assembly, make it public; if it genuinely must not be, do not write a test that needs to name it.
+    - Where the type belongs on the boundary but its construction does not, prefer a `public` type with an `internal` constructor over making the whole type `internal`.
+    - Making a type public is a decision to support it. Say in XML documentation what it is for, and where it is public for our own reach rather than for an application's use, say that in `<remarks>`.
+- Avoid primitive obsession.
+    - Where a primitive (string, int, bool, double, float etc.) could be replaced with a more expressive type, use a class, struct or record.
+    - Only use int for numeric values that have no domain meaning; only use string for string values that have no domain meaning.
+    - Where we need to serialize, or for interoperability, you may use primitive types as part of that serialization, instead of writing convertors, for simplicity.
+- Principles
+    - Tidy is better than cluttered.
+    - Reveal intention; be explicit to support future readers.
+    - Prefer simplicity.
+    - Do not duplicate knowledge.
+    - Avoid having more than one level of indentation in a method.
+    - Do not add new types without necessity.
+    - There should be one-- and preferably only one --obvious way to do it.
+    - If the implementation is hard to explain, it's a bad idea.
+    - Keep methods small and focused on a single responsibility
+- Follow Beck's "Tidy First" approach by separating structural changes from behavioral changes
+    - **Recommended Tool**: Use the `/tidy-first <description>` command (see [.claude/commands/refactor/tidy-first.md](../../.claude/commands/refactor/tidy-first.md)) to enforce this workflow automatically
+    - Separate all changes into two distinct types:
+        - STRUCTURAL CHANGES: Rearranging code without changing behavior (renaming, extracting methods, moving code)
+        - BEHAVIORAL CHANGES: Adding or modifying actual functionality
+    - Never mix structural and behavioral changes in the same commit
+    - Always make structural changes first when both are needed
+    - Validate structural changes do not alter behavior by running tests before and after
+- Not all of our code follows these conventions.
+    - Some of our older code uses older conventions.
+    - Follow the boy scout rule, and fix these, as part of your work.

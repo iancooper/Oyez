@@ -6,7 +6,7 @@
 
 Oyez announces new releases of [Brighter](https://github.com/BrighterCommand) on X, Mastodon, LinkedIn and Write.as. It replaces Buffer at a fraction of the cost.
 
-> **Status: in development.** The design is complete and the build has started, but Oyez can't post anything yet. Progress is tracked in [`tasks.md`](tasks.md).
+> **Status: in development.** The design is complete and the build has started, but Oyez can't post anything yet. Progress is tracked in [`tasks.md`](specs/0001-oyez/tasks.md).
 
 ## Why
 
@@ -79,10 +79,10 @@ These planning documents describe it in full:
 
 | Document | Contents |
 |---|---|
-| [`intent.md`](intent.md) | The problem, the goals, the costs, and the decisions made |
-| [`requirements.md`](requirements.md) | Functional and non-functional requirements, and acceptance criteria |
-| [`design.md`](design.md) | The architecture, the announcement format, the platform APIs, and the GitHub Actions workflows |
-| [`tasks.md`](tasks.md) | The build plan: test-first tasks, each with the test that proves it |
+| [`intent.md`](specs/0001-oyez/intent.md) | The problem, the goals, the costs, and the decisions made |
+| [`requirements.md`](specs/0001-oyez/requirements.md) | Functional and non-functional requirements, and acceptance criteria |
+| [ADR 0001](docs/adr/0001-oyez-design.md) | The architecture, the announcement format, the platform APIs, and the GitHub Actions workflows |
+| [`tasks.md`](specs/0001-oyez/tasks.md) | The build plan: test-first tasks, each with the test that proves it |
 | [`PROMPT.md`](PROMPT.md) | The current working state, for picking up where work stopped |
 
 ## Licence
