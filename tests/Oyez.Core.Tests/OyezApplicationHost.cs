@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Oyez.Core.Announcements;
 using Oyez.Core.Application;
+using Oyez.Core.Configuration;
 using Paramore.Darker;
 
 namespace Oyez.Core.Tests;
@@ -17,13 +18,13 @@ public sealed class OyezApplicationHost : IDisposable
 {
     private readonly ServiceProvider _provider;
 
-    public OyezApplicationHost()
+    public OyezApplicationHost(Action<OyezOptions>? configure = null)
     {
         _provider = new ServiceCollection()
             .AddLogging()
             .AddSingleton<ILoggerFactory>(NullLoggerFactory.Instance)
             .AddSingleton<IAmAnAnnouncementStore>(Announcements)
-            .AddOyezApplication()
+            .AddOyezApplication(configure)
             .BuildServiceProvider();
     }
 

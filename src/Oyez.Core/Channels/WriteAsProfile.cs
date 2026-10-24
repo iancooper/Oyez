@@ -32,4 +32,5 @@ internal sealed class WriteAsProfile : IAmAChannelProfile
     public ChannelId Id => ChannelId.WriteAs;
     public RenderingPolicy Policy => RenderingPolicy.Document;
     public IAmATextCounter Counter { get; } = new CodeUnitTextCounter();
+    public string Prepare(string text) => text;
 }

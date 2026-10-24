@@ -23,13 +23,30 @@ THE SOFTWARE. */
 
 #endregion
 
+using System.Text.RegularExpressions;
+using Oyez.Core.Configuration;
 using Oyez.Core.Counting;
 
 namespace Oyez.Core.Channels;
 
-internal sealed class LinkedInProfile : IAmAChannelProfile
+internal sealed partial class LinkedInProfile(OyezOptions options) : IAmAChannelProfile
 {
     public ChannelId Id => ChannelId.LinkedIn;
     public RenderingPolicy Policy => RenderingPolicy.SinglePost;
     public IAmATextCounter Counter { get; } = new CodeUnitTextCounter();
+
+    public string Prepare(string text) =>
+        (options.LinkedIn.ConvertHashtags ? HashtagsAndReservedCharacters() : ReservedCharacters())
+            .Replace(text, ConvertOrEscape);
+
+    private static string ConvertOrEscape(Match match) =>
+        match.Groups["tag"].Success
+            ? $"{{hashtag|\\#|{match.Groups["tag"].Value}}}"
+            : $"\\{match.Value}";
+
+    [GeneratedRegex(@"(?<![\p{L}\p{N}_])#(?<tag>[\p{L}\p{N}_]+)|[\\|{}@\[\]()<>#*_~]")]
+    private static partial Regex HashtagsAndReservedCharacters();
+
+    [GeneratedRegex(@"[\\|{}@\[\]()<>#*_~]")]
+    private static partial Regex ReservedCharacters();
 }

@@ -32,4 +32,5 @@ internal sealed class XProfile : IAmAChannelProfile
     public ChannelId Id => ChannelId.X;
     public RenderingPolicy Policy => RenderingPolicy.Thread;
     public IAmATextCounter Counter { get; } = new XTextCounter();
+    public string Prepare(string text) => text;
 }

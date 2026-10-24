@@ -47,6 +47,9 @@ internal sealed class Renderer(IEnumerable<IAmAChannelProfile> profiles)
     private static Rendering RenderPosts(Announcement announcement, IAmAChannelProfile profile) =>
         new(profile.Id, null, announcement.Segments.Select((segment, index) => NewPost(profile, index, segment.Text)).ToList());
 
-    private static Post NewPost(IAmAChannelProfile profile, int index, string text) =>
-        new(index, text, profile.Counter.Count(text));
+    private static Post NewPost(IAmAChannelProfile profile, int index, string text)
+    {
+        var prepared = profile.Prepare(text);
+        return new Post(index, prepared, profile.Counter.Count(prepared));
+    }
 }

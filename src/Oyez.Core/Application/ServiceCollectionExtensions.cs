@@ -26,6 +26,7 @@ THE SOFTWARE. */
 using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
 using Oyez.Core.Channels;
+using Oyez.Core.Configuration;
 using Oyez.Core.Previewing;
 using Paramore.Brighter.Extensions.DependencyInjection;
 using Paramore.Darker;
@@ -43,9 +44,14 @@ public static class ServiceCollectionExtensions
     /// and query handler in Oyez.Core. All requests are handled in-process.
     /// </summary>
     /// <param name="services">The <see cref="IServiceCollection"/> to register with.</param>
+    /// <param name="configure">Optionally changes the default <see cref="OyezOptions"/>.</param>
     /// <returns>The same <see cref="IServiceCollection"/>, for chaining.</returns>
-    public static IServiceCollection AddOyezApplication(this IServiceCollection services)
+    public static IServiceCollection AddOyezApplication(this IServiceCollection services, Action<OyezOptions>? configure = null)
     {
+        var options = new OyezOptions();
+        configure?.Invoke(options);
+        services.AddSingleton(options);
+
         var core = typeof(ServiceCollectionExtensions).Assembly;
 
         services.AddBrighter().AutoFromAssemblies([core]);

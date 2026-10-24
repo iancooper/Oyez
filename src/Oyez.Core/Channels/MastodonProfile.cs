@@ -32,4 +32,5 @@ internal sealed class MastodonProfile : IAmAChannelProfile
     public ChannelId Id => ChannelId.Mastodon;
     public RenderingPolicy Policy => RenderingPolicy.Thread;
     public IAmATextCounter Counter { get; } = new MastodonTextCounter();
+    public string Prepare(string text) => text;
 }
