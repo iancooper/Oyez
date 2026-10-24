@@ -45,9 +45,10 @@ Oyez follows Brighter's agent instructions: <https://github.com/BrighterCommand/
 ## Code style
 
 - Follow Microsoft's C# naming conventions, except:
-  - constants are `ALL_CAPS_WITH_UNDERSCORES`;
+  - constants are `ALL_CAPS_WITH_UNDERSCORES`, and so are `static readonly` lookup tables that never change, such as `KNOWN_KEYS` or `LIGHT_RANGES`;
   - Microsoft's Framework Design Guidelines are *not* followed.
 - Prefer primary constructors, expression-bodied members and `readonly` fields.
+- Use braces for any control statement (`if`, `else`, `foreach`, `while`) that spans more than one line.
 - Nullable reference types are on. Make a type nullable to show that it's optional.
 - Use one type per file, unless one type is clearly a detail of another.
 - Suffix async methods with `Async`.
