@@ -60,16 +60,8 @@ internal sealed class Validator(IEnumerable<IAmAChannelProfile> profiles, Render
             ? []
             : [new ValidationError(announcement.Id, $"The {rendering.Channel} rendering doesn't fit in one post: it needs {rendering.Posts.Count}, and {rendering.Channel} takes one. Shorten the announcement, or remove {rendering.Channel} from 'channels'.", rendering.Channel)];
 
-    private static IEnumerable<ValidationError> DocumentErrors(Announcement announcement, Rendering rendering)
-    {
-        if (string.IsNullOrWhiteSpace(rendering.Title))
-        {
-            yield return new ValidationError(announcement.Id, $"The {rendering.Channel} rendering has no title.", rendering.Channel);
-        }
-
-        if (rendering.Posts.All(post => string.IsNullOrWhiteSpace(post.Text)))
-        {
-            yield return new ValidationError(announcement.Id, $"The {rendering.Channel} rendering has an empty body. Add text to the Markdown body, or remove it to build the body from the segments.", rendering.Channel);
-        }
-    }
+    private static IEnumerable<ValidationError> DocumentErrors(Announcement announcement, Rendering rendering) =>
+        rendering.Posts.All(post => string.IsNullOrWhiteSpace(post.Text))
+            ? [new ValidationError(announcement.Id, $"The {rendering.Channel} rendering has an empty body. Add text to the Markdown body, or remove it to build the body from the segments.", rendering.Channel)]
+            : [];
 }
