@@ -30,5 +30,6 @@ namespace Oyez.Core.Channels;
 /// </summary>
 /// <param name="Channel">The <see cref="ChannelId"/> the posts are for.</param>
 /// <param name="Title">The post's title, for channels that have titles (Write.as); otherwise <c>null</c>.</param>
+/// <param name="Limit">The most characters a post may have on the channel, or <c>null</c> if it has no limit.</param>
 /// <param name="Posts">The <see cref="Post"/>s, in publishing order. A thread has more than one.</param>
-public sealed record Rendering(ChannelId Channel, string? Title, IReadOnlyList<Post> Posts);
+public sealed record Rendering(ChannelId Channel, string? Title, int? Limit, IReadOnlyList<Post> Posts);

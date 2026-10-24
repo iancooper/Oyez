@@ -23,14 +23,17 @@ THE SOFTWARE. */
 
 #endregion
 
+using Oyez.Core.Configuration;
 using Oyez.Core.Counting;
 
 namespace Oyez.Core.Channels;
 
-internal sealed class XProfile : IAmAChannelProfile
+internal sealed class XProfile(OyezOptions options) : IAmAChannelProfile
 {
     public ChannelId Id => ChannelId.X;
     public RenderingPolicy Policy => RenderingPolicy.Thread;
+    public bool IsEnabled => options.X.Enabled;
+    public int? Limit => options.X.Limit;
     public IAmATextCounter Counter { get; } = new XTextCounter();
     public string Prepare(string text) => text;
 }

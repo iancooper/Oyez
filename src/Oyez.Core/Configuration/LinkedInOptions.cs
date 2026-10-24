@@ -28,7 +28,7 @@ namespace Oyez.Core.Configuration;
 /// <summary>
 /// The settings for the LinkedIn channel.
 /// </summary>
-public sealed class LinkedInOptions
+public sealed class LinkedInOptions : ChannelOptions
 {
     /// <summary>
     /// Gets or sets whether <c>#word</c> becomes LinkedIn's clickable hashtag template. When <c>false</c>, the

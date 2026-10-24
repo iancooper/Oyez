@@ -33,6 +33,8 @@ internal sealed partial class LinkedInProfile(OyezOptions options) : IAmAChannel
 {
     public ChannelId Id => ChannelId.LinkedIn;
     public RenderingPolicy Policy => RenderingPolicy.SinglePost;
+    public bool IsEnabled => options.LinkedIn.Enabled;
+    public int? Limit => options.LinkedIn.Limit;
     public IAmATextCounter Counter { get; } = new CodeUnitTextCounter();
 
     public string Prepare(string text) =>

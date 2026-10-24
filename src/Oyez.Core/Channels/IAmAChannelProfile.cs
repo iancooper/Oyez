@@ -31,6 +31,8 @@ internal interface IAmAChannelProfile
 {
     ChannelId Id { get; }
     RenderingPolicy Policy { get; }
+    bool IsEnabled { get; }
+    int? Limit { get; }
     IAmATextCounter Counter { get; }
     string Prepare(string text);
 }

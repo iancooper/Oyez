@@ -32,7 +32,7 @@ internal sealed class Renderer(IEnumerable<IAmAChannelProfile> profiles)
 {
     public IReadOnlyList<Rendering> RenderTargetedChannels(Announcement announcement) =>
         profiles
-            .Where(profile => announcement.Channels.Contains(profile.Id))
+            .Where(profile => profile.IsEnabled && announcement.Channels.Contains(profile.Id))
             .Select(profile => Render(announcement, profile))
             .ToList();
 
@@ -42,10 +42,10 @@ internal sealed class Renderer(IEnumerable<IAmAChannelProfile> profiles)
             : RenderPosts(announcement, profile);
 
     private static Rendering RenderDocument(Announcement announcement, IAmAChannelProfile profile) =>
-        new(profile.Id, announcement.Title, [NewPost(profile, 0, announcement.WriteAsMarkdown ?? string.Empty)]);
+        new(profile.Id, announcement.Title, profile.Limit, [NewPost(profile, 0, announcement.WriteAsMarkdown ?? string.Empty)]);
 
     private static Rendering RenderPosts(Announcement announcement, IAmAChannelProfile profile) =>
-        new(profile.Id, null, announcement.Segments.Select((segment, index) => NewPost(profile, index, segment.Text)).ToList());
+        new(profile.Id, null, profile.Limit, announcement.Segments.Select((segment, index) => NewPost(profile, index, segment.Text)).ToList());
 
     private static Post NewPost(IAmAChannelProfile profile, int index, string text)
     {

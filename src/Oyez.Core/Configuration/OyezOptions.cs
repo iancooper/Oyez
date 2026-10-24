@@ -31,7 +31,26 @@ namespace Oyez.Core.Configuration;
 public sealed class OyezOptions
 {
     /// <summary>
+    /// Gets the settings for the X channel.
+    /// </summary>
+    /// <value>Enabled, with a limit of 280.</value>
+    public ChannelOptions X { get; } = new() { Limit = 280 };
+
+    /// <summary>
+    /// Gets the settings for the Mastodon channel.
+    /// </summary>
+    /// <value>Enabled, with a limit of 2,263.</value>
+    public ChannelOptions Mastodon { get; } = new() { Limit = 2263 };
+
+    /// <summary>
     /// Gets the settings for the LinkedIn channel.
     /// </summary>
-    public LinkedInOptions LinkedIn { get; } = new();
+    /// <value>Enabled, with a limit of 3,000.</value>
+    public LinkedInOptions LinkedIn { get; } = new() { Limit = 3000 };
+
+    /// <summary>
+    /// Gets the settings for the Write.as channel.
+    /// </summary>
+    /// <value>Enabled, with no limit.</value>
+    public ChannelOptions WriteAs { get; } = new();
 }
