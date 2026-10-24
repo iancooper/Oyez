@@ -150,7 +150,7 @@ Parsing, counting, rendering and validation are internal to `Oyez.Core`. Every t
   - `When_a_channel_is_disabled_should_not_preview_it`
 - **Done when:** the tests pass.
 
-### [ ] T-9 Merge segments into posts
+### [x] T-9 Merge segments into posts
 - **Covers:** FR-3.1–3.5, FR-1.5, §4.4
 - **Tests (Core):** observed as the renderings in the preview.
   - `When_segments_do_not_fit_together_should_start_a_new_post` (AC-7): three segments of 200 characters with a limit of 450 give posts of 402 and 200 characters
