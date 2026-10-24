@@ -213,7 +213,7 @@ Parsing, counting, rendering and validation are internal to `Oyez.Core`. Every t
   - `When_a_segment_is_over_xs_limit_should_report_it_once`: the segment check and the post check don't both report it
 - **Done when:** the tests pass.
 
-### [ ] T-11e Channels named for people in messages
+### [x] T-11e Channels named for people in messages
 - **Covers:** FR-5.2
 - **Found by:** the Phase 1 code-smell review after the phase was merged. Since T-11d, messages name a channel by its configuration key ("over x's limit", "The linkedin rendering", "The writeas rendering"). Messages about the `channels` header keep the keys, because those are what the user types.
 - **Builds:** an internal display name on each channel (X, Mastodon, LinkedIn, Write.as), used in rendering and limit messages.
