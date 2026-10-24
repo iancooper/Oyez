@@ -23,6 +23,9 @@ THE SOFTWARE. */
 
 #endregion
 
+using System.Security.Cryptography;
+using System.Text;
+
 namespace Oyez.Core.Channels;
 
 /// <summary>
@@ -32,4 +35,11 @@ namespace Oyez.Core.Channels;
 /// <param name="Title">The post's title, for channels that have titles (Write.as); otherwise <c>null</c>.</param>
 /// <param name="Limit">The most characters a post may have on the channel, or <c>null</c> if it has no limit.</param>
 /// <param name="Posts">The <see cref="Post"/>s, in publishing order. A thread has more than one.</param>
-public sealed record Rendering(ChannelId Channel, string? Title, int? Limit, IReadOnlyList<Post> Posts);
+public sealed record Rendering(ChannelId Channel, string? Title, int? Limit, IReadOnlyList<Post> Posts)
+{
+    /// <summary>
+    /// Gets a fingerprint of the post texts, in the form <c>sha256:</c> followed by lower-case hexadecimal.
+    /// </summary>
+    /// <value>The same hash for the same posts, and a different hash if any post's text, or the order of posts, changes.</value>
+    public string Hash => $"sha256:{Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(string.Join('\0', Posts.Select(post => post.Text)))))}";
+}

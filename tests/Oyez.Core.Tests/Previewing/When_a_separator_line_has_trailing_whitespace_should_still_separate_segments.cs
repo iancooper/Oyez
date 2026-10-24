@@ -6,7 +6,7 @@ namespace Oyez.Core.Tests.Previewing;
 
 public class PreviewSeparatorTests : IDisposable
 {
-    private readonly OyezApplicationHost _host = new();
+    private readonly OyezApplicationHost _host = new(options => options.X.Limit = 5);
     private readonly AnnouncementId _id = new("2026-11-03-brighter-10-3-0");
 
     [Fact]
