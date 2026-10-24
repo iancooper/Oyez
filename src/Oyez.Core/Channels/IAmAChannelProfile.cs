@@ -23,10 +23,13 @@ THE SOFTWARE. */
 
 #endregion
 
+using Oyez.Core.Counting;
+
 namespace Oyez.Core.Channels;
 
 internal interface IAmAChannelProfile
 {
     ChannelId Id { get; }
     RenderingPolicy Policy { get; }
+    IAmATextCounter Counter { get; }
 }

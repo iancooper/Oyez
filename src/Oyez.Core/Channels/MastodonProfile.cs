@@ -23,10 +23,13 @@ THE SOFTWARE. */
 
 #endregion
 
+using Oyez.Core.Counting;
+
 namespace Oyez.Core.Channels;
 
 internal sealed class MastodonProfile : IAmAChannelProfile
 {
     public ChannelId Id => ChannelId.Mastodon;
     public RenderingPolicy Policy => RenderingPolicy.Thread;
+    public IAmATextCounter Counter { get; } = new MastodonTextCounter();
 }

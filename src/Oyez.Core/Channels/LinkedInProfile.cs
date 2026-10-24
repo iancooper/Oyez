@@ -23,10 +23,13 @@ THE SOFTWARE. */
 
 #endregion
 
+using Oyez.Core.Counting;
+
 namespace Oyez.Core.Channels;
 
 internal sealed class LinkedInProfile : IAmAChannelProfile
 {
     public ChannelId Id => ChannelId.LinkedIn;
     public RenderingPolicy Policy => RenderingPolicy.SinglePost;
+    public IAmATextCounter Counter { get; } = new CodeUnitTextCounter();
 }

@@ -38,12 +38,15 @@ internal sealed class Renderer(IEnumerable<IAmAChannelProfile> profiles)
 
     private static Rendering Render(Announcement announcement, IAmAChannelProfile profile) =>
         profile.Policy == RenderingPolicy.Document
-            ? RenderDocument(announcement, profile.Id)
-            : RenderPosts(announcement, profile.Id);
+            ? RenderDocument(announcement, profile)
+            : RenderPosts(announcement, profile);
 
-    private static Rendering RenderDocument(Announcement announcement, ChannelId channel) =>
-        new(channel, announcement.Title, [new Post(0, announcement.WriteAsMarkdown ?? string.Empty)]);
+    private static Rendering RenderDocument(Announcement announcement, IAmAChannelProfile profile) =>
+        new(profile.Id, announcement.Title, [NewPost(profile, 0, announcement.WriteAsMarkdown ?? string.Empty)]);
 
-    private static Rendering RenderPosts(Announcement announcement, ChannelId channel) =>
-        new(channel, null, announcement.Segments.Select((segment, index) => new Post(index, segment.Text)).ToList());
+    private static Rendering RenderPosts(Announcement announcement, IAmAChannelProfile profile) =>
+        new(profile.Id, null, announcement.Segments.Select((segment, index) => NewPost(profile, index, segment.Text)).ToList());
+
+    private static Post NewPost(IAmAChannelProfile profile, int index, string text) =>
+        new(index, text, profile.Counter.Count(text));
 }

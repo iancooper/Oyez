@@ -30,4 +30,5 @@ namespace Oyez.Core.Channels;
 /// </summary>
 /// <param name="Index">The post's position in its <see cref="Rendering"/>, counting from 0.</param>
 /// <param name="Text">The text to publish.</param>
-public sealed record Post(int Index, string Text);
+/// <param name="Count">The length of <paramref name="Text"/>, measured the way the channel measures it.</param>
+public sealed record Post(int Index, string Text, int Count);
