@@ -136,9 +136,15 @@ internal sealed class AnnouncementHeader
     private HashSet<ChannelId> ParseChannels(string names)
     {
         var channels = new HashSet<ChannelId>();
-        foreach (var name in names.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+        var listed = names.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        foreach (var name in listed)
         {
             AddChannel(channels, name);
+        }
+
+        if (listed.Length == 0)
+        {
+            Report($"The channels header names no channel. List at least one of {string.Join(", ", ChannelId.All)}, or remove the header to target every channel.");
         }
 
         return channels;

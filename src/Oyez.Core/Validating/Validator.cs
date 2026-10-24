@@ -32,10 +32,19 @@ internal sealed class Validator(IEnumerable<IAmAChannelProfile> profiles, Render
 {
     private readonly IAmAChannelProfile _x = profiles.Single(profile => profile.Id == ChannelId.X);
 
-    public IReadOnlyList<ValidationError> Validate(Announcement announcement) =>
-        SegmentErrors(announcement)
-            .Concat(renderer.TargetedProfiles(announcement).SelectMany(profile => RenderingErrors(announcement, profile)))
+    public IReadOnlyList<ValidationError> Validate(Announcement announcement)
+    {
+        var targeted = renderer.TargetedProfiles(announcement).ToList();
+        return NoTargetErrors(announcement, targeted)
+            .Concat(SegmentErrors(announcement))
+            .Concat(targeted.SelectMany(profile => RenderingErrors(announcement, profile)))
             .ToList();
+    }
+
+    private static IEnumerable<ValidationError> NoTargetErrors(Announcement announcement, List<IAmAChannelProfile> targeted) =>
+        targeted.Count == 0
+            ? [new ValidationError(announcement.Id, "None of the channels this announcement targets is enabled, so nothing would be published. Enable one of them in configuration, or change the channels header.")]
+            : [];
 
     private IEnumerable<ValidationError> SegmentErrors(Announcement announcement) =>
         _x.Limit is { } limit
