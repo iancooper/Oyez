@@ -196,7 +196,7 @@ Parsing, counting, rendering and validation are internal to `Oyez.Core`. Every t
   - `When_a_header_key_appears_twice_should_report_it`: two `title:` lines, in different case
 - **Done when:** the tests pass.
 
-### [ ] T-11c Emoji from Unicode's data, checked against twitter-text
+### [x] T-11c Emoji from Unicode's data, checked against twitter-text
 - **Covers:** FR-2.1, §4.2
 - **Found by:** the Phase 1 code-smell review. `EmojiRanges` is a hand-typed table with no source or version; keycaps such as `1️⃣` count 5 on X instead of 2, and © and ® are unverified.
 - **Builds:** the emoji ranges loaded from Unicode's `emoji-data.txt`, embedded like the TLD list, with its version in a comment, in place of the hand-typed table.
