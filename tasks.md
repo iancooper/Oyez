@@ -103,7 +103,7 @@ Parsing, counting, rendering and validation are internal to `Oyez.Core`. Every t
   - A header line with no colon throws, and a missing title becomes an empty string. Extract an internal `AnnouncementHeader` that owns the known keys and their parsing.
 - **Done when:** the tests pass.
 
-### [ ] T-4 Count links for X and Mastodon
+### [x] T-4 Count links for X and Mastodon
 - **Covers:** FR-2.1, FR-2.2, §4.2
 - **Refactor first, in its own `refactor:` commit:** replace the renderer's `channel == WriteAs` conditional with the internal `IAmAChannelProfile` strategy and `RenderingPolicy` (§4.3), and make the renderer take its profiles through DI. This was found in the code-smell review, and it's what lets counting, preparation, limits and merging attach to profiles rather than add branches.
 - **Builds:** each post's `Count` in the preview, with links counted as 23. Internally, the URL matcher and the embedded IANA TLD list, with the list's date in a comment.
