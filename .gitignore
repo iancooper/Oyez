@@ -490,3 +490,6 @@ specs/**/.current-gear
 
 # Spec review findings (/spec:review) — untracked working state, not a spec artifact.
 specs/**/review-*.md
+
+# Agent working state — local to each checkout, never committed.
+PROMPT.md

@@ -1,6 +1,6 @@
 # Oyez — instructions for agents
 
-Read `PROMPT.md` first. It holds the plan, the current state and the next action.
+Read `PROMPT.md` first. It holds the plan, the current state and the next action. It is local working state: it is in `.gitignore`, so it is never committed, and a fresh clone has none.
 
 Oyez uses Brighter's spec layout. The current spec is named in `specs/.current-spec` (today `specs/0001-oyez/`, which holds `intent.md`, `requirements.md` and `tasks.md`, with its approval markers). Designs are ADRs in `docs/adr/`; Oyez's design is [ADR 0001](docs/adr/0001-oyez-design.md), and `§` numbers in the tasks refer to its sections.
 
@@ -18,7 +18,7 @@ Brighter's commands are copied into `.claude/commands/`: `/spec:*` (requirements
 - **A test that passes first time** hasn't shown it can fail. Don't weaken it. Instead, apply a named mutation to *production* code, see the test fail on its assertion, revert the mutation, and say in the commit message which mutation you used.
 - **Commits.**
   - Behaviour goes in a `feat:` or `test:` commit.
-  - Ticking the task in `tasks.md` and updating `PROMPT.md` goes in a separate `docs:` commit.
+  - Ticking the task in `tasks.md` goes in a separate `docs:` commit. Update `PROMPT.md` too, but it isn't committed.
   - Structural changes (`refactor:`) never share a commit with behavioural ones, and come first ("Tidy First").
   - Run the full test suite before every commit.
 - **Look for code smells after each phase**, and refactor before opening the phase's PR.

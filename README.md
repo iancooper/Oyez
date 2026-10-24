@@ -83,7 +83,6 @@ These planning documents describe it in full:
 | [`requirements.md`](specs/0001-oyez/requirements.md) | Functional and non-functional requirements, and acceptance criteria |
 | [ADR 0001](docs/adr/0001-oyez-design.md) | The architecture, the announcement format, the platform APIs, and the GitHub Actions workflows |
 | [`tasks.md`](specs/0001-oyez/tasks.md) | The build plan: test-first tasks, each with the test that proves it |
-| [`PROMPT.md`](PROMPT.md) | The current working state, for picking up where work stopped |
 
 ## Licence
 

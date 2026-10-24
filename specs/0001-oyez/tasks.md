@@ -9,7 +9,7 @@ Follow the workflow and conventions in `CLAUDE.md`, which follow Brighter's agen
 1. **Write the tests first.** Each task lists the tests that prove it is done, as `When_…_should_…` names. Write them and **stop for the user's approval**. Then watch them fail, write the least code that makes them pass, and refactor.
 2. **Test only through the module boundary.** That means Core's commands and queries, the adapters' port implementations, or the command line. No test names an internal type.
 3. **One task at a time.** Tick a task (`[x]`) only when its tests pass and the full suite is green.
-4. **Commit in two steps.** First a `feat:` or `test:` commit for the behaviour, then a `docs:` commit that ticks the task here and updates `PROMPT.md`. Structural changes go in their own `refactor:` commits.
+4. **Commit in two steps.** First a `feat:` or `test:` commit for the behaviour, then a `docs:` commit that ticks the task here. Update `PROMPT.md` as well; it is local working state and isn't committed. Structural changes go in their own `refactor:` commits.
 5. **Refactor at the end of each phase.** Look for code smells before opening the phase's PR.
 
 ## Kinds of test
