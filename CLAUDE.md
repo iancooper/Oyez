@@ -8,7 +8,7 @@ Oyez follows Brighter's agent instructions: <https://github.com/BrighterCommand/
 
 - **Test first, with an approval gate.** For each behaviour:
   1. Write the failing test.
-  2. **Stop and ask the user to approve the test** before running it or writing any production code.
+  2. **Stop and ask the user to approve the test** before running it or writing any production code. The exception is when `PROMPT.md` sets the review gear to **review-after**: then the user reviews the phase as a batch at its end, and this pause is the only thing dropped.
   3. Once approved, watch it fail for the right reason, then write the least code that makes it pass.
   4. Refactor.
 - **A test that passes first time** hasn't shown it can fail. Don't weaken it. Instead, apply a named mutation to *production* code, see the test fail on its assertion, revert the mutation, and say in the commit message which mutation you used.

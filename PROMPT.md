@@ -28,7 +28,16 @@ We work step by step. Each step ends with the user reviewing the output before w
 - Commits come in two steps: `feat:` or `test:` for the behaviour, then `docs:` to tick the task. Structural changes go in their own `refactor:` commits.
 - Look for code smells, and refactor, at the end of each phase.
 - One branch and PR per phase. Ask before pushing, merging or deleting branches.
-- Pace: stop after each task for the user's review until they're happy with the approach, then work a phase at a time. **Current pace: task by task.**
+- Pace: stop after each task for the user's review until they're happy with the approach, then work a phase at a time. **Current pace: a phase at a time** (from 2026-10-24, after T-3).
+
+## Review gear
+
+**review-after**, for the rest of phase 1 onwards. The user approved T-2 and T-3 and asked to move a phase at a time, like Brighter's `/spec:gear review-after` and `/spec:ralph-implement`:
+- the main agent (Opus) works the phase's tasks in order, handing each task's Red→Green→Refactor cycle to a fresh sub-agent (Sonnet);
+- the sub-agent writes the test and code, but never commits or edits `tasks.md`. The main agent makes the `feat:`/`test:`/`refactor:` commit, then the `docs:` commit;
+- at the end of the phase, a sub-agent runs a code-smell review (Brighter's `/refactor:smells`), the fixes go in as `refactor:` commits, and the user reviews the phase as a batch before its PR.
+
+Only the per-test approval pause is removed. RED first, the full suite before every commit, the two-commit shape and every convention in `CLAUDE.md` still apply. To go back to approving each test, the user says so; then remove this section.
 
 Layout: planning documents at the repo root, code in `src/`, tests in `tests/`, user documentation in `README.md` and `docs/`.
 
