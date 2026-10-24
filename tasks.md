@@ -181,7 +181,7 @@ Parsing, counting, rendering and validation are internal to `Oyez.Core`. Every t
 - **Done when:** the tests pass.
 
 
-### [ ] T-11a An announcement that goes nowhere
+### [x] T-11a An announcement that goes nowhere
 - **Covers:** FR-1.3, FR-5.2, FR-8.1
 - **Found by:** the Phase 1 code-smell review.
 - **Tests (Core):** through `ValidateAnnouncements`.
