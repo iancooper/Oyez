@@ -1,0 +1,54 @@
+#region Licence
+
+/* The MIT License (MIT)
+Copyright © 2026 Ian Cooper
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE. */
+
+#endregion
+
+using Oyez.Core.Announcements;
+using Oyez.Core.Channels;
+
+namespace Oyez.Core.Validating;
+
+internal sealed class Validator(IEnumerable<IAmAChannelProfile> profiles, Renderer renderer)
+{
+    private readonly IAmAChannelProfile _x = profiles.Single(profile => profile.Id == ChannelId.X);
+
+    public IReadOnlyList<ValidationError> Validate(Announcement announcement)
+    {
+        var targeted = renderer.TargetedProfiles(announcement).ToList();
+        return NoTargetErrors(announcement, targeted)
+            .Concat(UntargetedXErrors(announcement, targeted))
+            .Concat(targeted.SelectMany(profile => RenderingErrors(announcement, profile)))
+            .ToList();
+    }
+
+    private static IEnumerable<ValidationError> NoTargetErrors(Announcement announcement, List<IAmAChannelProfile> targeted) =>
+        targeted.Count == 0
+            ? [new ValidationError(announcement.Id, "None of the channels this announcement targets is enabled, so nothing would be published. Enable one of them in configuration, or change the channels header.")]
+            : [];
+
+    private IEnumerable<ValidationError> UntargetedXErrors(Announcement announcement, List<IAmAChannelProfile> targeted) =>
+        targeted.Any(profile => profile.Id == ChannelId.X) ? [] : _x.OverLimitSegments(announcement);
+
+    private IEnumerable<ValidationError> RenderingErrors(Announcement announcement, IAmAChannelProfile profile) =>
+        profile.Policy.Errors(announcement, profile, renderer.Render(announcement, profile));
+}

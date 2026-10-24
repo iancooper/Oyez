@@ -1,16 +1,18 @@
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Oyez.Core.Application;
 using Paramore.Brighter;
 using Paramore.Darker;
 
 namespace Oyez.Core.Tests.Application;
 
-// T-0 spike: proves Brighter and Darker are wired up. Removed in T-17.
 public class CompositionSpikeTests
 {
     private static ServiceProvider BuildProvider() =>
         new ServiceCollection()
             .AddLogging()
+            .AddSingleton<ILoggerFactory>(NullLoggerFactory.Instance)
             .AddOyezApplication()
             .BuildServiceProvider();
 

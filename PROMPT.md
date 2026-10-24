@@ -21,9 +21,25 @@ We work step by step. Each step ends with the user reviewing the output before w
 
 ## Conventions
 
-- **Test first.** Every task in `tasks.md` names the test that proves it is done, and we write that test before the code. What counts as a test depends on the task: a unit test, an integration test against a fake HTTP server, a manual check against a real account, or a review checklist for documents.
-- **One task at a time.** Mark a task done in `tasks.md` only when its test passes. Commit at the end of each task, naming the task ID. Update this file when a step or task changes status.
-- **Layout.** Planning documents live at the repo root, code in `src/`, tests in `tests/`, and user documentation in `README.md` and `docs/`.
+`CLAUDE.md` holds the working conventions, which follow Brighter's agent instructions. In short:
+- Test first, with an approval gate: write the tests, then stop for the user's approval before implementing.
+- Tests are named `When_…_should_…`, one per file, and go only through each module's public boundary.
+- Modules are narrow and deep. Parsing, counting, rendering and validation are internal to `Oyez.Core`, and are tested through its Darker queries and Brighter commands.
+- Commits come in two steps: `feat:` or `test:` for the behaviour, then `docs:` to tick the task. Structural changes go in their own `refactor:` commits.
+- Look for code smells, and refactor, at the end of each phase.
+- One branch and PR per phase. Ask before pushing, merging or deleting branches.
+- Pace: stop after each task for the user's review until they're happy with the approach, then work a phase at a time. **Current pace: a phase at a time** (from 2026-10-24, after T-3).
+
+## Review gear
+
+**review-after**, for the rest of phase 1 onwards. The user approved T-2 and T-3 and asked to move a phase at a time, like Brighter's `/spec:gear review-after` and `/spec:ralph-implement`:
+- the main agent (Opus) works the phase's tasks in order, handing each task's Red→Green→Refactor cycle to a fresh sub-agent (Sonnet);
+- the sub-agent writes the test and code, but never commits or edits `tasks.md`. The main agent makes the `feat:`/`test:`/`refactor:` commit, then the `docs:` commit;
+- at the end of the phase, a sub-agent runs a code-smell review (Brighter's `/refactor:smells`), the fixes go in as `refactor:` commits, and the user reviews the phase as a batch before its PR.
+
+Only the per-test approval pause is removed. RED first, the full suite before every commit, the two-commit shape and every convention in `CLAUDE.md` still apply. To go back to approving each test, the user says so; then remove this section.
+
+Layout: planning documents at the repo root, code in `src/`, tests in `tests/`, user documentation in `README.md` and `docs/`.
 
 ## Current state
 
@@ -34,9 +50,32 @@ We work step by step. Each step ends with the user reviewing the output before w
 - Step 5 has started. Phase 0 (T-0, T-1) is done and merged to `main` (PR #1). An early `README.md` was added afterwards in its own PR. T-38 updates it once Oyez is built.
   - T-0: solution skeleton. `AddOyezApplication()` in `src/Oyez.Core/Application/ServiceCollectionExtensions.cs` registers Brighter and Darker. A spike command and query (`Spike.cs`) prove the wiring and are removed in T-17. Tests run on Microsoft Testing Platform.
   - T-1: `ci.yml` (build, test, actionlint, SHA-pinned actions) and `dependabot.yml`.
-- Working practice: one branch and PR per phase (`phase-N-…`), one commit per task. Ask the user before pushing or merging.
+- `README.md` and an MIT `LICENSE` came in PR #2 (branch `add-readme`), which is merged.
+- Phase 1 is in progress on branch `phase-1-core-domain`, which was branched from `add-readme`. The user asked for Brighter's conventions, so:
+  - `CLAUDE.md` was added;
+  - the design gained module boundaries and `IAmA…` port names;
+  - phases 1–3 of `tasks.md` were restructured so tests go through the module boundaries.
+
+  A first attempt at T-2, which tested the parser directly, was discarded without being pushed.
+- T-2 is done: the `PreviewAnnouncement` query, with an internal parser and renderer. Tests share a never-disposed `NullLoggerFactory`, because Darker captures a logger factory in static state.
+- After T-2, a code-smell review (a sub-agent following Brighter's `.claude/commands/refactor/smells.md`) found 15 issues. Six were fixed as `refactor:` commits:
+  1. licence headers;
+  2. `GenerateDocumentationFile` on for `src/` (via `src/Directory.Build.props`), so missing XML docs fail the build;
+  3. every Darker query handler in Core, public or internal, is registered by reflection;
+  4. header keys are constants;
+  5. three test smells;
+  6. `ChannelId.TryParse`.
+
+  The rest are recorded in `tasks.md`: under T-3, at the start of T-4 (the `IAmAChannelProfile` strategy refactor), and in the backlog.
+- T-3 is done: the `ValidateAnnouncements` query, and `PreviewAnnouncement` returning failures (including for an announcement that doesn't exist). The T-3 code-smell findings are resolved: an internal `AnnouncementHeader` owns the known keys and reports its own errors, unknown channels are errors, and the preview handler no longer uses `!` or an unchecked `.Value`. The user also approved one extra test, `When_previewing_a_malformed_announcement_should_return_its_validation_errors`. Publish times must be strict ISO 8601 (`yyyy-MM-ddTHH:mm[:ss[.fff]]` with `Z` or an offset).
+- T-4 to T-11 are done, in the review-after gear, by Sonnet sub-agents. Phase 1's tasks are complete (103 tests). The T-4 refactor (`IAmAChannelProfile`) came first, in its own commit.
+- The Phase 1 code-smell review (T-3 to T-11) found 13 code smells and 3 test smells. Ten were fixed as `refactor:` commits. Two are deferred: test boilerplate to T-12, and profiles' options lookup to T-28. The user chose: braces on any multi-line control statement; ALL_CAPS for static readonly lookup tables (both in `CLAUDE.md`); and moving `UsDollars` to `Costing`. `design.md` was brought in line with the code.
+- The review also found five behaviour gaps. The user made them tasks T-11a to T-11d, at the end of Phase 1, and all four are done (128 tests). T-11c's sub-agent wrote production code before its tests; RED was recovered by running the tests against the previous code, as its commit records. The gaps were: an announcement naming only disabled channels; an empty `channels:` value; duplicate header keys; the hand-typed emoji table (keycaps miscount on X; © and ® unverified); and no general post-over-its-channel's-limit check.
+- After the Phase 1 PR: import Brighter's `.agent_instructions` and `/spec`, `/bugfix`, `/refactor` commands (with `tdd`, `adr`, `test-infra`), adopting Brighter's `specs/` layout, on a separate branch. The user chose this on 2026-10-24.
 - The GitHub repo `iancooper/Oyez` was made public on 2026-10-19 (it was still empty), so Actions minutes are free.
 
 ## Next action
 
-Start phase 1 (T-2) on a new branch, `phase-1-core-domain`, created from the updated `main`. Ask the user whether to stop after each task or at the phase's PR. Work one task at a time, test first, and commit at the end of each task.
+Push `phase-1-core-domain` and open the Phase 1 PR against `main` (the user approved this on 2026-10-24). After it merges, import Brighter's tooling on a new branch (see above).
+
+Open points for the user, from the review: error messages name channels by ID (`x`, `linkedin`), so a display name may be wanted; © ® ™ count 2 on X following Unicode's data, unconfirmed by twitter-text's conformance file.

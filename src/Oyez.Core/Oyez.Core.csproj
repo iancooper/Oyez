@@ -1,5 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
+    <EmbeddedResource Include="Counting\tlds-alpha-by-domain.txt" LogicalName="tlds-alpha-by-domain.txt" />
+    <EmbeddedResource Include="Counting\emoji-data.txt" LogicalName="emoji-data.txt" />
+  </ItemGroup>
+  <ItemGroup>
     <PackageReference Include="Paramore.Brighter" />
     <PackageReference Include="Paramore.Brighter.Extensions.DependencyInjection" />
     <PackageReference Include="Paramore.Darker" />
