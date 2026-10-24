@@ -30,6 +30,8 @@ namespace Oyez.Core.Previewing;
 
 internal sealed class Renderer(IEnumerable<IAmAChannelProfile> profiles)
 {
+    private const string SEGMENT_SEPARATOR = "\n\n";
+
     public IReadOnlyList<Rendering> RenderTargetedChannels(Announcement announcement) =>
         profiles
             .Where(profile => profile.IsEnabled && announcement.Channels.Contains(profile.Id))
@@ -40,8 +42,6 @@ internal sealed class Renderer(IEnumerable<IAmAChannelProfile> profiles)
         profile.Policy == RenderingPolicy.Document
             ? RenderDocument(announcement, profile)
             : RenderPosts(announcement, profile);
-
-    private const string SEGMENT_SEPARATOR = "\n\n";
 
     private static Rendering RenderDocument(Announcement announcement, IAmAChannelProfile profile) =>
         new(profile.Id, announcement.Title, profile.Limit, [NewPost(profile, 0, announcement.WriteAsMarkdown ?? JoinSegments(announcement))]);
@@ -56,7 +56,10 @@ internal sealed class Renderer(IEnumerable<IAmAChannelProfile> profiles)
     {
         var posts = new List<string>();
         foreach (var segment in announcement.Segments)
+        {
             Append(posts, segment.Text, profile);
+        }
+
         return posts;
     }
 
@@ -64,9 +67,13 @@ internal sealed class Renderer(IEnumerable<IAmAChannelProfile> profiles)
     {
         var candidate = posts.Count == 0 ? text : posts[^1] + SEGMENT_SEPARATOR + text;
         if (posts.Count == 0 || !Fits(profile, candidate))
+        {
             posts.Add(text);
+        }
         else
+        {
             posts[^1] = candidate;
+        }
     }
 
     private static bool Fits(IAmAChannelProfile profile, string text) =>

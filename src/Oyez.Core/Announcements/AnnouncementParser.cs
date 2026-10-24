@@ -84,9 +84,13 @@ internal static partial class AnnouncementParser
     private static void AddToBlocks(List<List<string>> blocks, string line)
     {
         if (IsSeparator(line))
+        {
             blocks.Add([]);
+        }
         else
+        {
             blocks[^1].Add(line);
+        }
     }
 
     private static bool IsSeparator(string line) => line.TrimEnd() == SEPARATOR;

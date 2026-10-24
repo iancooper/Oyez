@@ -63,8 +63,13 @@ internal sealed class Validator(IEnumerable<IAmAChannelProfile> profiles, Render
     private static IEnumerable<ValidationError> DocumentErrors(Announcement announcement, Rendering rendering)
     {
         if (string.IsNullOrWhiteSpace(rendering.Title))
+        {
             yield return new ValidationError(announcement.Id, $"The {rendering.Channel} rendering has no title.", rendering.Channel);
+        }
+
         if (rendering.Posts.All(post => string.IsNullOrWhiteSpace(post.Text)))
+        {
             yield return new ValidationError(announcement.Id, $"The {rendering.Channel} rendering has an empty body. Add text to the Markdown body, or remove it to build the body from the segments.", rendering.Channel);
+        }
     }
 }

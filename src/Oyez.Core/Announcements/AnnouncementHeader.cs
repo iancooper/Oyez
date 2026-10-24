@@ -79,24 +79,34 @@ internal sealed class AnnouncementHeader
     {
         var colon = line.IndexOf(':');
         if (colon < 0)
+        {
             Report($"The header line '{line}' has no colon. Write it as 'key: value', or, if it belongs in a segment, put a '---' line before it.");
+        }
         else
+        {
             AddKnownEntry(entries, line[..colon].Trim(), line[(colon + 1)..].Trim());
+        }
     }
 
     private void AddKnownEntry(Dictionary<string, string> entries, string key, string value)
     {
         if (KNOWN_KEYS.Contains(key, StringComparer.OrdinalIgnoreCase))
+        {
             entries[key] = value;
+        }
         else
+        {
             Report($"The header key '{key}' isn't known. Use {string.Join(", ", KNOWN_KEYS)}.");
+        }
     }
 
     private string ReadTitle()
     {
         var title = _entries.GetValueOrDefault(TITLE_KEY, string.Empty);
         if (title.Length == 0)
+        {
             Report("The announcement has no title. Add a header line such as 'title: Brighter 10.3.0 released'.");
+        }
 
         return title;
     }
@@ -108,10 +118,14 @@ internal sealed class AnnouncementHeader
     private DateTimeOffset? ParsePublishTime(string publish)
     {
         if (!DateTime.TryParseExact(publish, ISO_8601_FORMATS, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var time))
+        {
             return Reject($"The publish time '{publish}' isn't an ISO 8601 time, such as 2026-11-03T09:00Z.");
+        }
 
         if (time.Kind == DateTimeKind.Unspecified)
+        {
             return Reject($"The publish time '{publish}' has no time zone. Add Z for UTC, or an offset such as +01:00.");
+        }
 
         return DateTimeOffset.ParseExact(publish, ISO_8601_FORMATS, CultureInfo.InvariantCulture, DateTimeStyles.AdjustToUniversal);
     }
@@ -133,9 +147,13 @@ internal sealed class AnnouncementHeader
     private void AddChannel(HashSet<ChannelId> channels, string name)
     {
         if (ChannelId.TryParse(name, out var channel))
+        {
             channels.Add(channel);
+        }
         else
+        {
             Report($"'{name}' isn't a channel. Use {string.Join(", ", ChannelId.All)}.");
+        }
     }
 
     private DateTimeOffset? Reject(string message)

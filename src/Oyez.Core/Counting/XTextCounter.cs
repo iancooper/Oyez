@@ -48,7 +48,9 @@ internal sealed class XTextCounter : IAmATextCounter
     {
         var elements = StringInfo.GetTextElementEnumerator(text);
         while (elements.MoveNext())
+        {
             yield return (string)elements.Current;
+        }
     }
 
     private static int WeightOf(string cluster) =>
