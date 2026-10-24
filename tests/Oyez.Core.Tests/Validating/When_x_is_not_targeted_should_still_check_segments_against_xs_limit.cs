@@ -1,6 +1,5 @@
 using Oyez.Core.Announcements;
 using Oyez.Core.Channels;
-using Oyez.Core.Tests.Rendering;
 using Oyez.Core.Validating;
 
 namespace Oyez.Core.Tests.Validating;
@@ -14,8 +13,9 @@ public class ValidateSegmentWhenXNotTargetedTests : IDisposable
     public async Task When_x_is_not_targeted_should_still_check_segments_against_xs_limit()
     {
         //Arrange
-        var segments = new[] { Segments.OfLength(10, 'a'), Segments.OfLength(281, 'b') };
-        _host.Announcements.Add(new AnnouncementDocument(_id, Segments.Announcement("mastodon", segments), WriteAsMarkdown: null));
+        var segments = new[] { AnnouncementText.OfLength(10, 'a'), AnnouncementText.OfLength(281, 'b') };
+        _host.Announcements.Add(new AnnouncementDocument(_id, AnnouncementText.With("mastodon", segments), WriteAsMarkdown: null));
+
         //Act
         var errors = await _host.QueryProcessor.ExecuteAsync(new ValidateAnnouncements([_id]), TestContext.Current.CancellationToken);
 

@@ -2,7 +2,7 @@ using Oyez.Core.Announcements;
 using Oyez.Core.Channels;
 using Oyez.Core.Previewing;
 
-namespace Oyez.Core.Tests.Rendering;
+namespace Oyez.Core.Tests.Merging;
 
 public class PostCountPerChannelTests : IDisposable
 {
@@ -13,8 +13,8 @@ public class PostCountPerChannelTests : IDisposable
     public async Task When_rendering_four_long_segments_should_give_each_channel_its_expected_post_count()
     {
         //Arrange
-        var segments = new[] { 'a', 'b', 'c', 'd' }.Select(fill => Segments.OfLength(250, fill)).ToArray();
-        _host.Announcements.Add(new AnnouncementDocument(_id, Segments.Announcement("x, mastodon, linkedin, writeas", segments), WriteAsMarkdown: null));
+        var segments = new[] { 'a', 'b', 'c', 'd' }.Select(fill => AnnouncementText.OfLength(250, fill)).ToArray();
+        _host.Announcements.Add(new AnnouncementDocument(_id, AnnouncementText.With("x, mastodon, linkedin, writeas", segments), WriteAsMarkdown: null));
 
         //Act
         var result = await _host.QueryProcessor.ExecuteAsync(new PreviewAnnouncement(_id), TestContext.Current.CancellationToken);

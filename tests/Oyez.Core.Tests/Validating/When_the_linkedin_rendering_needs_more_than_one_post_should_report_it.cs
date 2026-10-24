@@ -1,6 +1,5 @@
 using Oyez.Core.Announcements;
 using Oyez.Core.Channels;
-using Oyez.Core.Tests.Rendering;
 using Oyez.Core.Validating;
 
 namespace Oyez.Core.Tests.Validating;
@@ -14,8 +13,9 @@ public class ValidateLinkedInOverflowTests : IDisposable
     public async Task When_the_linkedin_rendering_needs_more_than_one_post_should_report_it()
     {
         //Arrange
-        var segments = Enumerable.Range(0, 11).Select(_ => Segments.OfLength(280, 'a')).ToArray();
-        _host.Announcements.Add(new AnnouncementDocument(_id, Segments.Announcement("linkedin", segments), WriteAsMarkdown: null));
+        var segments = Enumerable.Range(0, 11).Select(_ => AnnouncementText.OfLength(280, 'a')).ToArray();
+        _host.Announcements.Add(new AnnouncementDocument(_id, AnnouncementText.With("linkedin", segments), WriteAsMarkdown: null));
+
         //Act
         var errors = await _host.QueryProcessor.ExecuteAsync(new ValidateAnnouncements([_id]), TestContext.Current.CancellationToken);
 

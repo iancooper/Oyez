@@ -1,6 +1,5 @@
 using Oyez.Core.Announcements;
 using Oyez.Core.Channels;
-using Oyez.Core.Tests.Rendering;
 using Oyez.Core.Validating;
 
 namespace Oyez.Core.Tests.Validating;
@@ -14,8 +13,9 @@ public class ValidateLinkedInNotTargetedTests : IDisposable
     public async Task When_linkedin_is_not_targeted_should_not_check_its_length()
     {
         //Arrange
-        var segments = Enumerable.Range(0, 11).Select(_ => Segments.OfLength(280, 'a')).ToArray();
-        _host.Announcements.Add(new AnnouncementDocument(_id, Segments.Announcement("x,mastodon,writeas", segments), WriteAsMarkdown: null));
+        var segments = Enumerable.Range(0, 11).Select(_ => AnnouncementText.OfLength(280, 'a')).ToArray();
+        _host.Announcements.Add(new AnnouncementDocument(_id, AnnouncementText.With("x,mastodon,writeas", segments), WriteAsMarkdown: null));
+
         //Act
         var errors = await _host.QueryProcessor.ExecuteAsync(new ValidateAnnouncements([_id]), TestContext.Current.CancellationToken);
 

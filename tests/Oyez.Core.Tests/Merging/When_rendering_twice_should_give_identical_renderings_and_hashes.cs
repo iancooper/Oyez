@@ -1,7 +1,7 @@
 using Oyez.Core.Announcements;
 using Oyez.Core.Previewing;
 
-namespace Oyez.Core.Tests.Rendering;
+namespace Oyez.Core.Tests.Merging;
 
 public class DeterministicRenderingTests : IDisposable
 {
@@ -12,8 +12,8 @@ public class DeterministicRenderingTests : IDisposable
     public async Task When_rendering_twice_should_give_identical_renderings_and_hashes()
     {
         //Arrange
-        var segments = new[] { Segments.OfLength(250, 'a'), Segments.OfLength(250, 'b') };
-        _host.Announcements.Add(new AnnouncementDocument(_id, Segments.Announcement("x, mastodon", segments), WriteAsMarkdown: null));
+        var segments = new[] { AnnouncementText.OfLength(250, 'a'), AnnouncementText.OfLength(250, 'b') };
+        _host.Announcements.Add(new AnnouncementDocument(_id, AnnouncementText.With("x, mastodon", segments), WriteAsMarkdown: null));
 
         //Act
         var first = await _host.QueryProcessor.ExecuteAsync(new PreviewAnnouncement(_id), TestContext.Current.CancellationToken);

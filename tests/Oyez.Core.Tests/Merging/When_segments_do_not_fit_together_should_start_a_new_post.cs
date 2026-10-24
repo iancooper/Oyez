@@ -1,7 +1,7 @@
 using Oyez.Core.Announcements;
 using Oyez.Core.Previewing;
 
-namespace Oyez.Core.Tests.Rendering;
+namespace Oyez.Core.Tests.Merging;
 
 public class GreedyMergeTests : IDisposable
 {
@@ -12,10 +12,10 @@ public class GreedyMergeTests : IDisposable
     public async Task When_segments_do_not_fit_together_should_start_a_new_post()
     {
         //Arrange
-        var first = Segments.OfLength(200, 'a');
-        var second = Segments.OfLength(200, 'b');
-        var third = Segments.OfLength(200, 'c');
-        _host.Announcements.Add(new AnnouncementDocument(_id, Segments.Announcement("mastodon", first, second, third), WriteAsMarkdown: null));
+        var first = AnnouncementText.OfLength(200, 'a');
+        var second = AnnouncementText.OfLength(200, 'b');
+        var third = AnnouncementText.OfLength(200, 'c');
+        _host.Announcements.Add(new AnnouncementDocument(_id, AnnouncementText.With("mastodon", first, second, third), WriteAsMarkdown: null));
 
         //Act
         var result = await _host.QueryProcessor.ExecuteAsync(new PreviewAnnouncement(_id), TestContext.Current.CancellationToken);

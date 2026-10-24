@@ -1,9 +1,9 @@
-namespace Oyez.Core.Tests.Rendering;
+namespace Oyez.Core.Tests;
 
-internal static class Segments
+internal static class AnnouncementText
 {
     public static string OfLength(int length, char fill) => new(fill, length);
 
-    public static string Announcement(string channels, params string[] segments) =>
+    public static string With(string channels, params string[] segments) =>
         $"title: Release\nchannels: {channels}\n---\n{string.Join("\n---\n", segments)}";
 }

@@ -1,7 +1,7 @@
 using Oyez.Core.Announcements;
 using Oyez.Core.Previewing;
 
-namespace Oyez.Core.Tests.Rendering;
+namespace Oyez.Core.Tests.Merging;
 
 public class MergeOverTheLimitTests : IDisposable
 {
@@ -12,8 +12,8 @@ public class MergeOverTheLimitTests : IDisposable
     public async Task When_a_merge_is_one_over_the_limit_should_not_merge()
     {
         //Arrange
-        var segments = new[] { Segments.OfLength(200, 'a'), Segments.OfLength(200, 'b') };
-        _host.Announcements.Add(new AnnouncementDocument(_id, Segments.Announcement("mastodon", segments), WriteAsMarkdown: null));
+        var segments = new[] { AnnouncementText.OfLength(200, 'a'), AnnouncementText.OfLength(200, 'b') };
+        _host.Announcements.Add(new AnnouncementDocument(_id, AnnouncementText.With("mastodon", segments), WriteAsMarkdown: null));
 
         //Act
         var result = await _host.QueryProcessor.ExecuteAsync(new PreviewAnnouncement(_id), TestContext.Current.CancellationToken);

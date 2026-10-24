@@ -1,7 +1,6 @@
 using Oyez.Core.Announcements;
 using Oyez.Core.Costing;
 using Oyez.Core.Previewing;
-using Oyez.Core.Tests.Rendering;
 
 namespace Oyez.Core.Tests.Costing;
 
@@ -17,8 +16,8 @@ public class BareDomainCostTests : IDisposable
     {
         //Arrange
         var postWithBareDomain = "Notes at example.com/r";
-        var plainPost = Segments.OfLength(30, 'b');
-        _host.Announcements.Add(new AnnouncementDocument(_id, Segments.Announcement("x", postWithBareDomain, plainPost, plainPost), WriteAsMarkdown: null));
+        var plainPost = AnnouncementText.OfLength(30, 'b');
+        _host.Announcements.Add(new AnnouncementDocument(_id, AnnouncementText.With("x", postWithBareDomain, plainPost, plainPost), WriteAsMarkdown: null));
 
         //Act
         var result = await _host.QueryProcessor.ExecuteAsync(new PreviewAnnouncement(_id), TestContext.Current.CancellationToken);

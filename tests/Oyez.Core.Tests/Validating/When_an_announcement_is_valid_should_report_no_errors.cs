@@ -1,6 +1,5 @@
 using Oyez.Core.Announcements;
 using Oyez.Core.Channels;
-using Oyez.Core.Tests.Rendering;
 using Oyez.Core.Validating;
 
 namespace Oyez.Core.Tests.Validating;
@@ -14,7 +13,8 @@ public class ValidateValidAnnouncementTests : IDisposable
     public async Task When_an_announcement_is_valid_should_report_no_errors()
     {
         //Arrange
-        _host.Announcements.Add(new AnnouncementDocument(_id, Segments.Announcement("x,mastodon,linkedin,writeas", "One", "Two"), WriteAsMarkdown: null));
+        _host.Announcements.Add(new AnnouncementDocument(_id, AnnouncementText.With("x,mastodon,linkedin,writeas", "One", "Two"), WriteAsMarkdown: null));
+
         //Act
         var errors = await _host.QueryProcessor.ExecuteAsync(new ValidateAnnouncements([_id]), TestContext.Current.CancellationToken);
 

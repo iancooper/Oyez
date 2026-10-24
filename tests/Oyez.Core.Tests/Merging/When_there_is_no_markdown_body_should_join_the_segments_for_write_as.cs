@@ -1,27 +1,26 @@
 using Oyez.Core.Announcements;
-using Oyez.Core.Channels;
 using Oyez.Core.Previewing;
 
-namespace Oyez.Core.Tests.Rendering;
+namespace Oyez.Core.Tests.Merging;
 
-public class ShortSegmentsOnXTests : IDisposable
+public class WriteAsWithoutMarkdownTests : IDisposable
 {
     private readonly OyezApplicationHost _host = new();
     private readonly AnnouncementId _id = new("2026-11-03-brighter-10-3-0");
 
     [Fact]
-    public async Task When_two_short_segments_fit_together_should_merge_them_for_x()
+    public async Task When_there_is_no_markdown_body_should_join_the_segments_for_write_as()
     {
         //Arrange
-        _host.Announcements.Add(new AnnouncementDocument(_id, Segments.Announcement("x", "Brighter is out", "Thanks everyone"), WriteAsMarkdown: null));
+        _host.Announcements.Add(new AnnouncementDocument(_id, AnnouncementText.With("writeas", "First segment", "Second segment"), WriteAsMarkdown: null));
 
         //Act
         var result = await _host.QueryProcessor.ExecuteAsync(new PreviewAnnouncement(_id), TestContext.Current.CancellationToken);
 
         //Assert
         var rendering = Assert.Single(result.Value.Renderings);
-        Assert.Equal(ChannelId.X, rendering.Channel);
-        Assert.Equal("Brighter is out\n\nThanks everyone", Assert.Single(rendering.Posts).Text);
+        Assert.Equal("Release", rendering.Title);
+        Assert.Equal("First segment\n\nSecond segment", Assert.Single(rendering.Posts).Text);
     }
 
     public void Dispose() => _host.Dispose();
