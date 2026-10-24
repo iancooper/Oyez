@@ -36,6 +36,9 @@ internal sealed partial class UrlMatcher(bool includeBareDomains)
     public string ReplaceWithPlaceholders(string text) =>
         LinkPattern().Replace(text, ReplacementFor);
 
+    public bool ContainsLink(string text) =>
+        LinkPattern().Matches(text).Any(IsLink);
+
     private string ReplacementFor(Match match) =>
         IsLink(match) ? string.Concat(Enumerable.Repeat(PLACEHOLDER, LINK_LENGTH)) : match.Value;
 

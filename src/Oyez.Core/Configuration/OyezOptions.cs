@@ -34,7 +34,7 @@ public sealed class OyezOptions
     /// Gets the settings for the X channel.
     /// </summary>
     /// <value>Enabled, with a limit of 280.</value>
-    public ChannelOptions X { get; } = new() { Limit = 280 };
+    public XOptions X { get; } = new() { Limit = 280 };
 
     /// <summary>
     /// Gets the settings for the Mastodon channel.

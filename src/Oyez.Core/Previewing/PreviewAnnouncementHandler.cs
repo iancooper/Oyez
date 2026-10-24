@@ -24,16 +24,20 @@ THE SOFTWARE. */
 #endregion
 
 using Oyez.Core.Announcements;
+using Oyez.Core.Costing;
 using Paramore.Darker;
 
 namespace Oyez.Core.Previewing;
 
-internal sealed class PreviewAnnouncementHandler(IAmAnAnnouncementStore store, Renderer renderer)
+internal sealed class PreviewAnnouncementHandler(IAmAnAnnouncementStore store, Renderer renderer, XCostEstimator costEstimator)
     : QueryHandlerAsync<PreviewAnnouncement, Result<Preview>>
 {
     public override Task<Result<Preview>> ExecuteAsync(PreviewAnnouncement query, CancellationToken cancellationToken = default) =>
         Task.FromResult(store.ReadAnnouncement(query.Id).Map(ToPreview));
 
-    private Preview ToPreview(Announcement announcement) =>
-        new(announcement.Id, announcement.Title, announcement.PublishAt, renderer.RenderTargetedChannels(announcement));
+    private Preview ToPreview(Announcement announcement)
+    {
+        var renderings = renderer.RenderTargetedChannels(announcement);
+        return new Preview(announcement.Id, announcement.Title, announcement.PublishAt, renderings, costEstimator.Estimate(renderings));
+    }
 }

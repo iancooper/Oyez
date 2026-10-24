@@ -27,6 +27,7 @@ using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
 using Oyez.Core.Channels;
 using Oyez.Core.Configuration;
+using Oyez.Core.Costing;
 using Oyez.Core.Previewing;
 using Oyez.Core.Validating;
 using Paramore.Brighter.Extensions.DependencyInjection;
@@ -64,6 +65,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IAmAChannelProfile, WriteAsProfile>();
         services.AddSingleton<Renderer>();
         services.AddSingleton<Validator>();
+        services.AddSingleton<XCostEstimator>();
 
         return services;
     }

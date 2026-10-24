@@ -35,8 +35,10 @@ namespace Oyez.Core.Previewing;
 /// <param name="Title">The announcement's title.</param>
 /// <param name="PublishAt">When the announcement is due, in UTC, or <c>null</c> to publish it as soon as possible.</param>
 /// <param name="Renderings">One <see cref="Rendering"/> per targeted channel, in the order of <see cref="ChannelId.All"/>.</param>
+/// <param name="EstimatedXCost">What publishing to X would cost, or <c>null</c> when the announcement doesn't target X or X is disabled.</param>
 public sealed record Preview(
     AnnouncementId Id,
     string Title,
     DateTimeOffset? PublishAt,
-    IReadOnlyList<Rendering> Renderings);
+    IReadOnlyList<Rendering> Renderings,
+    UsDollars? EstimatedXCost = null);
