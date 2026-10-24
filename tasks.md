@@ -125,7 +125,7 @@ Parsing, counting, rendering and validation are internal to `Oyez.Core`. Every t
   - `When_a_segment_has_curly_quotes_should_count_each_as_1_for_x`
 - **Done when:** the tests pass.
 
-### [ ] T-6 Count characters for Mastodon
+### [x] T-6 Count characters for Mastodon
 - **Covers:** FR-2.2, AC-5
 - **Tests (Core):** observed as Mastodon post counts in the preview.
   - `When_a_post_mentions_a_remote_account_should_count_only_the_username_for_mastodon` (AC-5): `@someone@example.social` counts as 8
