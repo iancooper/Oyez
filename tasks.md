@@ -180,6 +180,39 @@ Parsing, counting, rendering and validation are internal to `Oyez.Core`. Every t
   - `When_a_post_has_only_a_bare_domain_should_price_it_as_a_post_with_a_url`
 - **Done when:** the tests pass.
 
+
+### [ ] T-11a An announcement that goes nowhere
+- **Covers:** FR-1.3, FR-5.2, FR-8.1
+- **Found by:** the Phase 1 code-smell review.
+- **Tests (Core):** through `ValidateAnnouncements`.
+  - `When_every_targeted_channel_is_disabled_should_report_it`: `channels: linkedin` with LinkedIn disabled in configuration
+  - `When_the_channels_header_is_empty_should_report_it`: `channels:` with no value
+- **Done when:** the tests pass.
+
+### [ ] T-11b Duplicate header keys
+- **Covers:** FR-1.1, FR-5.2
+- **Found by:** the Phase 1 code-smell review. Today the last value silently wins.
+- **Tests (Core):** through `ValidateAnnouncements`.
+  - `When_a_header_key_appears_twice_should_report_it`: two `title:` lines, in different case
+- **Done when:** the tests pass.
+
+### [ ] T-11c Emoji from Unicode's data, checked against twitter-text
+- **Covers:** FR-2.1, §4.2
+- **Found by:** the Phase 1 code-smell review. `EmojiRanges` is a hand-typed table with no source or version; keycaps such as `1️⃣` count 5 on X instead of 2, and © and ® are unverified.
+- **Builds:** the emoji ranges loaded from Unicode's `emoji-data.txt`, embedded like the TLD list, with its version in a comment, in place of the hand-typed table.
+- **Tests (Core):** observed as X post counts in the preview.
+  - `When_a_segment_has_a_keycap_emoji_should_count_it_as_2_for_x`
+  - `When_counting_twitter_text_conformance_cases_should_match_for_x`: a `[Theory]` over cases from twitter-text's `conformance/validate.yml` (weighted tweets), including © and ®
+- **Done when:** the tests pass.
+
+### [ ] T-11d A post over its channel's limit
+- **Covers:** FR-2.4, FR-5.2, §4.6
+- **Found by:** the Phase 1 code-smell review. Only X's segment check and LinkedIn's one-post check exist, so a channel configured with a smaller limit can render a post over it with no error.
+- **Tests (Core):** through `ValidateAnnouncements`.
+  - `When_a_post_is_over_its_channels_limit_should_report_it`: Mastodon's limit configured below a segment's length
+  - `When_a_segment_is_over_xs_limit_should_report_it_once`: the segment check and the post check don't both report it
+- **Done when:** the tests pass.
+
 ---
 
 ## Phase 2 — Publishing, through the application layer
