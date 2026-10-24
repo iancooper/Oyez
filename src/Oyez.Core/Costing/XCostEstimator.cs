@@ -32,7 +32,7 @@ namespace Oyez.Core.Costing;
 
 internal sealed class XCostEstimator(OyezOptions options)
 {
-    private readonly UrlMatcher _urls = new(includeBareDomains: true);
+    private readonly UrlMatcher _urls = UrlMatcher.ForX;
 
     public UsDollars? Estimate(IReadOnlyList<Rendering> renderings) =>
         renderings.FirstOrDefault(rendering => rendering.Channel == ChannelId.X) is { } x

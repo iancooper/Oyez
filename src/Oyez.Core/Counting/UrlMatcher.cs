@@ -27,11 +27,19 @@ using System.Text.RegularExpressions;
 
 namespace Oyez.Core.Counting;
 
-internal sealed partial class UrlMatcher(bool includeBareDomains)
+internal sealed partial class UrlMatcher
 {
-    public const int LINK_LENGTH = 23;
+    private const int LINK_LENGTH = 23;
 
     private const string PLACEHOLDER = "x";
+
+    private readonly bool _includeBareDomains;
+
+    private UrlMatcher(bool includeBareDomains) => _includeBareDomains = includeBareDomains;
+
+    public static UrlMatcher ForX { get; } = new(includeBareDomains: true);
+
+    public static UrlMatcher ForMastodon { get; } = new(includeBareDomains: false);
 
     public string ReplaceWithPlaceholders(string text) =>
         LinkPattern().Replace(text, ReplacementFor);
@@ -43,7 +51,7 @@ internal sealed partial class UrlMatcher(bool includeBareDomains)
         IsLink(match) ? string.Concat(Enumerable.Repeat(PLACEHOLDER, LINK_LENGTH)) : match.Value;
 
     private bool IsLink(Match match) =>
-        match.Groups["scheme"].Success || (includeBareDomains && TopLevelDomains.Contains(match.Groups["tld"].Value));
+        match.Groups["scheme"].Success || (_includeBareDomains && TopLevelDomains.Contains(match.Groups["tld"].Value));
 
     [GeneratedRegex(
         """

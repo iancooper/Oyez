@@ -39,7 +39,7 @@ internal sealed class XTextCounter : IAmATextCounter
         (0x0000, 0x10FF), (0x2000, 0x200D), (0x2010, 0x201F), (0x2032, 0x2037)
     ];
 
-    private readonly UrlMatcher _urls = new(includeBareDomains: true);
+    private readonly UrlMatcher _urls = UrlMatcher.ForX;
 
     public int Count(string text) =>
         Clusters(_urls.ReplaceWithPlaceholders(text.Normalize(NormalizationForm.FormC))).Sum(WeightOf);

@@ -30,7 +30,7 @@ namespace Oyez.Core.Counting;
 
 internal sealed partial class MastodonTextCounter : IAmATextCounter
 {
-    private readonly UrlMatcher _urls = new(includeBareDomains: false);
+    private readonly UrlMatcher _urls = UrlMatcher.ForMastodon;
 
     public int Count(string text) =>
         new StringInfo(WithoutMentionDomains(_urls.ReplaceWithPlaceholders(text))).LengthInTextElements;
