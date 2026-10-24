@@ -162,7 +162,7 @@ Parsing, counting, rendering and validation are internal to `Oyez.Core`. Every t
   - `When_there_is_no_markdown_body_should_join_the_segments_for_write_as` (FR-1.5)
 - **Done when:** the tests pass.
 
-### [ ] T-10 Validate against the channels' limits
+### [x] T-10 Validate against the channels' limits
 - **Covers:** FR-5.2, FR-4.3.2, §4.6
 - **Tests (Core):** through `ValidateAnnouncements`.
   - `When_a_segment_is_over_xs_limit_should_report_its_number` (AC-6)
