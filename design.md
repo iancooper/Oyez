@@ -118,7 +118,7 @@ public sealed record AnnouncementId(string Value);
 public readonly record struct ChannelId                         // X, Mastodon, LinkedIn, WriteAs
 public sealed record AnnouncementDocument(AnnouncementId Id, string Text, string? WriteAsMarkdown);  // the raw files
 public sealed record Post(int Index, string Text, int Count);   // Count is measured by the channel's counter
-public sealed record Rendering(ChannelId Channel, string? Title, IReadOnlyList<Post> Posts, int? Limit)
+public sealed record Rendering(ChannelId Channel, string? Title, int? Limit, IReadOnlyList<Post> Posts)
 {
     public string Hash { get; }                                 // SHA-256 of the post texts (see §4.8)
 }
@@ -159,12 +159,21 @@ A **profile** is the pure, platform-specific part of a channel: how to count, th
 internal interface IAmAChannelProfile
 {
     ChannelId Id { get; }
-    RenderingPolicy Policy { get; }   // Thread | SinglePost | Document
-    int? Limit { get; }               // null = no limit
-    IAmATextCounter? Counter { get; }
-    string Prepare(string text);      // LinkedIn escapes text; the others return it unchanged
+    IAmARenderingPolicy Policy { get; }  // ThreadPolicy | SinglePostPolicy | DocumentPolicy
+    bool IsEnabled { get; }              // from configuration
+    int? Limit { get; }                  // null = no limit
+    IAmATextCounter Counter { get; }     // Write.as counts code units, though it has no limit
+    string Prepare(string text);         // LinkedIn escapes text; the others return it unchanged
+}
+
+internal interface IAmARenderingPolicy
+{
+    Rendering Render(Announcement announcement, IAmAChannelProfile profile);
+    IEnumerable<ValidationError> Errors(Announcement announcement, Rendering rendering);
 }
 ```
+
+Each policy renders and also reports the errors particular to its shape (§4.6), so neither the `Renderer` nor the `Validator` branches on the kind of channel.
 
 | Profile | Policy | Limit (default, from `oyez.json`) |
 |---|---|---|
@@ -175,11 +184,11 @@ internal interface IAmAChannelProfile
 
 ### 4.4 Rendering [FR-3]
 
-`Renderer.Render(Announcement, IAmAChannelProfile) → Rendering` (internal). The method is pure and deterministic [FR-3.5].
+`Renderer.Render(Announcement, IAmAChannelProfile) → Rendering` (internal) delegates to the profile's policy; Thread and SinglePost share a `SegmentMerger`. Renderings come out in `ChannelId.All` order. Rendering is pure and deterministic [FR-3.5].
 
 - **Thread and SinglePost.** Merge segments greedily. Start with the first segment as the current post. For each following segment, form `candidate = current + "\n\n" + next`. If `Count(Prepare(candidate)) <= Limit`, the candidate becomes the current post. Otherwise, emit the current post and start a new one with `next` [FR-3.1–3.3].
   - X needs no special case [FR-3.4]. Segments are written close to 280 characters, so joining two almost always goes over the limit and each becomes its own post. If two short segments do fit together, they're merged, which saves a post. AC-8 uses segments of about 250 characters, so it gets one post per segment.
-- **SinglePost.** If the result has more than one post, `Validator` reports a LinkedIn overflow [FR-4.3.2, AC-9].
+- **SinglePost.** If the result has more than one post, the policy reports a LinkedIn overflow [FR-4.3.2, AC-9].
 - **Document.** One post. The title is the announcement's title, and the text is `WriteAsMarkdown` or, failing that, the segments joined by blank lines [FR-1.5].
 
 ### 4.5 LinkedIn preparation [FR-4.3.3]
@@ -198,7 +207,7 @@ The text is counted after preparation [AC-10].
 - **Header errors** come from the parser: a missing title, a bad time, an unknown channel or key.
 - **Segment check:** every segment must have `XTextCounter.Count ≤ 280`. This rule applies even when X isn't targeted, because segments are always written to the strictest limit [AC-6].
 - **SinglePost check:** for each targeted channel with this policy, the rendering must have exactly one post.
-- **Document check:** a Write.as rendering must have a title and a body that isn't empty.
+- **Document check:** a Write.as rendering must have a body that isn't empty. (A missing title is already a header error.)
 
 ### 4.7 Ports
 
