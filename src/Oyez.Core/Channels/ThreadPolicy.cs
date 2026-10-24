@@ -24,7 +24,6 @@ THE SOFTWARE. */
 #endregion
 
 using Oyez.Core.Announcements;
-using Oyez.Core.Validating;
 
 namespace Oyez.Core.Channels;
 
