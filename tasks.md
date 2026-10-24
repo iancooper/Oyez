@@ -189,7 +189,7 @@ Parsing, counting, rendering and validation are internal to `Oyez.Core`. Every t
   - `When_the_channels_header_is_empty_should_report_it`: `channels:` with no value
 - **Done when:** the tests pass.
 
-### [ ] T-11b Duplicate header keys
+### [x] T-11b Duplicate header keys
 - **Covers:** FR-1.1, FR-5.2
 - **Found by:** the Phase 1 code-smell review. Today the last value silently wins.
 - **Tests (Core):** through `ValidateAnnouncements`.
