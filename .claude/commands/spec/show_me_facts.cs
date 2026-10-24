@@ -1,3 +1,4 @@
+#:property PublishAot=false
 #nullable enable
 using System.Diagnostics;
 using System.Linq;
@@ -183,7 +184,7 @@ else
     // remote-tracking branch spec/{name}, then the local branch of the same name — either
     // skipped when its tip is already contained in the base ref; (2) the checked-out branch,
     // if its name contains {name}; (3) HEAD, if a commit since the base ref touches the spec
-    // directory. The base ref (origin/master, else master) is resolved regardless of whether
+    // directory. The base ref (origin/main, else main) is resolved regardless of whether
     // a rule succeeds (FR-16 row 15).
     var name = Path.GetFileName(target.TrimEnd('/'));
     var nameSuffix = Regex.Replace(name, @"^[0-9]+-", "");
@@ -395,11 +396,11 @@ static string? CurrentBranch()
     return exitCode == 0 ? stdout.Trim() : null;
 }
 
-// FR-10's base ref: origin/master if it resolves, else master.
+// FR-10's base ref: origin/main if it resolves, else main.
 static (string Ref, string Sha) ResolveBaseRef() =>
-    RefExists("refs/remotes/origin/master")
-        ? ("origin/master", RevParse("refs/remotes/origin/master"))
-        : ("master", RevParse("refs/heads/master"));
+    RefExists("refs/remotes/origin/main")
+        ? ("origin/main", RevParse("refs/remotes/origin/main"))
+        : ("main", RevParse("refs/heads/main"));
 
 // FR-10's ordered rule set. Returns null when no rule resolves (spec branch not determinable).
 // Every rule that does not resolve records its outcome in rulesTried, in FR-10's wording, so a

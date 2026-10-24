@@ -17,7 +17,7 @@ $ARGUMENTS
 ## Review gear
 
 Which review mode applies is called the **gear** (see
-[ADR 0071](../../../docs/adr/0071-tdd-review-gear.md)):
+[ADR 0071](https://github.com/BrighterCommand/Brighter/blob/be197af20d0beb3478d8b2877daa036c83946cc4/docs/adr/0071-tdd-review-gear.md)):
 
 | Gear | Gate | Meaning |
 |------|------|---------|
@@ -48,8 +48,9 @@ both gears:
   commit for any task-list checkbox.
 - **Every test-authoring convention below**, plus the standing ones in
   [.agent_instructions/testing.md](../../../.agent_instructions/testing.md): TestDoubles one class
-  per file; a distinct request type per new test double so assembly scans do not collide; new closed
-  generics registered with each test project's logging `Initializer.cs`.
+  per file; a distinct request type per new test double so assembly scans do not collide; the
+  application built through the test project's `OyezApplicationHost` (it shares one never-disposed
+  `NullLoggerFactory`, because Darker captures a logger factory in static state).
 
 ## Workflow Phases
 
@@ -64,7 +65,7 @@ both gears:
 4. **Evident Data**: Highlight only the data that impacts the test outcome
 5. **Test Exports Only**: Test public methods on public classes only
 6. **Developer Test Style**: Do NOT use mocks for isolation - we test behaviors, not classes
-7. **I/O Substitution**: Use InMemory* implementations for I/O (e.g., InMemoryMessageProducer, InMemoryOutbox)
+7. **I/O Substitution**: Use InMemory* implementations for I/O (e.g., InMemoryAnnouncementStore)
 
 **Steps:**
 1. Identify the exact behavior being tested
@@ -75,7 +76,7 @@ both gears:
      to force a failure. If the caller (a spec task labelled `CHARACTERISE`) names a **RED
      mutation**, apply that temporary change to *production* code, confirm the test fails on the
      assertion it is about, **revert the mutation**, and confirm green — that is RED observed
-     ([ADR 0071](../../../docs/adr/0071-tdd-review-gear.md), *Characterisation amendment*). With no
+     ([ADR 0071](https://github.com/BrighterCommand/Brighter/blob/be197af20d0beb3478d8b2877daa036c83946cc4/docs/adr/0071-tdd-review-gear.md), *Characterisation amendment*). With no
      named mutation, stop and report the green test to the user.
 5. Show the test code and failure message to the user (for a characterisation test, the mutation
    and the failure it produced)
@@ -226,38 +227,38 @@ After completing all phases:
 ## Example Session
 
 ```
-User: /test-first when an invalid message is received it should be sent to the dead letter queue
+User: /test-first when a segment is empty it should report its number
 
-🔴 RED: Writing test When_message_is_invalid_should_send_to_dead_letter_queue
+🔴 RED: Writing test When_a_segment_is_empty_should_report_its_number
 
 [Shows test code]
-Test file: tests/Paramore.Brighter.Kafka.Tests/When_message_is_invalid_should_send_to_dead_letter_queue.cs
+Test file: tests/Oyez.Core.Tests/Validating/When_a_segment_is_empty_should_report_its_number.cs
 
 Running test...
-Test fails: ✓ "Method SendToDeadLetterQueue not found on KafkaMessageConsumer"
+Test fails: ✓ "Expected one validation error naming segment 2, but found none"
 
 ✅ APPROVAL REQUIRED
 Should I proceed to implement the code to make this test pass?
 
 User: Yes
 
-🟢 GREEN: Implementing SendToDeadLetterQueue method
+🟢 GREEN: Reporting an empty segment in the validator
 
-[Shows implementation code with XML docs]
+[Shows implementation code]
 
 Running tests...
-✓ When_message_is_invalid_should_send_to_dead_letter_queue PASSED
-✓ All 47 tests in Paramore.Brighter.Kafka.Tests PASSED
+✓ When_a_segment_is_empty_should_report_its_number PASSED
+✓ All 128 tests in Oyez.Core.Tests PASSED
 
-🔵 REFACTOR: Extracting validation logic into IsValidMessage method
+🔵 REFACTOR: Extracting the emptiness check into an IsBlank method
 
 [Shows refactoring]
 
 Running tests...
-✓ All 47 tests PASSED
+✓ All 128 tests PASSED
 
 Suggested commit message:
-feat: send invalid messages to dead letter queue
+feat: report an empty segment by its number
 
 Should I commit these changes?
 ```

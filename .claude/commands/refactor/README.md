@@ -31,10 +31,10 @@ marked `structural` (a `/tidy-first` job) or `public API change` (needs a decisi
 
 **Usage:**
 ```bash
-/refactor:smells                 # current branch vs master, plus uncommitted changes
+/refactor:smells                 # current branch vs main, plus uncommitted changes
 /refactor:smells HEAD~3          # changes since a ref
 /refactor:smells abc123^1..abc123  # changes between two refs, e.g. a merged PR's merge commit
-/refactor:smells src/Paramore.Brighter/CommandProcessor.cs
+/refactor:smells src/Oyez.Core/Application/ServiceCollectionExtensions.cs
 ```
 
 ### `/refactor:tidy-comments [base-ref | base..head | path...]`
@@ -57,7 +57,7 @@ the ADR is shown to you rather than deleted.
 ```bash
 /refactor:tidy-comments                 # comments this branch added or changed
 /refactor:tidy-comments HEAD~3          # comments changed since a ref
-/refactor:tidy-comments src/Paramore.Brighter/CommandProcessor.cs  # every comment in a file with no changes
+/refactor:tidy-comments src/Oyez.Core/Application/ServiceCollectionExtensions.cs  # every comment in a file with no changes
 ```
 
 ## The Core Principle

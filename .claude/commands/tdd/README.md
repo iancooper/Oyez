@@ -1,6 +1,6 @@
 # Test-Driven Development (TDD) Commands
 
-This directory contains Claude Code commands that enforce Test-Driven Development workflows for the Brighter project.
+This directory contains Claude Code commands that enforce Test-Driven Development workflows for the Oyez project.
 
 ## Commands
 
@@ -55,7 +55,7 @@ This command enforces that requirement automatically, ensuring:
 
 ## The review gear
 
-The pause is a **gear**, not a policy ([ADR 0071](../../../docs/adr/0071-tdd-review-gear.md)). You
+The pause is a **gear**, not a policy ([ADR 0071](https://github.com/BrighterCommand/Brighter/blob/be197af20d0beb3478d8b2877daa036c83946cc4/docs/adr/0071-tdd-review-gear.md)). You
 select it for the certainty you have and the blast radius you face: review every test while the
 design is still moving; review a batch once the shape has been approved several times over; shift
 back down the moment the work produces a test you would not have approved.
@@ -82,8 +82,8 @@ reason for the shift.
 - **The two-commit shape** — `feat:`/`test:` for the behaviour, then a separate `docs:` for any
   task-list tick.
 - **Every test-authoring convention** — naming, one test per file, TestDoubles one class per file,
-  a distinct request type per new test double, new closed generics registered with the test
-  project's logging `Initializer.cs`, no mocks for isolation, `InMemory*` for I/O.
+  a distinct request type per new test double, the application built through the test
+  project's `OyezApplicationHost`, no mocks for isolation, `InMemory*` for I/O.
 
 **Related Guidelines:**
 - [Testing Guidelines](../../../.agent_instructions/testing.md)

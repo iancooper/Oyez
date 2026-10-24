@@ -59,11 +59,11 @@ skeleton, the readability rules, the diagram rules and the pre-commit checks —
 `/spec:design` uses, so the two commands cannot drift. The Step 5 template below is that
 skeleton; the guidance says what goes in each heading and why.
 
-Then read the worked examples:
-- `docs/adr/0001-record-architecture-decisions.md` — the minimal template
-- `docs/adr/0070-per-pipeline-di-scope-for-mapper-and-transform-factories.md` — the full shape:
+Then read the worked examples (Brighter's ADRs):
+- [`0001-record-architecture-decisions.md`](https://github.com/BrighterCommand/Brighter/blob/be197af20d0beb3478d8b2877daa036c83946cc4/docs/adr/0001-record-architecture-decisions.md) — the minimal template
+- [`0070-per-pipeline-di-scope-for-mapper-and-transform-factories.md`](https://github.com/BrighterCommand/Brighter/blob/be197af20d0beb3478d8b2877daa036c83946cc4/docs/adr/0070-per-pipeline-di-scope-for-mapper-and-transform-factories.md) — the full shape:
   sequence diagram, assembly flowchart, roles table, contract tables
-- `docs/adr/0072-ambient-scope-adoption-seam.md` — the decision-ladder form, for a protocol with
+- [`0072-ambient-scope-adoption-seam.md`](https://github.com/BrighterCommand/Brighter/blob/be197af20d0beb3478d8b2877daa036c83946cc4/docs/adr/0072-ambient-scope-adoption-seam.md) — the decision-ladder form, for a protocol with
   too many branches to draw as a flowchart
 
 ### Step 4: Gather Information from User

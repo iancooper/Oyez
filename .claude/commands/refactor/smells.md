@@ -39,17 +39,15 @@ Resolve the scope from the arguments:
 
 | Arguments | Scope |
 |-----------|-------|
-| none | The current branch against its merge-base with `master`, plus any uncommitted changes: `git diff $(git merge-base HEAD master)` |
+| none | The current branch against its merge-base with `main`, plus any uncommitted changes: `git diff $(git merge-base HEAD main)` |
 | a git ref (e.g. `HEAD~3`, a commit SHA, a branch) | `git diff <ref>` — the changes since that ref |
-| a range `<base>..<head>` (e.g. `abc123^1..abc123` for a merged PR's merge commit, `master..feature`) | `git diff <base>..<head>` — the changes between the two refs, ignoring the working tree. Use this to review work that is already committed or merged |
+| a range `<base>..<head>` (e.g. `abc123^1..abc123` for a merged PR's merge commit, `main..feature`) | `git diff <base>..<head>` — the changes between the two refs, ignoring the working tree. Use this to review work that is already committed or merged |
 | one or more paths | The changes to those paths on the current branch; if they have no changes, the files themselves |
 
 Then:
 
 1. List the changed files with `git diff --stat` for the resolved scope and show the list to the user.
 2. **Exclude** from review:
-   - generated files (see `.agent_instructions/generated_tests.md`) — a smell there is fixed in the
-     template, so report it against the template instead if the template is in scope
    - `*.Designer.cs`, migrations, `Directory.Packages.props`, project files, and non-code files
 3. Read each remaining changed file **in full**, not just the hunks. Many smells (Large Class,
    Divergent Change, Feature Envy) only show against the surrounding class. For a range, read each
@@ -132,7 +130,7 @@ person to change this code:
 ```
 ## Code smells in <scope>
 
-### 1. Feature Envy — `src/Paramore.Brighter/Foo.cs:42-61`
+### 1. Feature Envy — `src/Oyez.Core/Foo.cs:42-61`
 **Evidence**: `Foo.Calculate` reads five properties of `Bar` and none of its own.
 **Refactoring**: Move Function — move `Calculate` to `Bar`.
 **Kind**: structural | public API change
@@ -143,7 +141,7 @@ For each finding:
 
 - **Kind** — `structural` if the refactoring leaves every public signature unchanged, so `/tidy-first`
   can carry it with all tests green. `public API change` if it renames, removes, moves or changes the
-  signature of a `public` or `protected` member: that is a breaking change for Brighter's users, so it
+  signature of a `public` or `protected` member: that is a breaking change for Oyez's users, so it
   needs a decision (and possibly an ADR via `/adr`), not just a tidy.
 - **Size** — a rough guide for scheduling: *small* is one method or a rename; *medium* is one class;
   *large* crosses several classes or packages.

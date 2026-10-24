@@ -53,7 +53,7 @@ rule set, stopping at the first rule that yields exactly one match:
 - If the file is missing, is empty, is whitespace-only, or names a directory that is not one of the
   candidates above, stop. Do not create or modify any file. Print exactly:
   `No spec id given and no usable current spec (specs/.current-spec is {missing|empty|stale: names
-  '{value}'}). Pass a spec id (/spec:show-me 0036-scoped-lifetime-per-pipeline) or run /spec:switch
+  '{value}'}). Pass a spec id (/spec:show-me 0001-oyez) or run /spec:switch
   first.` — using `missing` when the file does not exist, `empty` when it exists but is empty or
   whitespace-only, and `stale: names '{value}'` (with `{value}` the file's trimmed content)
   otherwise.
@@ -509,7 +509,7 @@ every number from the ledger or from the Classifier's tallies, never computing o
 
 **`## What changed and why`** (FR-6) states, in 150–600 words of prose (fenced diagram lines
 excluded, NFR-2 (d)) — never a bullet dump, never a copy-paste of an ADR's *Decision* section — what
-the spec set out to fix, what a user of Brighter can now do differently (or what now behaves
+the spec set out to fix, what a user of Oyez can now do differently (or what now behaves
 differently), and the one or two decisions that most shaped the result. An internal type name is
 never introduced without a short gloss on first use.
 

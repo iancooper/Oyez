@@ -1,17 +1,21 @@
 # Build and Development Commands
 
+Oyez targets .NET 10. `global.json` pins the SDK and selects Microsoft Testing Platform as the test runner.
+
 ## Building the Solution
 
 ```bash
 # Build entire solution
-dotnet build Brighter.slnx
+dotnet build Oyez.slnx
 
 # Build specific project
-dotnet build src/Paramore.Brighter/Paramore.Brighter.csproj
+dotnet build src/Oyez.Core/Oyez.Core.csproj
 
 # Build in Release mode
-dotnet build Brighter.slnx -c Release
+dotnet build Oyez.slnx -c Release
 ```
+
+Warnings are errors, and projects under `src/` generate XML documentation, so a public member without `///` docs fails the build.
 
 ## Running Tests
 
@@ -20,23 +24,10 @@ dotnet build Brighter.slnx -c Release
 dotnet test
 
 # Run tests for specific project
-dotnet test tests/Paramore.Brighter.Core.Tests/
+dotnet test --project tests/Oyez.Core.Tests/
 
-# Run tests with coverage
-dotnet test --collect:"XPlat Code Coverage"
-
-# Run tests matching pattern
-dotnet test --filter "When_Handling_A_Command"
+# Run tests matching a name
+dotnet test --project tests/Oyez.Core.Tests/ --filter "FullyQualifiedName~When_previewing"
 ```
 
-## Docker Development Environment
-
-```bash
-# Start all infrastructure services
-docker-compose up -d --build --scale redis-slave=2 --scale redis-sentinel=3
-
-# Start specific services for testing
-docker-compose -f docker-compose-rabbitmq.yaml up -d
-docker-compose -f docker-compose-mysql.yaml up -d
-docker-compose -f docker-compose-postgres.yaml up -d
-```
+No external infrastructure is needed: tests use `InMemory…` port implementations, fake HTTP handlers and `FakeTimeProvider` in place of I/O and the clock.

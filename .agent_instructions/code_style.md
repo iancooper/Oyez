@@ -27,7 +27,7 @@
   - Suffix async methods with async.
   - For I/O, you should provide both sync and async implementations.
   - Prefer explicit threads to using the thread pool.
-- Divide into responsibilities based on optionality. Required behaviors should exist in Paramore.Brighter and Paramore.Brighter.ServiceActivator.
+- Divide into responsibilities based on optionality. Required behaviors should exist in Oyez.Core.
   - Other assemblies should add optional behaviors, allowing users to only take dependencies on the resulting NuGet packages if they require that functionality.
   - There is a balance here. We want you to load as few dependencies as possible, without bringing in too many behaviors you do not need.
   - As we support multiple message brokers (a.k.a. transports), these should always use their own assembly.

@@ -1,6 +1,6 @@
 # Specification-Driven Development Commands
 
-This directory contains Claude Code commands that implement a specification-driven development workflow for Brighter contributions. These commands help you follow Brighter's preferred contribution workflow: **Issue → Requirements → ADR(s) → Tasks → Tests → Code**.
+This directory contains Claude Code commands that implement a specification-driven development workflow for Oyez contributions. These commands help you follow Brighter's preferred contribution workflow: **Issue → Requirements → ADR(s) → Tasks → Tests → Code**.
 
 ## Overview
 
@@ -47,7 +47,7 @@ The spec commands provide a structured approach to designing and implementing fe
 
 **One task list, one gear lever.** There is a single task list — `tasks.md` — and both drivers run
 it. What changes between "attended" and "unattended" is the **review gear**, and the gear is
-shiftable at any point in either direction ([ADR 0071](../../../docs/adr/0071-tdd-review-gear.md)):
+shiftable at any point in either direction ([ADR 0071](https://github.com/BrighterCommand/Brighter/blob/be197af20d0beb3478d8b2877daa036c83946cc4/docs/adr/0071-tdd-review-gear.md)):
 
 | Gear | Gate | Meaning |
 |------|------|---------|
@@ -482,7 +482,7 @@ then a separate `docs:` commit ticking the task off in `tasks.md`.
 ### `/spec:gear [review-before|review-after] ["phase"] [--because "..."]`
 
 Report or shift the **review gear** — whether `/test-first`'s approval gate is armed for the
-current spec. See [ADR 0071](../../../docs/adr/0071-tdd-review-gear.md).
+current spec. See [ADR 0071](https://github.com/BrighterCommand/Brighter/blob/be197af20d0beb3478d8b2877daa036c83946cc4/docs/adr/0071-tdd-review-gear.md).
 
 ```bash
 /spec:gear                                        # what gear am I in, and why?
@@ -661,7 +661,7 @@ advisory Low/Medium/High merge-risk read, where to look first, and a provenance 
 
 ```bash
 /spec:show-me                          # the current spec
-/spec:show-me 0036-scoped-lifetime-per-pipeline
+/spec:show-me 0001-oyez
 ```
 
 **Not a review.** It does not re-check correctness, security, TDD compliance, CI status or PR review
@@ -708,12 +708,12 @@ flagged by `/spec:review`'s design criteria when one is missing — never run au
 `show_me_facts.cs` — a plain, dependency-free C# file-based app (`dotnet run <path> -- <args>`, no
 build, project file or install step). **A user never invokes it directly**; `/spec:show-me`'s own
 steps call it via the one whitelisted
-`Bash(dotnet run .claude/commands/spec/show_me_facts.cs -- specs/:*)` entry in `.claude/settings.json`.
+`Bash(dotnet run .claude/commands/spec/show_me_facts.cs -- specs/:*)` entry in its `allowed-tools`.
 
 ```bash
 # The measurement mode /spec:show-me itself uses
-dotnet run .claude/commands/spec/show_me_facts.cs -- specs/0036-scoped-lifetime-per-pipeline
-dotnet run .claude/commands/spec/show_me_facts.cs -- specs/0036-scoped-lifetime-per-pipeline --pinned <base-sha> <head-sha>
+dotnet run .claude/commands/spec/show_me_facts.cs -- specs/0001-oyez
+dotnet run .claude/commands/spec/show_me_facts.cs -- specs/0001-oyez --pinned <base-sha> <head-sha>
 
 # A second, unrelated mode: word-counts a single file, no spec target involved
 dotnet run .claude/commands/spec/show_me_facts.cs -- some/file.md --word-count
@@ -746,6 +746,9 @@ non-zero if any fails.
 ```bash
 dotnet run .claude/commands/spec/show_me_facts_tests.cs
 ```
+
+In Oyez, the rows that use Brighter's calibration spec, its pinned commit pairs, its ADRs or its
+`release_notes.md` fail, because none of them exist here; the fixture-only rows still apply.
 
 **It is not part of CI** — no CI workflow lints or tests anything under `.claude/`, and this script
 doesn't change that. Run it by hand after editing either script.
@@ -809,7 +812,7 @@ Here's a complete workflow for adding a new feature:
 ## File Structure
 
 ```
-Brighter/
+Oyez/
 ├── specs/
 │   ├── .current-spec                      # Tracks active spec
 │   └── 0001-feature-name/
@@ -893,9 +896,9 @@ Instead of one large ADR covering everything, create focused ADRs:
 - Can supersede individual decisions without affecting others
 - Better traceability of architectural evolution
 
-## Contributing to Brighter
+## Contributing
 
-These commands align with Brighter's contribution guidelines (see [CONTRIBUTING.md](../../../CONTRIBUTING.md)):
+These commands align with Brighter's contribution guidelines (see [CONTRIBUTING.md](https://github.com/BrighterCommand/Brighter/blob/be197af20d0beb3478d8b2877daa036c83946cc4/CONTRIBUTING.md)):
 
 - ADRs are required for new capabilities
 - ADRs should focus on WHY over implementation details
@@ -907,6 +910,6 @@ These commands align with Brighter's contribution guidelines (see [CONTRIBUTING.
 ## Support
 
 For questions or issues with these commands:
-- Check [CONTRIBUTING.md](../../../CONTRIBUTING.md) for contribution guidelines
+- Check Brighter's [CONTRIBUTING.md](https://github.com/BrighterCommand/Brighter/blob/be197af20d0beb3478d8b2877daa036c83946cc4/CONTRIBUTING.md) for contribution guidelines
 - Review existing ADRs in [docs/adr/](../../../docs/adr/) for examples
 - See [Brighter Documentation](https://brightercommand.gitbook.io/paramore-brighter-documentation/)

@@ -69,7 +69,7 @@ Read `<path>`. Detect whether a frontmatter block is present: the file's first n
 - `status` — from `--status`, else the body `## Status` word normalized to the vocabulary, else
   `Proposed`.
 - `author` — from `--author` (list form, one entry per author). If absent: default to the git user
-  (`git config user.name`); if that is empty, `- "Brighter Team"`.
+  (`git config user.name`); if that is empty, `- "Oyez Team"`.
 - `created` — from `--created`, else the body `Date:` line, else today (`date +%Y-%m-%d`).
 - `summary` — from `--summary`. If none and none exists in a prior block, **ask** — a summary cannot
   be guessed; it is the load-bearing field.

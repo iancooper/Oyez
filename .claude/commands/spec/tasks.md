@@ -86,21 +86,19 @@ prompt MUST include:
 ##### Example Task
 
 ```markdown
-- [ ] **TEST + IMPLEMENT: Rejection with no channels configured acknowledges message**
-  - **USE COMMAND**: `/test-first when rejecting message with no channels configured should acknowledge and log`
-  - Test location: "tests/Paramore.Brighter.Kafka.Tests/MessagingGateway/Reactor"
-  - Test file: `When_rejecting_message_with_no_channels_configured_should_acknowledge_and_log.cs`
+- [ ] **TEST + IMPLEMENT: An empty segment is reported by its number**
+  - **USE COMMAND**: `/test-first when a segment is empty should report its number`
+  - Test location: "tests/Oyez.Core.Tests/Validating"
+  - Test file: `When_a_segment_is_empty_should_report_its_number.cs`
   - Test should verify:
-    - Consumer created without DLQ or invalid message routing keys
-    - Message rejected with DeliveryError reason
-    - Message acknowledged (can consume next message)
-    - Warning logged
+    - An announcement whose second segment is blank, held in `InMemoryAnnouncementStore`
+    - The `ValidateAnnouncements` query returns one validation error
+    - The error names the announcement and segment 2
   - **⛔ APPROVAL GATE — STOP HERE and WAIT FOR USER APPROVAL in IDE before implementing** *(fires in the `review-before` gear, which is the default)*
   - Implementation should:
-    - In KafkaMessageConsumer.Reject() check if both producers are null
-    - Log warning via NoChannelsConfiguredForRejection
-    - Acknowledge message anyway to prevent reprocessing
-    - Return true
+    - Check each trimmed segment for emptiness in the internal validator
+    - Report a `ValidationError` naming the segment's number
+    - Leave the other segments' checks unchanged
 ```
 
 ##### Why This Format?
@@ -115,7 +113,7 @@ prompt MUST include:
 
 Write the `⛔` line on **every** behavioral task. It states the default: the gate is armed unless
 the spec has been deliberately shifted into the `review-after` gear
-([ADR 0071](../../../docs/adr/0071-tdd-review-gear.md)).
+([ADR 0071](https://github.com/BrighterCommand/Brighter/blob/be197af20d0beb3478d8b2877daa036c83946cc4/docs/adr/0071-tdd-review-gear.md)).
 
 Do **not** try to encode the gear in `tasks.md` — no per-task or per-phase "no gate" annotations,
 and no omitting the `⛔` line for tasks you expect to run unattended. `tasks.md` is frozen once

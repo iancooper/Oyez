@@ -1,4 +1,4 @@
-# Claude Code Skills for Brighter Development
+# Claude Code Skills for Oyez Development
 
 This directory contains Claude Code skills (slash commands) that enforce Brighter's engineering practices and streamline common development workflows.
 
@@ -435,7 +435,7 @@ Complete! Two commits created for easier review.
 - **Skill documentation**: Each skill has a README.md in its directory
 - **Brighter guidelines**: See `.agent_instructions/` for full practices
 - **Issues**: Report skill issues at https://github.com/anthropics/claude-code/issues
-- **Contributing guidelines**: See [CONTRIBUTING.md](../CONTRIBUTING.md)
+- **Contributing guidelines**: See Brighter's [CONTRIBUTING.md](https://github.com/BrighterCommand/Brighter/blob/be197af20d0beb3478d8b2877daa036c83946cc4/CONTRIBUTING.md)
 
 ---
 

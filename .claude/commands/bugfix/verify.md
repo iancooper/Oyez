@@ -28,8 +28,6 @@ commit/PR.
    `dotnet test {test-project} --filter "FullyQualifiedName~When_{...}"`
 2. Run the broader suite for the touched project(s) to check for regressions:
    `dotnet test {test-project}`
-   (For transport/integration tests that need infrastructure, use `/test-infra:run-tests` or note
-   that the run requires a container runtime.)
 3. **Report results faithfully.** If anything fails, say so with the output and stop — do not
    declare the bug fixed. The regression test must stay (never delete or `[Skip]` it).
 

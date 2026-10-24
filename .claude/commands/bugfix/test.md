@@ -17,7 +17,7 @@ Write the **failing regression test** that pins the confirmed bug. This step is 
 around `/test-first` — it carries the confirmed diagnosis in, and `/test-first`'s own
 IDE-approval gate governs the test before any implementation.
 
-> **Always gated.** The TDD review gear ([ADR 0071](../../../docs/adr/0071-tdd-review-gear.md)) is a
+> **Always gated.** The TDD review gear ([ADR 0071](https://github.com/BrighterCommand/Brighter/blob/be197af20d0beb3478d8b2877daa036c83946cc4/docs/adr/0071-tdd-review-gear.md)) is a
 > spec-workflow mechanism: `/spec:gear` disarms the approval pause for one *spec*, and bugfixes are
 > outside it. Never read `specs/*/.current-gear` here, and never infer a gear from an ungated spec
 > run happening on the same branch. A regression test pins a defect a human already had to reason

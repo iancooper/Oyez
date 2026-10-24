@@ -49,7 +49,7 @@ rule set, stopping at the first rule that yields exactly one match:
 - If the file is missing, is empty, is whitespace-only, or names a directory that is not one of the
   candidates above, stop. Do not create or modify any file. Print exactly:
   `No spec id given and no usable current spec (specs/.current-spec is {missing|empty|stale: names
-  '{value}'}). Pass a spec id (/spec:write_release_notes 0036-scoped-lifetime-per-pipeline) or run
+  '{value}'}). Pass a spec id (/spec:write_release_notes 0001-oyez) or run
   /spec:switch first.` — using `missing` when the file does not exist, `empty` when it exists but is
   empty or whitespace-only, and `stale: names '{value}'` (with `{value}` the file's trimmed content)
   otherwise. Note the command names **itself** here, `/spec:write_release_notes`, in the example —

@@ -18,7 +18,7 @@ tasks are done.
 ### This command is the `review-after` driver
 
 There is one task-list format (`tasks.md`) and one gate-state mechanism (the **review gear**, see
-[ADR 0071](../../../docs/adr/0071-tdd-review-gear.md) and [`gear.md`](gear.md)). This command does
+[ADR 0071](https://github.com/BrighterCommand/Brighter/blob/be197af20d0beb3478d8b2877daa036c83946cc4/docs/adr/0071-tdd-review-gear.md) and [`gear.md`](gear.md)). This command does
 not have its own format and does not regenerate anything — it is simply the driver that runs
 `tasks.md` in the `review-after` gear, in a loop, unattended.
 
@@ -67,16 +67,15 @@ Running unattended changes *who reviews when*. It changes nothing else. Every ta
 - **Proves RED first** — the test is run and observed to fail *for the right reason* before any
   production code is written. A task whose test passes on first run is `ALREADY_COMPLETE`, never a
   licence to write the implementation anyway — **except** a `CHARACTERISE` task, whose RED is
-  observed through the task's named production mutation instead, and a `GENERATE` task, whose
-  generated tests pass on first run by design (see the dispatch table). Neither is ever
-  `ALREADY_COMPLETE`; a characterisation test is never dropped and never rewritten.
+  observed through the task's named production mutation instead (see the dispatch table). It is
+  never `ALREADY_COMPLETE`; a characterisation test is never dropped and never rewritten.
 - **Runs the full regression suite** for the affected project(s), not just the new test's own
   `--filter`.
 - **Produces two commits** — a `feat:`/`test:`/`fix:`/`refactor:` commit for the change, then a
   separate `docs:` commit ticking the task off in `tasks.md`.
 - **Obeys every standing test-authoring convention**: TestDoubles one class per file; a distinct
-  request type per new test double so assembly scans do not collide; new closed generics registered
-  with each test project's logging `Initializer.cs`; `When_[condition]_should_[behavior]` naming;
+  request type per new test double so assembly scans do not collide; the application built
+  through the test project's `OyezApplicationHost`; `When_[condition]_should_[behavior]` naming;
   no mocks for isolation; `InMemory*` for I/O.
 
 ## Your Task
@@ -185,13 +184,12 @@ project's `/tidy-first` vocabulary and the `STRUCTURAL` label mean the same thin
 | **Implementation only** | `IMPLEMENT` | Only run this when the test that specifies it already exists — i.e. the preceding `TEST` task is already `- [x]`, or the task names an existing failing test. Make that test pass, then the full suite. **If no such test exists, mark `- [!]`** with `RALPH-SKIPPED: IMPLEMENT task with no preceding test`. An unattended TDD loop must never write implementation that no test demanded. |
 | **Structural** | `TIDY FIRST`, `TIDY`, `TIDY-FIRST`, `STRUCTURAL` | No new test. Require the **existing** suite green before *and* after. Commit as `refactor:`. Behaviour must not change; if a test's result changes, the refactoring was wrong — revert and mark `- [!]`. |
 | **Characterisation** | `CHARACTERISE` | A test for behaviour an earlier task may already deliver (one task per acceptance criterion makes these unavoidable). Every test file the task names must be **observed RED** — either on first run, or under the task's **named RED mutation**. For each test file that passes on first run: apply the named mutation (a temporary change to *production* code, never to the test), confirm the test fails **on the assertion the task names** (not a compile error or an unrelated exception), **revert the mutation**, confirm green. If a test file fails on first run, the behaviour is missing: continue as Behavioural for that file, using the task's implementation notes. **Never revise the test and never return `ALREADY_COMPLETE`.** If a green-on-arrival file has no named mutation, or the mutation does not produce the named failure, return `FAILED`. Returns `CHARACTERISED` when no production code was kept, `GREEN` otherwise. |
-| **Generated** | `GENERATE` | The test files are rendered by a generator and must **never** be hand-written. Run the generator exactly as the task says, build, run the generated tests and the task's named audit, and return the generated files under `TEST_FILES` with `STATUS: GREEN` (commit as `test:`). Never `ALREADY_COMPLETE` — generated files passing on first run is the expected case, and they must still be committed. If the generated tests fail, return `FAILED`. |
 | **Documentation** | `DOC`, `DOCS`, `DOCUMENT` | No test. Delegate the edit; commit as `docs:`. That is the change commit for the task — the checkbox tick still gets its own second commit. |
 | **Scaffolding** | `SETUP` | Project/config/package scaffolding. No test, but `dotnet build` of the affected project(s) MUST succeed. Commit as `chore:`. |
 | **Checkpoint** | `VERIFY`, `VALIDATION` | Run the checks the task names and report. A checkpoint asserts the state is already correct, so it should need **no** source change: if it passes, tick it with the `docs:` bookkeeping commit alone. If it fails, or would require a change to pass, mark `- [!]` with the failure — do not "fix" it here, because whatever it caught belongs to some other task. |
 | **Anything else** | free prose, unlabelled | Do **not** guess: mark `- [!]` with `RALPH-SKIPPED: unrecognised task shape, needs /spec:implement`, commit the marker, and continue. An unattended loop should skip what it does not understand, not improvise. |
 
-These labels were taken from the ~750 tasks currently in `specs/`. If you meet a label that is not
+These labels were taken from the ~750 tasks in Brighter's `specs/`. If you meet a label that is not
 listed, that is the "anything else" row — skip it and let a human decide, rather than mapping it to
 the nearest row by guesswork.
 
@@ -223,12 +221,11 @@ prompt MUST include:
    - every ADR path from `.adr-list`
    - `.agent_instructions/testing.md` and `.agent_instructions/code_style.md`
    with an instruction to **read them before writing code**.
-3. The **verify command(s)** to use. If the task text states its own commands (a `GENERATE` task
-   does), pass those. Otherwise `tasks.md` tasks name a test location and test file(s) but not a
-   filter command — derive **one per test file the task names** and state them explicitly:
+3. The **verify command(s)** to use. If the task text states its own commands, pass those.
+   Otherwise `tasks.md` tasks name a test location and test file(s) but not a filter command — derive **one per test file the task names** and state them explicitly:
    `dotnet test {test project from the task's test location} --filter "FullyQualifiedName~{test method name}"`
 4. The cycle instructions, code-style rules, and hard constraints below — and, for a
-   `CHARACTERISE` or `GENERATE` task, the matching **shape cycle** below, which takes precedence
+   `CHARACTERISE` task, the **characterisation cycle** below, which takes precedence
    over the plain RED rules where they differ.
 5. The required return format below.
 
@@ -248,14 +245,14 @@ from conversation.
 - Test behavior, not implementation — public exports only; no mocks for isolation, use
   `InMemory*` implementations for I/O.
 - TestDoubles: one class per file. Give each new test double its **own distinct request type** so
-  assembly scans do not collide with other tests. Register any new closed generic with the test
-  project's logging `Initializer.cs`.
+  assembly scans do not collide with other tests. Build the application through the test
+  project's `OyezApplicationHost`, as production builds it, through `AddOyezApplication`.
 - Write the test file at the path the task specifies.
 - Run the verify command and confirm the test **FAILS** for the right reason (behavior doesn't
   exist yet). **Do not skip this.** Running unattended does not make this test-after.
 - **If the test PASSES with no implementation change**: the behavior already exists. Either
   revise the test to verify something genuinely new, or RETURN status `ALREADY_COMPLETE`.
-  **Not for a `CHARACTERISE` or `GENERATE` task** — follow its shape cycle below instead.
+  **Not for a `CHARACTERISE` task** — follow the characterisation cycle below instead.
 
 🟢 **GREEN — Make the Test Pass**
 - Write the MINIMUM code to pass — no speculative code. Follow the task's implementation notes.
@@ -292,22 +289,12 @@ Work **per test file** the task names:
    needed an implementation (the mixed case), and in both cases fill `RED_EVIDENCE` for **every**
    test file.
 
-#### Generated cycle for the sub-agent (include for a `GENERATE` task)
-
-1. Never write or edit a generated file by hand. Build the generator and run it exactly as the task
-   says.
-2. Build, then run the verify commands and any audit the task names. Passing on first run is the
-   expected case.
-3. RETURN `GREEN` with **every** file the generator wrote or changed under `TEST_FILES`, including
-   helper files the task says the generator also renders, and nothing under `IMPL_FILES`. Never
-   `ALREADY_COMPLETE`. If a generated test or the audit fails → `FAILED`.
-
 #### Hard constraints for the sub-agent (include in the prompt)
 
 - **NEVER** run `git commit`, `git add`, or `git push`.
 - **NEVER** edit `tasks.md` or `.current-gear`.
-- Only create/modify the test file(s) and implementation source file(s) — plus, for a `GENERATE`
-  task, the files the generator renders. A RED mutation is reverted before you return.
+- Only create/modify the test file(s) and implementation source file(s). A RED mutation is
+  reverted before you return.
 - Do not ask the user anything — this is unattended. Where `testing.md` or the task says
   "stop and ask", RETURN `FAILED` with the question as the reason.
 - If the task cannot be done as written (it contradicts an ADR, depends on something absent, or

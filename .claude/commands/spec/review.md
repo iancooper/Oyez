@@ -25,7 +25,7 @@ Read `specs/.current-spec` to determine the active specification directory.
 Parse $ARGUMENTS:
 - Extract **phase**: first word — `requirements`, `design`, `tasks`, or `code`
 - Extract **adr-number**: for `design` phase, a zero-padded 4-digit number (e.g., `0053`). **Precedence rule**: a 4-digit zero-padded number is ALWAYS an ADR number, never a threshold.
-- Extract **base-ref**: for `code` phase, a token starting with `--base=` (e.g., `--base=origin/master`). Default base is `master`.
+- Extract **base-ref**: for `code` phase, a token starting with `--base=` (e.g., `--base=origin/main`). Default base is `main`.
 - Extract **threshold**: any other numeric value (default: **60**)
 - If phase is empty: auto-detect. Check approval markers in order: `.requirements-approved`, `.design-approved`, `.tasks-approved`. The first missing marker is the phase to review. If all three are approved, default to `code` (review the implementation against the approved specs). If no branch is checked out or there is no diff vs. base, tell the user there is nothing to review and suggest `/spec:status`.
 
@@ -39,8 +39,8 @@ Examples:
 - `/spec:review design 0053 80` → review ADR 0053, threshold 80
 - `/spec:review design 70` → review all ADRs, threshold 70 (not 4-digit, so it's a threshold)
 - `/spec:review tasks 50` → review tasks, threshold 50
-- `/spec:review code` → review branch diff vs. master, threshold 60
-- `/spec:review code 70` → review branch diff vs. master, threshold 70
+- `/spec:review code` → review branch diff vs. main, threshold 60
+- `/spec:review code 70` → review branch diff vs. main, threshold 70
 - `/spec:review code --base=origin/main 70` → diff vs. origin/main, threshold 70
 
 ### Step 2: Gather Documents for the Sub-Agent
@@ -69,7 +69,7 @@ Read ALL documents the sub-agent will need. The sub-agent gets a clean context �
 - Read `specs/{current-spec}/.adr-list` and each ADR (for cross-referencing)
 
 **For code review:**
-- Resolve `{base-ref}` (default `master`). Run `git rev-parse --verify {base-ref}` — if it fails, tell the user the base ref doesn't exist and stop.
+- Resolve `{base-ref}` (default `main`). Run `git rev-parse --verify {base-ref}` — if it fails, tell the user the base ref doesn't exist and stop.
 - Run `git merge-base {base-ref} HEAD` to find the divergence point.
 - Run `git diff --stat {base-ref}...HEAD` to get the summary of changed files.
 - Run `git log --oneline {base-ref}..HEAD` to get the commit list.

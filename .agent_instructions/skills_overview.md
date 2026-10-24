@@ -1,6 +1,6 @@
 # Claude Code Skills Overview
 
-This document provides a quick reference for the Claude Code skills available for Brighter development.
+This document provides a quick reference for the Claude Code skills available for Oyez development.
 
 ## What Are Skills?
 
@@ -85,7 +85,7 @@ Skills are slash commands that automate multi-step workflows and enforce Brighte
    /adr <title>
    • Auto-numbered, properly formatted ADRs
    • Links to current spec if applicable
-   • Example: /adr kafka error handling strategy
+   • Example: /adr channel publisher retry strategy
 
 📐 SPECIFICATION WORKFLOW
    /spec:requirements [issue]    → Capture requirements
@@ -248,10 +248,10 @@ Each skill enforces specific practices from `.agent_instructions/`:
 
 ```bash
 # Refactor without adding features
-/tidy-first simplify nested conditionals in KafkaConsumer
+/tidy-first simplify nested conditionals in AnnouncementParser
 
 # Output: Single commit
-#   - refactor: simplify nested conditionals in KafkaConsumer
+#   - refactor: simplify nested conditionals in AnnouncementParser
 ```
 
 ### Workflow 5: Shift Gear Mid-Spec (Attended → Unattended → Attended)

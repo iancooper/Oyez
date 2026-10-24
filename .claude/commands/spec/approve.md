@@ -65,7 +65,7 @@ Parse $ARGUMENTS to extract phase and optional ADR number:
 
    There is **one** task list (`tasks.md`) and **one** route to it. What used to be a fork in
    the artifacts is now a **gear** you select at implementation time, and can change as you go
-   ([ADR 0071](../../../docs/adr/0071-tdd-review-gear.md)) — so there is nothing to choose here.
+   ([ADR 0071](https://github.com/BrighterCommand/Brighter/blob/be197af20d0beb3478d8b2877daa036c83946cc4/docs/adr/0071-tdd-review-gear.md)) — so there is nothing to choose here.
    Mention both drivers so the user knows what is coming, but do not ask them to commit to one:
 
    - `/spec:implement` — one task at a time, on **sonnet**. Red → **user approval** → Green →

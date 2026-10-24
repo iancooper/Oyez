@@ -51,7 +51,7 @@ criterion. A green test has not yet shown that it can fail, so it has not yet sh
 anything. **Do not weaken, rewrite or delete it to get a failure, and do not treat the task as
 "already complete".**
 
-Instead, observe RED through a **named mutation** ([ADR 0071](../docs/adr/0071-tdd-review-gear.md),
+Instead, observe RED through a **named mutation** ([ADR 0071](https://github.com/BrighterCommand/Brighter/blob/be197af20d0beb3478d8b2877daa036c83946cc4/docs/adr/0071-tdd-review-gear.md),
 *Characterisation amendment*):
 
 1. Apply a temporary change to **production code, never to the test**. It should be the realistic
@@ -74,7 +74,7 @@ the test guards against, and confirm it fails for that reason.
 
 ### The review gear
 
-Whether the approval pause fires is a **gear** ([ADR 0071](../docs/adr/0071-tdd-review-gear.md)),
+Whether the approval pause fires is a **gear** ([ADR 0071](https://github.com/BrighterCommand/Brighter/blob/be197af20d0beb3478d8b2877daa036c83946cc4/docs/adr/0071-tdd-review-gear.md)),
 selected for the certainty you have and the blast radius you face — high value early in a spec, low
 value on a run of near-identical tasks whose shape has already been reviewed repeatedly.
 
@@ -100,8 +100,8 @@ value on a run of near-identical tasks whose shape has already been reviewed rep
 - **The two-commit shape** — a `feat:`/`test:` commit for the behaviour, then a separate `docs:`
   commit ticking the task off in `tasks.md`.
 - **Every convention in this document** — naming, one test per file, TestDoubles one class per
-  file, a distinct request type per new test double, new closed generics registered with the test
-  project's logging `Initializer.cs`, no mocks for isolation, `InMemory*` for I/O.
+  file, a distinct request type per new test double, the application built through the test
+  project's `OyezApplicationHost`, no mocks for isolation, `InMemory*` for I/O.
 
 A run in `review-after` that drops any of these is defective — it is not "a different gear".
 - Where possible, avoid writing tests after.
@@ -191,17 +191,17 @@ A run in `review-after` that drops any of these is defective — it is not "a di
 
 ## Test Doubles
 
-- Use fakes or mocks for I/O for testing core libraries such as Paramore.Brighter or Paramore.Brighter.ServiceActivator
+- Use fakes or mocks for I/O for testing core libraries such as Oyez.Core
   - Consider writing in-memory replacements for I/O, that could be used in a production system, over a fake or mock.
   - Look for existing classes that use the naming convention InMemory*
   - Use the naming convention InMemory for your own in-memory implementations.
-  - See [ADR 0023](../docs/adr/0023-reactor-and-nonblocking-io.md) for advice on how to replace I/O.
+  - See [ADR 0023](https://github.com/BrighterCommand/Brighter/blob/be197af20d0beb3478d8b2877daa036c83946cc4/docs/adr/0023-reactor-and-nonblocking-io.md) for advice on how to replace I/O.
 - Do NOT use fakes or mocks for isolating a class.
   - We use developer tests: isolation is to the most recent edit, not a class.
   - Do not inject dependencies into a constructor or property for test isolation
 - You MAY use fakes or mocks (test doubles) for I/O or the strategy pattern. Prefer in-memory alternatives to fakes to mocks.
   - You may use a test double to replace I/O as it is slow and has shared fixture making tests brittle.
-  - You should look at using an in-memory substitute if testing core functionality that can use a range of alternative I/O. For example you can use an in-memory substitute such as InMemoryMessageProducer or InMemoryOutbox.
+  - You should look at using an in-memory substitute if testing core functionality that can use a range of alternative I/O. For example you can use an in-memory substitute such as InMemoryAnnouncementStore.
   - If you are testing the implementation of a messaging gateway (transport), outbox, inbox or other I/O adapter, you should create a suite of tests that use those directly to prove the implementation works. We separate these into test assemblies that require the dependency on a broker or database to run. This allows the core tests, that substitute I/O to run without additional dependencies, and indicates what dependencies you need to run a particular test suite.
   or use of the strategy pattern to satisfy the open-closed principle.
 - Only add code needed to satisfy a behavioral requirement expressed in a test.
@@ -212,7 +212,7 @@ A run in `review-after` that drops any of these is defective — it is not "a di
 - When testing messaging gateways (Kafka, RabbitMQ, etc.) or databases, use Docker for test infrastructure
 - Docker Compose files for test infrastructure are located in the solution root (e.g., `docker-compose-kafka.yaml`)
 - Integration tests that require middleware should:
-  - Be in separate test assemblies (e.g., `Paramore.Brighter.Kafka.Tests`)
+  - Be in separate test assemblies (e.g., Brighter's `Paramore.Brighter.Kafka.Tests`)
   - Use docker-compose to spin up required infrastructure
   - Test actual integration with the middleware, not mocked behavior
   - Follow the same TDD workflow: write failing test, get approval, implement
@@ -221,47 +221,3 @@ A run in `review-after` that drops any of these is defective — it is not "a di
   - Get approval for the test
   - Implement the code to make it pass
   - This ensures you're building the right behavior from the start
-
-### Hand-written tests that use a generated pump must join its configuration's collection
-
-The generated `ConformanceDeferredPump` (one per provider configuration, under that configuration's
-`Generated/` folder) keeps its dispatch count, requeue count and `HandledCount` log in **static**
-counters. Every test that uses it calls `ConformanceDeferredPump.ResetDispatchCount()` in its
-constructor, and that clears the counters for **every** message, not only the test's own.
-
-xUnit runs test classes in different collections in parallel. So if two classes using the same pump
-run at once, one test's reset wipes the other's in-flight counts. The failures are intermittent and
-look like wrong counts (e.g. "Expected 0, Actual 1").
-
-- The generated tests are already safe. Each `test-configuration.json` sets a `CollectionName` for
-  every configuration, and the templates put every generated test in that collection, so tests
-  sharing a pump run one at a time.
-- **A hand-written test that uses a generated pump must join the same collection.** Put
-  `[Collection("<CollectionName>")]` on the class, with the `CollectionName` of the configuration
-  whose pump it imports. For example, a test using
-  `Paramore.Brighter.AWS.Tests.MessagingGateway.SqsStandard.ConformanceDeferredPump` takes
-  `[Collection("SqsStandard")]`.
-- Do not "fix" the race by removing the reset from a test or template. The reset is part of the
-  spec 0037 harness contract (task 3.2) and a generator test enforces it.
-- Before you accept a new test of this kind, run the full suite for the project more than once.
-  This race does not show up in a filtered run.
-
-### RabbitMQ: run each suite against the broker version it targets
-
-The two RabbitMQ suites do not target the same broker, and pointing one at the other's version
-produces a wall of red that is not a regression.
-
-- **`RMQ.Async` runs on 4.2 and 4.3+.** `RmqSubscription.isDurable` defaults to `true` there (#4355),
-  so a default subscription declares a queue 4.3 accepts.
-- **`RMQ.Sync` runs on 4.2 only.** It targets the RabbitMQ 3.x line through `RabbitMQ.Client` 6.x, so
-  its `isDurable` default is deliberately still `false`. RabbitMQ **4.3 removed transient
-  non-exclusive queues**, so on a 4.3+ broker every queue declaration is rejected with
-  `INTERNAL_ERROR - Feature 'transient_nonexcl_queues' is deprecated`. Measured against 4.3.5:
-  **46 failed / 35 passed / 3 skipped**. This applies to the package, not just its tests — a default
-  subscription from `Paramore.Brighter.MessagingGateway.RMQ.Sync` is rejected by 4.3+ too.
-
-`docker-compose-rmq.yaml` is pinned to 4.2 for this reason and CI uses it, so `rabbitmq-sync-ci` is
-green. **Check the broker version before reading a local RabbitMQ failure** — `docker ps` will show
-an unrelated 4.3 container holding 5672 on a developer machine. Do not "fix" the `isDurable: false`
-sites in `Paramore.Brighter.RMQ.Sync.Tests` to make a 4.3 run pass; they match the product default
-the package deliberately keeps.

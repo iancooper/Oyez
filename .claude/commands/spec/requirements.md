@@ -189,7 +189,7 @@ After the sub-agent returns:
 ### Step 6: Branch Management
 
 1. Check current branch with `git branch --show-current`
-2. If on `master` or `main`:
+2. If on `main`:
    - Offer to create feature branch: `git checkout -b feature/{issue-number}-{feature-name}` or `feature/{feature-name}`
 3. If on another branch:
    - Inform user: "You're on branch `{branch-name}`. You can continue using this branch or create a new one."

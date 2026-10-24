@@ -28,7 +28,7 @@ Current spec directory: specs/
 
 ## The review gear
 
-Whether the approval gate fires is the **gear** ([ADR 0071](../../../docs/adr/0071-tdd-review-gear.md),
+Whether the approval gate fires is the **gear** ([ADR 0071](https://github.com/BrighterCommand/Brighter/blob/be197af20d0beb3478d8b2877daa036c83946cc4/docs/adr/0071-tdd-review-gear.md),
 full reference in [`gear.md`](gear.md)):
 
 | Gear | Gate | Meaning |
@@ -157,9 +157,6 @@ For each task, follow this strict workflow:
      **on the assertion the task names**, **revert the mutation**, and confirm green again. That is
      RED observed. No named mutation, or a mutation that fails some other way, is a stop-and-ask.
      A `CHARACTERISE` test that fails on first run is simply RED — continue as normal.
-   - **`GENERATE` task**: do not write the test with Write/Edit. Run the generator exactly as the
-     task says, build, and run the generated tests and any audit the task names. The approval gate
-     below is on the **generated files**, before they are committed.
 
 6. **Show Test to User**:
    - Display the test code
@@ -180,8 +177,6 @@ do not rely on a value resolved several tasks ago.
    implement: ask instead "I've written a characterisation test for [behavior]; it went red under
    [mutation] and the mutation is reverted. Should I commit it?". On approval, run the **full test
    suite** for the affected project(s), then go to Step 5.
-   For a `GENERATE` task ask: "I've generated [files]; the generated tests and [audit] pass. Should I
-   commit them?". On approval, go to Step 5.
 
 2. Wait for user approval
 
@@ -198,9 +193,7 @@ Skip the pause — and **only** the pause:
 
 1. Confirm RED is already proved: the test ran and failed **for the right reason** — on arrival,
    or, for a `CHARACTERISE` task, under its named mutation (reverted). If it has not, go back and
-   prove it. `review-after` never licenses writing implementation first. A `GENERATE` task has no
-   RED of its own: instead confirm the generated tests and any audit the task names are green, run
-   the full suite for the affected project(s), and go to Step 5.
+   prove it. `review-after` never licenses writing implementation first.
 2. Print one line recording that the pause was skipped and why, e.g.
    `➖ review-after (Phase 5) — proceeding to GREEN without pausing`.
 3. Proceed to GREEN — or, for a characterisation test with nothing to implement, run the full
@@ -295,7 +288,7 @@ history should see the behaviour commit without a task-list tick mixed into it.
    Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
    ```
    Use `test:` instead of `feat:` when the task added only a test — including a characterisation
-   test and generated test files — and `fix:` for a bug fix. For a characterisation test, add a
+   test — and `fix:` for a bug fix. For a characterisation test, add a
    `- Characterisation — RED observed via: [mutation]` line. **Before staging, run
    `git status --porcelain`** and confirm no production file is still modified by a mutation.
 
@@ -346,8 +339,8 @@ terminal while you were working, and a downshift must take effect at the very ne
 - **The two-commit shape** — `feat:`/`test:` for the behaviour, then a separate `docs:` for the
   task-list tick
 - **The test-authoring conventions** — TestDoubles one class per file; a distinct request type per
-  new test double so assembly scans do not collide; new closed generics registered with each test
-  project's logging `Initializer.cs`; `When_[condition]_should_[behavior]` naming; no mocks for
+  new test double so assembly scans do not collide; the application built through the test
+  project's `OyezApplicationHost`; `When_[condition]_should_[behavior]` naming; no mocks for
   isolation; `InMemory*` for I/O
 
 ### Code Quality Requirements

@@ -1,6 +1,6 @@
 # Architecture Decision Record (ADR) Commands
 
-This directory contains Claude Code commands for creating and managing Architecture Decision Records in the Brighter project.
+This directory contains Claude Code commands for creating and managing Architecture Decision Records in the Oyez project.
 
 ## Commands
 
@@ -196,7 +196,7 @@ This updates the Status field in the ADR from "Proposed" to "Accepted".
 ## File Locations
 
 ```
-Brighter/
+Oyez/
 ├── docs/
 │   └── adr/
 │       ├── index.md                                # Derived index (generated; do not hand-edit)
@@ -218,6 +218,6 @@ Brighter/
 ## References
 
 - [Documentation Standards](../../../.agent_instructions/documentation.md)
-- [ADR Template](../../../docs/adr/0001-record-architecture-decisions.md)
+- [ADR Template](https://github.com/BrighterCommand/Brighter/blob/be197af20d0beb3478d8b2877daa036c83946cc4/docs/adr/0001-record-architecture-decisions.md)
 - [Specification Workflow](../spec/README.md)
 - [Michael Nygard's ADR article](http://thinkrelevance.com/blog/2011/11/15/documenting-architecture-decisions)

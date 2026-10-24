@@ -19,7 +19,7 @@ up. The moment the work starts producing tests you would not have approved, shif
 | `review-before` | ✅ armed | The user reviews each test in their IDE **before** implementation. **The default.** |
 | `review-after` | ➖ not armed | The user reviews a **batch** of completed work after the fact. |
 
-See [ADR 0071](../../../docs/adr/0071-tdd-review-gear.md) for why this exists and why it lives where
+See [ADR 0071](https://github.com/BrighterCommand/Brighter/blob/be197af20d0beb3478d8b2877daa036c83946cc4/docs/adr/0071-tdd-review-gear.md) for why this exists and why it lives where
 it does.
 
 ## The gear file
@@ -172,8 +172,8 @@ explicitly whenever you shift:
 - **The two-commit shape**: a `feat:`/`test:` commit for the behaviour, then a separate `docs:`
   commit ticking the task off in `tasks.md`.
 - **Every standing test-authoring convention**: TestDoubles one class per file; a distinct request
-  type per new test double so assembly scans do not collide; new closed generics registered with
-  each test project's logging `Initializer.cs`; `When_[condition]_should_[behavior]` naming; no mocks
+  type per new test double so assembly scans do not collide; the application built through
+  the test project's `OyezApplicationHost`; `When_[condition]_should_[behavior]` naming; no mocks
   for isolation; `InMemory*` for I/O.
 
 If a run in `review-after` is dropping any of these, that is a defect in the run, not a consequence

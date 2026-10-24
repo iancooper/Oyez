@@ -41,7 +41,7 @@ public string Status { get; set; }
   ```  
 
 - Documentation comments should be changed when APIs change.  
-- Document new features and changes in the Docs repository of the BrighterCommand organization.
+- Document new features and changes in `README.md` and `docs/`.
 
 ## Comments in Code
 
@@ -74,9 +74,9 @@ Where a comment may go depends on what it is attached to.
 
 We are using Architecture Decision Records (ADR) to record important design decisions that we make. When you make a significant decicion about design, that would be useful as context to future reviewers, or explorers of the codebase, please record your design decision as an ADR.
 
-Place ADRs in the [ADR directory](../adr)
+Place ADRs in the [ADR directory](../docs/adr)
 
-The template for the ADR is in our [first ADR](../adr/0001-record-architecture-decisions.md).
+The template for the ADR is in Brighter's [first ADR](https://github.com/BrighterCommand/Brighter/blob/be197af20d0beb3478d8b2877daa036c83946cc4/docs/adr/0001-record-architecture-decisions.md).
 
 An ADR should follow the naming convention [Sequence Number]-[Title].md
 
@@ -108,9 +108,9 @@ nesting level.
 | `## Alternatives Considered` | genuine rejection rationale, not strawmen. State the do-nothing option when the ADR delivers no behaviour |
 | `## References` | parent requirement, related ADRs, external references |
 
-`docs/adr/0070-per-pipeline-di-scope-for-mapper-and-transform-factories.md` is the worked example
-of the full shape; `0072-ambient-scope-adoption-seam.md` shows the decision-ladder form.
-`0001-record-architecture-decisions.md` remains the minimal template.
+Brighter's [`0070-per-pipeline-di-scope-for-mapper-and-transform-factories.md`](https://github.com/BrighterCommand/Brighter/blob/be197af20d0beb3478d8b2877daa036c83946cc4/docs/adr/0070-per-pipeline-di-scope-for-mapper-and-transform-factories.md) is the worked example
+of the full shape; [`0072-ambient-scope-adoption-seam.md`](https://github.com/BrighterCommand/Brighter/blob/be197af20d0beb3478d8b2877daa036c83946cc4/docs/adr/0072-ambient-scope-adoption-seam.md) shows the decision-ladder form.
+[`0001-record-architecture-decisions.md`](https://github.com/BrighterCommand/Brighter/blob/be197af20d0beb3478d8b2877daa036c83946cc4/docs/adr/0001-record-architecture-decisions.md) remains the minimal template.
 
 ### Terms
 

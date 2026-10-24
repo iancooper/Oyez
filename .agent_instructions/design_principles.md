@@ -40,7 +40,7 @@
       easy to get right in new call sites and just as easy to miss in existing ones (tests
       especially) when a second implementation is added later.
     - This is a deliberate, ADR-sanctioned pattern (see
-      [ADR 0074](../docs/adr/0074-lifetime-validation-evaluation-site.md)), not something to avoid —
+      [ADR 0074](https://github.com/BrighterCommand/Brighter/blob/be197af20d0beb3478d8b2877daa036c83946cc4/docs/adr/0074-lifetime-validation-evaluation-site.md)), not something to avoid —
       but treat adding a second implementation under an existing service type as a breaking change
       that requires sweeping **every** call site (`grep` for `GetService<TService>()` and
       `GetRequiredService<TService>()` repo-wide, including tests) to the multi-resolve pattern, not

@@ -47,7 +47,7 @@ Date: 2026-06-18
 | `id`      | yes      | string          | **Stable identity = the filename stem** (name without `.md`), e.g. `0043-rabbitmq-mutual-tls`. This is the unique key; see *Identity and numbering* below. |
 | `title`   | yes      | string (quoted) | The ADR title. Use the H1 title text (without the leading `N.` number). |
 | `status`  | yes      | enum            | One of `Proposed`, `Accepted`, `Deprecated`, `Superseded`. Mirrors the body `## Status`. See *Status* below. |
-| `author`  | yes      | list of strings | Always list form, even for one author: `- "Name"`. Backfill default is `- "Brighter Team"` where no author is recorded. |
+| `author`  | yes      | list of strings | Always list form, even for one author: `- "Name"`. Backfill default is `- "Oyez Team"` where no author is recorded. |
 | `created` | yes      | date (ISO 8601) | `YYYY-MM-DD`. For existing ADRs use the body `Date:` line. |
 | `summary` | yes      | string (quoted) | One or two sentences describing the decision. This is what an agent reads to decide whether to open the full ADR — make it specific about *what was decided*, not just the topic. |
 | `tags`    | yes      | list of strings | 1–4 topic tags drawn from the controlled vocabulary below. |

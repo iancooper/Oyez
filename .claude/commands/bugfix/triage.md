@@ -118,7 +118,7 @@ After the sub-agent returns:
 ### Step 5: Branch Management
 
 1. Check current branch with `git branch --show-current`
-2. If on `master`/`main`, offer to create a fix branch:
+2. If on `main`, offer to create a fix branch:
    `git checkout -b bugfix/{issue-number}-{slug}` (or `bugfix/{slug}` with no issue)
 3. If on another branch, tell the user they can keep it or create a new one.
 
