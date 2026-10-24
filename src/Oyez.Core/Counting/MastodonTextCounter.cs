@@ -23,11 +23,21 @@ THE SOFTWARE. */
 
 #endregion
 
+using System.Globalization;
+using System.Text.RegularExpressions;
+
 namespace Oyez.Core.Counting;
 
-internal sealed class MastodonTextCounter : IAmATextCounter
+internal sealed partial class MastodonTextCounter : IAmATextCounter
 {
     private readonly UrlMatcher _urls = new(includeBareDomains: false);
 
-    public int Count(string text) => _urls.ReplaceWithPlaceholders(text).Length;
+    public int Count(string text) =>
+        new StringInfo(WithoutMentionDomains(_urls.ReplaceWithPlaceholders(text))).LengthInTextElements;
+
+    private static string WithoutMentionDomains(string text) =>
+        RemoteMentionPattern().Replace(text, "${user}");
+
+    [GeneratedRegex(@"(?<user>(?<![\p{L}\p{N}_@./:-])@[\p{L}\p{N}_]+(?:[.-][\p{L}\p{N}_]+)*)@[\p{L}\p{N}](?:[\p{L}\p{N}.-]*[\p{L}\p{N}])?", RegexOptions.CultureInvariant)]
+    private static partial Regex RemoteMentionPattern();
 }
