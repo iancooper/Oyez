@@ -195,6 +195,7 @@ Every task in this phase sends Brighter commands, or runs Darker queries, throug
 - **Tests (Core):**
   - `When_an_announcement_has_never_been_published_should_report_no_channels_published`
   - `When_a_publication_record_exists_should_report_each_channels_state_and_posts`
+- **Code-smell finding to resolve here (Phase 1 review):** before the first test, hide the test boilerplate. About 40 tests write the whole announcement text inline where the header isn't the point, and every class repeats the host, the `_id` and `Dispose`. Use `AnnouncementText` where the header isn't evident data, and add a small fixture or base for the host and ID, so the Phase 2 tests start clean.
 - **Done when:** the tests pass.
 
 ### [ ] T-13 Publish due announcements
@@ -353,6 +354,7 @@ Every task in this phase tests a port implementation registered by `AddOyezAdapt
   - With only valid announcements, it exits with 0.
   - A missing or invalid `oyez.json` exits with 3.
   - `validate` needs no secrets.
+- **Code-smell finding to resolve here (Phase 1 review):** when binding `OyezOptions` from `oyez.json`, have each `…Profile` hold its own `ChannelOptions` section rather than each repeating `options.<Channel>.Enabled` and `.Limit` (Preserve Whole Object).
 - **Done when:** the tests pass.
 
 ### [ ] T-29 `oyez preview`

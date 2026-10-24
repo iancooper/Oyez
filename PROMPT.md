@@ -68,8 +68,12 @@ Layout: planning documents at the repo root, code in `src/`, tests in `tests/`, 
 
   The rest are recorded in `tasks.md`: under T-3, at the start of T-4 (the `IAmAChannelProfile` strategy refactor), and in the backlog.
 - T-3 is done: the `ValidateAnnouncements` query, and `PreviewAnnouncement` returning failures (including for an announcement that doesn't exist). The T-3 code-smell findings are resolved: an internal `AnnouncementHeader` owns the known keys and reports its own errors, unknown channels are errors, and the preview handler no longer uses `!` or an unchecked `.Value`. The user also approved one extra test, `When_previewing_a_malformed_announcement_should_return_its_validation_errors`. Publish times must be strict ISO 8601 (`yyyy-MM-ddTHH:mm[:ss[.fff]]` with `Z` or an offset).
+- T-4 to T-11 are done, in the review-after gear, by Sonnet sub-agents. Phase 1's tasks are complete (103 tests). The T-4 refactor (`IAmAChannelProfile`) came first, in its own commit.
+- The Phase 1 code-smell review (T-3 to T-11) found 13 code smells and 3 test smells. Ten were fixed as `refactor:` commits. Two are deferred: test boilerplate to T-12, and profiles' options lookup to T-28. The user chose: braces on any multi-line control statement; ALL_CAPS for static readonly lookup tables (both in `CLAUDE.md`); and moving `UsDollars` to `Costing`. `design.md` was brought in line with the code.
+- The review also found five behaviour gaps, which await the user's decision: an announcement naming only disabled channels; an empty `channels:` value; duplicate header keys; the hand-typed emoji table (keycaps miscount on X; © and ® unverified); and no general post-over-its-channel's-limit check.
+- After the Phase 1 PR: import Brighter's `.agent_instructions` and `/spec`, `/bugfix`, `/refactor` commands (with `tdd`, `adr`, `test-infra`), adopting Brighter's `specs/` layout, on a separate branch. The user chose this on 2026-10-24.
 - The GitHub repo `iancooper/Oyez` was made public on 2026-10-19 (it was still empty), so Actions minutes are free.
 
 ## Next action
 
-T-4: first the `IAmAChannelProfile` refactor listed under T-4 in `tasks.md`, in its own `refactor:` commit; then write the T-4 tests and stop for the user's approval.
+The user reviews Phase 1 as a batch and decides on the five behaviour gaps. Then open the Phase 1 PR (ask before pushing). Branch `phase-1-core-domain` was cut from `add-readme` (PR #2), so PR #2 should merge first, or the Phase 1 PR should target `add-readme`.
