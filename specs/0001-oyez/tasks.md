@@ -541,6 +541,9 @@ Every task in this phase tests a port implementation registered by `AddOyezAdapt
 
 ## Backlog (Could, not scheduled)
 
+**Tooling:**
+- `/spec:show-me` (a merge-risk summary of a finished spec) was parked when Brighter's commands were imported. Its measurement script's tests were built around Brighter's own specs and ADRs, and PRs here are expected to be simple. Review an alternative later, or restore it from BrighterCommand/Brighter@be197af.
+
 **Refactoring, from the code-smell review after T-2:**
 - Rewrite the block-splitting loop in `AnnouncementParser` as a pipeline.
 - Remove package references that nothing uses yet, such as `Paramore.Darker.QueryLogging` and the unused ones in Adapters and Cli. Add them back when a task needs them.

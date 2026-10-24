@@ -6,7 +6,7 @@ Oyez uses Brighter's spec layout. The current spec is named in `specs/.current-s
 
 Oyez follows Brighter's agent instructions, copied into `.agent_instructions/`. Read `code_style.md`, `design_principles.md`, `testing.md` and the "Comments in Code" and "Licensing" sections of `documentation.md`. This file summarises them as they apply to Oyez, and records where Oyez differs. Where this file and `.agent_instructions/` disagree, this file wins.
 
-Brighter's commands are copied into `.claude/commands/`: `/spec:*` (requirements, design, tasks, approve, implement, ralph-implement, gear, review, status), `/bugfix:*`, `/refactor:*` (smells, tidy-first, tidy-comments), `/tdd:test-first` and `/adr`. They came from BrighterCommand/Brighter@be197af; the commit that adapted them to Oyez shows every local change, so a later sync can reapply it. `/test-infra` (Brighter's broker containers), `box_provisioning.md` and `generated_tests.md` were left out. `show_me_facts_tests.cs` fails here, because its cases are Brighter's own specs and ADRs; `/spec:show-me` itself works.
+Brighter's commands are copied into `.claude/commands/`: `/spec:*` (requirements, design, tasks, approve, implement, ralph-implement, gear, review, status), `/bugfix:*`, `/refactor:*` (smells, tidy-first, tidy-comments), `/tdd:test-first` and `/adr`. They came from BrighterCommand/Brighter@be197af; the commit that adapted them to Oyez shows every local change, so a later sync can reapply it. `/test-infra` (Brighter's broker containers), `box_provisioning.md` and `generated_tests.md` were left out, and `/spec:show-me` (with its script and fixtures) is parked; see the backlog in `tasks.md`.
 
 ## Workflow
 
