@@ -81,7 +81,7 @@ Parsing, counting, rendering and validation are internal to `Oyez.Core`. Every t
   - `When_a_separator_line_has_trailing_whitespace_should_still_separate_segments`
 - **Done when:** the tests pass.
 
-### [ ] T-3 Report a malformed announcement
+### [x] T-3 Report a malformed announcement
 - **Covers:** FR-1.3, FR-5.2, NFR-7, AC-2
 - **Builds:** the query `ValidateAnnouncements`, which takes the IDs to check (or none, meaning all), and returns `ValidationError`s. `PreviewAnnouncement` returns the same errors as a failed `Result`.
 - **Tests (Core):** each case gives a `ValidationError` naming the announcement and the problem.

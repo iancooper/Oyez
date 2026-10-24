@@ -58,8 +58,9 @@ Layout: planning documents at the repo root, code in `src/`, tests in `tests/`, 
   6. `ChannelId.TryParse`.
 
   The rest are recorded in `tasks.md`: under T-3, at the start of T-4 (the `IAmAChannelProfile` strategy refactor), and in the backlog.
+- T-3 is done: the `ValidateAnnouncements` query, and `PreviewAnnouncement` returning failures (including for an announcement that doesn't exist). The T-3 code-smell findings are resolved: an internal `AnnouncementHeader` owns the known keys and reports its own errors, unknown channels are errors, and the preview handler no longer uses `!` or an unchecked `.Value`. The user also approved one extra test, `When_previewing_a_malformed_announcement_should_return_its_validation_errors`. Publish times must be strict ISO 8601 (`yyyy-MM-ddTHH:mm[:ss[.fff]]` with `Z` or an offset).
 - The GitHub repo `iancooper/Oyez` was made public on 2026-10-19 (it was still empty), so Actions minutes are free.
 
 ## Next action
 
-T-3: write the tests, including the code-smell findings listed under T-3 in `tasks.md`, then stop for the user's approval.
+T-4: first the `IAmAChannelProfile` refactor listed under T-4 in `tasks.md`, in its own `refactor:` commit; then write the T-4 tests and stop for the user's approval.
