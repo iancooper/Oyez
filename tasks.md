@@ -115,7 +115,7 @@ Parsing, counting, rendering and validation are internal to `Oyez.Core`. Every t
   - `When_a_post_contains_a_bare_domain_should_count_it_literally_for_mastodon`
 - **Done when:** the tests pass.
 
-### [ ] T-5 Count characters for X
+### [x] T-5 Count characters for X
 - **Covers:** FR-2.1, AC-3, AC-4
 - **Tests (Core):** observed as X post counts in the preview.
   - `When_a_segment_has_a_release_url_and_250_ascii_characters_should_count_273_for_x` (AC-3)
