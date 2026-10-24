@@ -40,7 +40,7 @@ internal sealed class Validator(IEnumerable<IAmAChannelProfile> profiles, Render
     {
         var x = profiles.Single(profile => profile.Id == ChannelId.X);
         return x.Limit is { } limit
-            ? announcement.Segments.Where(segment => x.Counter.Count(x.Prepare(segment.Text)) > limit).Select(segment => OverLimit(announcement, segment, limit))
+            ? announcement.Segments.Where(segment => x.Measure(segment.Text) > limit).Select(segment => OverLimit(announcement, segment, limit))
             : [];
     }
 

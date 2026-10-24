@@ -66,7 +66,7 @@ internal sealed class Renderer(IEnumerable<IAmAChannelProfile> profiles)
     private static void Append(List<string> posts, string text, IAmAChannelProfile profile)
     {
         var candidate = posts.Count == 0 ? text : posts[^1] + SEGMENT_SEPARATOR + text;
-        if (posts.Count == 0 || !Fits(profile, candidate))
+        if (posts.Count == 0 || !profile.Fits(candidate))
         {
             posts.Add(text);
         }
@@ -75,9 +75,6 @@ internal sealed class Renderer(IEnumerable<IAmAChannelProfile> profiles)
             posts[^1] = candidate;
         }
     }
-
-    private static bool Fits(IAmAChannelProfile profile, string text) =>
-        profile.Limit is not { } limit || profile.Counter.Count(profile.Prepare(text)) <= limit;
 
     private static Post NewPost(IAmAChannelProfile profile, int index, string text)
     {
