@@ -3,24 +3,19 @@ using Oyez.Core.Previewing;
 
 namespace Oyez.Core.Tests.Merging;
 
-public class MergeOnTheLimitTests : IDisposable
+public class MergeOnTheLimitTests() : OyezApplicationTest(options => options.Mastodon.Limit = 402)
 {
-    private readonly OyezApplicationHost _host = new(options => options.Mastodon.Limit = 402);
-    private readonly AnnouncementId _id = new("2026-11-03-brighter-10-3-0");
-
     [Fact]
     public async Task When_a_merge_lands_exactly_on_the_limit_should_merge()
     {
         //Arrange
         var segments = new[] { AnnouncementText.OfLength(200, 'a'), AnnouncementText.OfLength(200, 'b') };
-        _host.Announcements.Add(new AnnouncementDocument(_id, AnnouncementText.With("mastodon", segments), WriteAsMarkdown: null));
+        Host.Announcements.Add(new AnnouncementDocument(Id, AnnouncementText.With("mastodon", segments), WriteAsMarkdown: null));
 
         //Act
-        var result = await _host.QueryProcessor.ExecuteAsync(new PreviewAnnouncement(_id), TestContext.Current.CancellationToken);
+        var result = await Host.QueryProcessor.ExecuteAsync(new PreviewAnnouncement(Id), TestContext.Current.CancellationToken);
 
         //Assert
         Assert.Equal(402, Assert.Single(Assert.Single(result.Value.Renderings).Posts).Count);
     }
-
-    public void Dispose() => _host.Dispose();
 }

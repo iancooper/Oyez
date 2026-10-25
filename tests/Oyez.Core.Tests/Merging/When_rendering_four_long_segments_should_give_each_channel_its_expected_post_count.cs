@@ -4,20 +4,17 @@ using Oyez.Core.Previewing;
 
 namespace Oyez.Core.Tests.Merging;
 
-public class PostCountPerChannelTests : IDisposable
+public class PostCountPerChannelTests : OyezApplicationTest
 {
-    private readonly OyezApplicationHost _host = new();
-    private readonly AnnouncementId _id = new("2026-11-03-brighter-10-3-0");
-
     [Fact]
     public async Task When_rendering_four_long_segments_should_give_each_channel_its_expected_post_count()
     {
         //Arrange
         var segments = new[] { 'a', 'b', 'c', 'd' }.Select(fill => AnnouncementText.OfLength(250, fill)).ToArray();
-        _host.Announcements.Add(new AnnouncementDocument(_id, AnnouncementText.With("x, mastodon, linkedin, writeas", segments), WriteAsMarkdown: null));
+        Host.Announcements.Add(new AnnouncementDocument(Id, AnnouncementText.With("x, mastodon, linkedin, writeas", segments), WriteAsMarkdown: null));
 
         //Act
-        var result = await _host.QueryProcessor.ExecuteAsync(new PreviewAnnouncement(_id), TestContext.Current.CancellationToken);
+        var result = await Host.QueryProcessor.ExecuteAsync(new PreviewAnnouncement(Id), TestContext.Current.CancellationToken);
 
         //Assert
         var postCounts = result.Value.Renderings.ToDictionary(r => r.Channel, r => r.Posts.Count);
@@ -26,6 +23,4 @@ public class PostCountPerChannelTests : IDisposable
         Assert.Equal(1, postCounts[ChannelId.LinkedIn]);
         Assert.Equal(1, postCounts[ChannelId.WriteAs]);
     }
-
-    public void Dispose() => _host.Dispose();
 }

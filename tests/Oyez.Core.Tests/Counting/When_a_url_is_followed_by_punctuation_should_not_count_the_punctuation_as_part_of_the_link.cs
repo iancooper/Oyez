@@ -4,11 +4,8 @@ using Oyez.Core.Previewing;
 
 namespace Oyez.Core.Tests.Counting;
 
-public class UrlPunctuationCountingTests : IDisposable
+public class UrlPunctuationCountingTests : OyezApplicationTest
 {
-    private readonly OyezApplicationHost _host = new();
-    private readonly AnnouncementId _id = new("2026-11-03-brighter-10-3-0");
-
     [Theory]
     [InlineData("X", ".")]
     [InlineData("X", ",")]
@@ -28,23 +25,13 @@ public class UrlPunctuationCountingTests : IDisposable
     {
         //Arrange
         const string TEXT_BEFORE_URL = "Read https://github.com/BrighterCommand/Brighter/releases";
-        _host.Announcements.Add(new AnnouncementDocument(
-            _id,
-            $"""
-            title: Release
-            channels: {channel}
-            ---
-            {TEXT_BEFORE_URL}{punctuation}
-            """,
-            WriteAsMarkdown: null));
+        Host.Announcements.Add(new AnnouncementDocument(Id, AnnouncementText.With(channel, $"{TEXT_BEFORE_URL}{punctuation}"), WriteAsMarkdown: null));
 
         //Act
-        var result = await _host.QueryProcessor.ExecuteAsync(new PreviewAnnouncement(_id), TestContext.Current.CancellationToken);
+        var result = await Host.QueryProcessor.ExecuteAsync(new PreviewAnnouncement(Id), TestContext.Current.CancellationToken);
 
         //Assert
         var post = Assert.Single(Assert.Single(result.Value.Renderings).Posts);
         Assert.Equal("Read ".Length + 23 + punctuation.Length, post.Count);
     }
-
-    public void Dispose() => _host.Dispose();
 }

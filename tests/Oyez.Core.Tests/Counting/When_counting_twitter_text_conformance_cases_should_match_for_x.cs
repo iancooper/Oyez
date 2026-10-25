@@ -9,11 +9,8 @@ namespace Oyez.Core.Tests.Counting;
 // is the section for the current config with emoji weighted 2. Cases whose text exceeds one post, or that
 // begin or end with whitespace, are left out. The last group is not from the conformance file; it
 // records Unicode's Extended_Pictographic treatment of (c), (r) and (tm), with and without U+FE0F.
-public class XTwitterTextConformanceTests : IDisposable
+public class XTwitterTextConformanceTests : OyezApplicationTest
 {
-    private readonly OyezApplicationHost _host = new();
-    private readonly AnnouncementId _id = new("2026-11-03-brighter-10-3-0");
-
     [Theory]
     [InlineData("Hi http://test.co", 26)]
     [InlineData("http://test.co", 23)]
@@ -34,23 +31,13 @@ public class XTwitterTextConformanceTests : IDisposable
     public async Task When_counting_twitter_text_conformance_cases_should_match_for_x(string text, int expectedWeightedLength)
     {
         //Arrange
-        _host.Announcements.Add(new AnnouncementDocument(
-            _id,
-            $"""
-            title: Release
-            channels: X
-            ---
-            {text}
-            """,
-            WriteAsMarkdown: null));
+        Host.Announcements.Add(new AnnouncementDocument(Id, AnnouncementText.With("X", text), WriteAsMarkdown: null));
 
         //Act
-        var result = await _host.QueryProcessor.ExecuteAsync(new PreviewAnnouncement(_id), TestContext.Current.CancellationToken);
+        var result = await Host.QueryProcessor.ExecuteAsync(new PreviewAnnouncement(Id), TestContext.Current.CancellationToken);
 
         //Assert
         var post = Assert.Single(Assert.Single(result.Value.Renderings).Posts);
         Assert.Equal(expectedWeightedLength, post.Count);
     }
-
-    public void Dispose() => _host.Dispose();
 }

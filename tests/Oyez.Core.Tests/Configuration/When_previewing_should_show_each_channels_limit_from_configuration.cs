@@ -4,17 +4,14 @@ using Oyez.Core.Previewing;
 
 namespace Oyez.Core.Tests.Configuration;
 
-public class ChannelLimitTests : IDisposable
+public class ChannelLimitTests : OyezApplicationTest
 {
-    private readonly OyezApplicationHost _host = new();
-    private readonly AnnouncementId _id = new("2026-11-03-brighter-10-3-0");
-
     [Fact]
     public async Task When_previewing_should_show_each_channels_limit_from_configuration()
     {
         //Arrange
-        _host.Announcements.Add(new AnnouncementDocument(
-            _id,
+        Host.Announcements.Add(new AnnouncementDocument(
+            Id,
             """
             title: Release
             ---
@@ -23,7 +20,7 @@ public class ChannelLimitTests : IDisposable
             WriteAsMarkdown: "Body"));
 
         //Act
-        var result = await _host.QueryProcessor.ExecuteAsync(new PreviewAnnouncement(_id), TestContext.Current.CancellationToken);
+        var result = await Host.QueryProcessor.ExecuteAsync(new PreviewAnnouncement(Id), TestContext.Current.CancellationToken);
 
         //Assert
         var limits = result.Value.Renderings.ToDictionary(r => r.Channel, r => r.Limit);
@@ -37,6 +34,4 @@ public class ChannelLimitTests : IDisposable
             },
             limits);
     }
-
-    public void Dispose() => _host.Dispose();
 }

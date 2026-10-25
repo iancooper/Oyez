@@ -3,17 +3,14 @@ using Oyez.Core.Previewing;
 
 namespace Oyez.Core.Tests.Previewing;
 
-public class PreviewHeaderValueTests : IDisposable
+public class PreviewHeaderValueTests : OyezApplicationTest
 {
-    private readonly OyezApplicationHost _host = new();
-    private readonly AnnouncementId _id = new("2026-11-03-brighter-10-3-0");
-
     [Fact]
     public async Task When_a_header_value_contains_a_colon_should_keep_the_whole_value()
     {
         //Arrange
-        _host.Announcements.Add(new AnnouncementDocument(
-            _id,
+        Host.Announcements.Add(new AnnouncementDocument(
+            Id,
             """
             title:   Brighter: the 10.3.0 release   
             ---
@@ -22,11 +19,9 @@ public class PreviewHeaderValueTests : IDisposable
             WriteAsMarkdown: null));
 
         //Act
-        var result = await _host.QueryProcessor.ExecuteAsync(new PreviewAnnouncement(_id), TestContext.Current.CancellationToken);
+        var result = await Host.QueryProcessor.ExecuteAsync(new PreviewAnnouncement(Id), TestContext.Current.CancellationToken);
 
         //Assert
         Assert.Equal("Brighter: the 10.3.0 release", result.Value.Title);
     }
-
-    public void Dispose() => _host.Dispose();
 }
