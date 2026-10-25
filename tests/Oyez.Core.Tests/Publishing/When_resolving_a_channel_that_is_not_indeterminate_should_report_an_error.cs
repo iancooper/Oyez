@@ -11,7 +11,7 @@ public class ResolveChannelErrorTests : OyezApplicationTest
         //Arrange
         Host.Announcements.Add(PublishingTestData.Announcement(
             Id.Value, "x", null, AnnouncementText.OfLength(250, 'a'), AnnouncementText.OfLength(250, 'b')));
-        Host.PublisherFor(ChannelId.X).RejectFrom(index: 1, reason: "rate limited");
+        Host.PublisherFor(ChannelId.X).RespondFrom(index: 1, result: new PostResult.Rejected("rate limited"));
         await Host.CommandProcessor.SendAsync(new PublishDueAnnouncements(), cancellationToken: TestContext.Current.CancellationToken);
         var before = Host.PublicationRecords.Load(Id);
         var resolve = new ResolveChannel(Id, ChannelId.X, new PostRef("x-9", null));

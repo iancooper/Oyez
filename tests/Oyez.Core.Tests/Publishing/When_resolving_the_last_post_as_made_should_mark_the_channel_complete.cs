@@ -12,7 +12,7 @@ public class ResolveLastPostAsMadeTests : OyezApplicationTest
         Host.Announcements.Add(PublishingTestData.Announcement(
             Id.Value, "x", null, AnnouncementText.OfLength(250, 'a'), AnnouncementText.OfLength(250, 'b')));
         var publisher = Host.PublisherFor(ChannelId.X);
-        publisher.IndeterminateFrom(index: 1, reason: "timed out creating post 2");
+        publisher.RespondFrom(index: 1, result: new PostResult.Indeterminate("timed out creating post 2"));
         await Host.CommandProcessor.SendAsync(new PublishDueAnnouncements(), cancellationToken: TestContext.Current.CancellationToken);
         var lastPost = new PostRef("x-checked-by-hand", null);
         var attemptsBefore = publisher.Requests.Count;

@@ -10,7 +10,7 @@ public class JobSummaryTests : OyezApplicationTest
     {
         //Arrange
         Host.Announcements.Add(PublishingTestData.Announcement(Id.Value, "x, mastodon", null, "Released"));
-        Host.PublisherFor(ChannelId.X).RejectFrom(index: 0, reason: "account suspended");
+        Host.PublisherFor(ChannelId.X).RespondFrom(index: 0, result: new PostResult.Rejected("account suspended"));
         var command = new PublishDueAnnouncements();
 
         //Act

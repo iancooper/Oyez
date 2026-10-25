@@ -10,7 +10,7 @@ public class MissingSecretTests : OyezApplicationTest
     {
         //Arrange
         Host.Announcements.Add(PublishingTestData.Announcement(Id.Value, "mastodon, x", null, "Released"));
-        Host.PublisherFor(ChannelId.Mastodon).RejectFrom(index: 0, reason: "missing secret OYEZ_MASTODON_TOKEN");
+        Host.PublisherFor(ChannelId.Mastodon).RespondFrom(index: 0, result: new PostResult.Rejected("missing secret OYEZ_MASTODON_TOKEN"));
 
         //Act
         await Host.CommandProcessor.SendAsync(new PublishDueAnnouncements(), cancellationToken: TestContext.Current.CancellationToken);

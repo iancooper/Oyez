@@ -34,10 +34,7 @@ namespace Oyez.Core.Publishing;
 public sealed class InMemoryChannelPublisher(ChannelId channel) : IAmAChannelPublisher
 {
     private readonly List<PostRequest> _requests = [];
-    private int? _rejectFrom;
-    private string _rejection = string.Empty;
-    private int? _indeterminateFrom;
-    private string _uncertainty = string.Empty;
+    private (int From, PostResult Result)? _response;
     private CredentialStatus _credentials = new(true, "Credentials are valid.");
 
     /// <inheritdoc />
@@ -50,29 +47,13 @@ public sealed class InMemoryChannelPublisher(ChannelId channel) : IAmAChannelPub
     /// <value>The <see cref="PostRequest"/>s, in the order they arrived.</value>
     public IReadOnlyList<PostRequest> Requests => _requests;
 
-    /// <summary>Makes the publisher refuse posts, as a platform does when it rejects them or a secret is missing.</summary>
-    /// <param name="index">The first post index to refuse. Earlier posts are still made.</param>
-    /// <param name="reason">The reason to give for the refusal.</param>
-    public void RejectFrom(int index, string reason)
-    {
-        _rejectFrom = index;
-        _rejection = reason;
-    }
+    /// <summary>Makes the publisher answer posts with a given result, as a platform does when it rejects them or a request times out.</summary>
+    /// <param name="index">The first post index to answer with <paramref name="result"/>. Earlier posts are still made.</param>
+    /// <param name="result">The <see cref="PostResult"/> to return instead of posting. A later call replaces an earlier one.</param>
+    public void RespondFrom(int index, PostResult result) => _response = (index, result);
 
-    /// <summary>Makes the publisher accept every post again.</summary>
-    public void StopRejecting() => _rejectFrom = null;
-
-    /// <summary>Makes the publisher fail to say whether a post was made, as a platform does when a request times out.</summary>
-    /// <param name="index">The first post index to leave in doubt. Earlier posts are still made.</param>
-    /// <param name="reason">The reason to give for the doubt.</param>
-    public void IndeterminateFrom(int index, string reason)
-    {
-        _indeterminateFrom = index;
-        _uncertainty = reason;
-    }
-
-    /// <summary>Makes the publisher say whether every post was made again.</summary>
-    public void StopBeingIndeterminate() => _indeterminateFrom = null;
+    /// <summary>Makes the publisher make every post again.</summary>
+    public void RespondNormally() => _response = null;
 
     /// <summary>Sets what the publisher reports when asked to verify its credentials.</summary>
     /// <param name="status">The <see cref="CredentialStatus"/> to report. Credentials are valid until this is called.</param>
@@ -85,14 +66,9 @@ public sealed class InMemoryChannelPublisher(ChannelId channel) : IAmAChannelPub
     public Task<PostResult> CreateAsync(PostRequest request, CancellationToken cancellationToken)
     {
         _requests.Add(request);
-        if (request.Index >= _rejectFrom)
+        if (request.Index >= _response?.From)
         {
-            return Task.FromResult<PostResult>(new PostResult.Rejected(_rejection));
-        }
-
-        if (request.Index >= _indeterminateFrom)
-        {
-            return Task.FromResult<PostResult>(new PostResult.Indeterminate(_uncertainty));
+            return Task.FromResult(_response.Value.Result);
         }
 
         var post = new PostRef($"{Channel}-{_requests.Count}", $"https://{Channel}.example/{request.Announcement}/{_requests.Count}");

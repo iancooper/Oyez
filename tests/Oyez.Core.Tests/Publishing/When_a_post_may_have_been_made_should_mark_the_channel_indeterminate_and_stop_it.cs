@@ -11,7 +11,7 @@ public class MarkChannelIndeterminateTests : OyezApplicationTest
         //Arrange
         Host.Announcements.Add(PublishingTestData.Announcement(
             Id.Value, "x, mastodon", null, AnnouncementText.OfLength(250, 'a'), AnnouncementText.OfLength(250, 'b'), AnnouncementText.OfLength(250, 'c')));
-        Host.PublisherFor(ChannelId.X).IndeterminateFrom(index: 1, reason: "timed out creating post 2");
+        Host.PublisherFor(ChannelId.X).RespondFrom(index: 1, result: new PostResult.Indeterminate("timed out creating post 2"));
         var command = new PublishDueAnnouncements();
 
         //Act
