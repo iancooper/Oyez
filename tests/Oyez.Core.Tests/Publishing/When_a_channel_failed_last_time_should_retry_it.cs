@@ -10,7 +10,7 @@ public class RetryFailedChannelTests : OyezApplicationTest
     {
         //Arrange
         Host.Announcements.Add(PublishingTestData.Announcement(Id.Value, "x", null, "Released"));
-        var failed = new ChannelPublication(ChannelState.Failed, "sha256:earlier", [], "account suspended");
+        var failed = new ChannelPublication(ChannelState.Failed, new RenderingHash("sha256:earlier"), [], "account suspended");
         Host.PublicationRecords.Save(Id, new PublicationRecord(new Dictionary<ChannelId, ChannelPublication> { [ChannelId.X] = failed }));
 
         //Act

@@ -23,17 +23,19 @@ THE SOFTWARE. */
 
 #endregion
 
+using Oyez.Core.Channels;
+
 namespace Oyez.Core.Publishing;
 
 /// <summary>
 /// What has been published to one channel.
 /// </summary>
 /// <param name="State">The <see cref="ChannelState"/> of the channel.</param>
-/// <param name="RenderingHash">The hash of the rendering that was being published.</param>
+/// <param name="RenderingHash">The <see cref="Channels.RenderingHash"/> of the rendering that was being published.</param>
 /// <param name="Posts">The <see cref="PublishedPost"/>s made so far.</param>
 /// <param name="Reason">Why the channel is <see cref="ChannelState.Indeterminate"/> or <see cref="ChannelState.Failed"/>, if it is.</param>
 public sealed record ChannelPublication(
     ChannelState State,
-    string RenderingHash,
+    RenderingHash RenderingHash,
     IReadOnlyList<PublishedPost> Posts,
     string? Reason = null);

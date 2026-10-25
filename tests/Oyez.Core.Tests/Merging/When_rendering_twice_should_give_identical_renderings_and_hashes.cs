@@ -19,7 +19,7 @@ public class DeterministicRenderingTests : OyezApplicationTest
         //Assert
         Assert.Equal(first.Value.Renderings.Select(r => r.Hash), second.Value.Renderings.Select(r => r.Hash));
         Assert.Equal(first.Value.Renderings.Select(r => r.Posts.Select(p => p.Text)), second.Value.Renderings.Select(r => r.Posts.Select(p => p.Text)));
-        Assert.All(first.Value.Renderings, r => Assert.StartsWith("sha256:", r.Hash));
+        Assert.All(first.Value.Renderings, r => Assert.StartsWith("sha256:", r.Hash.Value));
         Assert.NotEqual(first.Value.Renderings[0].Hash, first.Value.Renderings[1].Hash);
     }
 }

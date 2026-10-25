@@ -23,9 +23,6 @@ THE SOFTWARE. */
 
 #endregion
 
-using System.Security.Cryptography;
-using System.Text;
-
 namespace Oyez.Core.Channels;
 
 /// <summary>
@@ -38,8 +35,8 @@ namespace Oyez.Core.Channels;
 public sealed record Rendering(ChannelId Channel, string? Title, int? Limit, IReadOnlyList<Post> Posts)
 {
     /// <summary>
-    /// Gets a fingerprint of the post texts, in the form <c>sha256:</c> followed by lower-case hexadecimal.
+    /// Gets a fingerprint of the post texts.
     /// </summary>
-    /// <value>The same hash for the same posts, and a different hash if any post's text, or the order of posts, changes.</value>
-    public string Hash => $"sha256:{Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(string.Join('\0', Posts.Select(post => post.Text)))))}";
+    /// <value>The same <see cref="RenderingHash"/> for the same posts, and a different one if any post's text, or the order of posts, changes.</value>
+    public RenderingHash Hash => RenderingHash.Of(Posts.Select(post => post.Text));
 }

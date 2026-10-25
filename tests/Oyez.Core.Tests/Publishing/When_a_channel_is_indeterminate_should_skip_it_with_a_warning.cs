@@ -16,7 +16,7 @@ public class SkipIndeterminateChannelTests : OyezApplicationTest
             new PublishedPost(0, new PostRef("x-1", null), DateTimeOffset.UnixEpoch),
             new PublishedPost(1, new PostRef("x-2", null), DateTimeOffset.UnixEpoch)
         };
-        var indeterminate = new ChannelPublication(ChannelState.Indeterminate, "sha256:earlier", posts, "timed out creating post 3");
+        var indeterminate = new ChannelPublication(ChannelState.Indeterminate, new RenderingHash("sha256:earlier"), posts, "timed out creating post 3");
         var record = new PublicationRecord(new Dictionary<ChannelId, ChannelPublication> { [ChannelId.X] = indeterminate });
         Host.PublicationRecords.Save(Id, record);
         var command = new PublishDueAnnouncements();

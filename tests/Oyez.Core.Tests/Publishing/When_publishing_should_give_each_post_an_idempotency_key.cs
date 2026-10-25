@@ -16,7 +16,7 @@ public class IdempotencyKeyTests : OyezApplicationTest
 
         //Assert
         var requests = Host.PublisherFor(ChannelId.X).Requests;
-        var fingerprint = requests[0].Rendering.Hash["sha256:".Length..][..12];
+        var fingerprint = requests[0].Rendering.Hash.Value["sha256:".Length..][..12];
         Assert.Equal($"oyez:{Id}:x:0:{fingerprint}", requests[0].IdempotencyKey);
         Assert.Equal($"oyez:{Id}:x:1:{fingerprint}", requests[1].IdempotencyKey);
     }

@@ -10,8 +10,8 @@ public class PublishedStatusTests : OyezApplicationTest
     {
         //Arrange
         var xPost = new PublishedPost(0, new PostRef("1847", "https://x.com/ICooper/status/1847"), new DateTimeOffset(2026, 10, 20, 9, 7, 12, TimeSpan.Zero));
-        var x = new ChannelPublication(ChannelState.Complete, "sha256:x", [xPost]);
-        var linkedIn = new ChannelPublication(ChannelState.Indeterminate, "sha256:li", [], "Timed out creating post 1");
+        var x = new ChannelPublication(ChannelState.Complete, new RenderingHash("sha256:x"), [xPost]);
+        var linkedIn = new ChannelPublication(ChannelState.Indeterminate, new RenderingHash("sha256:li"), [], "Timed out creating post 1");
         Host.PublicationRecords.Save(Id, new PublicationRecord(new Dictionary<ChannelId, ChannelPublication>
         {
             [ChannelId.X] = x,

@@ -167,7 +167,7 @@ internal sealed class PublishService(
     }
 
     private static string IdempotencyKey(AnnouncementId id, Rendering rendering, int index) =>
-        $"oyez:{id}:{rendering.Channel}:{index}:{rendering.Hash["sha256:".Length..][..12]}";
+        $"oyez:{id}:{rendering.Channel}:{index}:{rendering.Hash.Fingerprint}";
 
     private static ChannelPublication Append(ChannelPublication publication, Rendering rendering, PublishedPost post)
     {

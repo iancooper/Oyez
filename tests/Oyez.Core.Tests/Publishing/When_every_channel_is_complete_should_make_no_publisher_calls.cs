@@ -10,7 +10,7 @@ public class CompleteChannelTests : OyezApplicationTest
     {
         //Arrange
         Host.Announcements.Add(PublishingTestData.Announcement(Id.Value, "x, mastodon", null, "Released"));
-        var done = new ChannelPublication(ChannelState.Complete, "sha256:earlier", []);
+        var done = new ChannelPublication(ChannelState.Complete, new RenderingHash("sha256:earlier"), []);
         Host.PublicationRecords.Save(Id, new PublicationRecord(new Dictionary<ChannelId, ChannelPublication>
         {
             [ChannelId.X] = done,
