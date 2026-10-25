@@ -269,7 +269,7 @@ Every task in this phase sends Brighter commands, or runs Darker queries, throug
   - `When_a_channel_is_indeterminate_should_skip_it_with_a_warning`
 - **Done when:** the tests pass.
 
-### [ ] T-16 Events and the job summary
+### [x] T-16 Events and the job summary
 - **Covers:** §4.10, FR-4.5.2, NFR-10
 - **Builds:** the events `PostPublished` and `ChannelPublishFailed`, and the job summary in the `PublishReport`.
 - **Tests (Core):**
