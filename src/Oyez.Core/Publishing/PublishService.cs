@@ -39,10 +39,11 @@ internal sealed class PublishService(
     public async Task<PublishReport> PublishDueAsync(CancellationToken cancellationToken)
     {
         var due = DueAnnouncements().ToList();
+        var publishable = due.Where(candidate => candidate.Errors.Count == 0).Select(candidate => candidate.Announcement).OfType<Announcement>();
         var outcomes = new List<PublishOutcome>();
-        foreach (var announcement in due.Where(candidate => candidate.Errors.Count == 0))
+        foreach (var announcement in publishable)
         {
-            outcomes.AddRange(await PublishAnnouncementAsync(announcement.Announcement!, cancellationToken));
+            outcomes.AddRange(await PublishAnnouncementAsync(announcement, cancellationToken));
         }
 
         return new PublishReport(outcomes, due.Where(candidate => candidate.Errors.Count > 0).Select(NotPublished).ToList());
