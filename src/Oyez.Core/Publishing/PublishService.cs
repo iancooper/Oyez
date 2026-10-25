@@ -26,6 +26,7 @@ THE SOFTWARE. */
 using Oyez.Core.Announcements;
 using Oyez.Core.Channels;
 using Oyez.Core.Validating;
+using Paramore.Brighter;
 
 namespace Oyez.Core.Publishing;
 
@@ -35,6 +36,7 @@ internal sealed class PublishService(
     Renderer renderer,
     Validator validator,
     IEnumerable<IAmAChannelPublisher> publishers,
+    IAmACommandProcessor commands,
     TimeProvider clock)
 {
     private const string EDITED_REASON = "The announcement was edited after it was partly published. Resolve the channel before publishing again.";
@@ -82,35 +84,57 @@ internal sealed class PublishService(
         var recorded = records.Load(id).Channels.GetValueOrDefault(rendering.Channel);
         if (recorded?.State == ChannelState.Indeterminate)
         {
-            return OutcomeOf(id, rendering.Channel, recorded);
+            return OutcomeOf(id, rendering.Channel, recorded, 0);
         }
 
         if (recorded is not null && WasEditedAfterPosting(recorded, rendering))
         {
-            return FailEdited(id, rendering.Channel, recorded);
+            return await FailEditedAsync(id, rendering.Channel, recorded, cancellationToken);
         }
 
         var publication = Resume(recorded, rendering);
+        var alreadyPosted = publication.Posts.Count;
         while (HasPostsToMake(publication, rendering))
         {
+            var previous = publication;
             publication = await PostNextAsync(id, rendering, publisher, publication, cancellationToken);
             Save(id, rendering.Channel, publication);
+            await PublishProgressAsync(id, rendering.Channel, previous, publication, cancellationToken);
         }
 
-        return OutcomeOf(id, rendering.Channel, publication);
+        return OutcomeOf(id, rendering.Channel, publication, alreadyPosted);
     }
 
     private static bool HasPostsToMake(ChannelPublication publication, Rendering rendering) =>
         publication.State == ChannelState.Partial && publication.Posts.Count < rendering.Posts.Count;
 
-    private static PublishOutcome OutcomeOf(AnnouncementId id, ChannelId channel, ChannelPublication publication) =>
-        new(id, channel, publication.State, publication.Reason);
+    private static PublishOutcome OutcomeOf(AnnouncementId id, ChannelId channel, ChannelPublication publication, int alreadyPosted) =>
+        new(id, channel, publication.State, publication.Reason, publication.Posts.Skip(alreadyPosted).Select(post => post.Ref).ToList());
 
-    private PublishOutcome FailEdited(AnnouncementId id, ChannelId channel, ChannelPublication recorded)
+    private async Task<PublishOutcome> FailEditedAsync(AnnouncementId id, ChannelId channel, ChannelPublication recorded, CancellationToken cancellationToken)
     {
         var failed = Failed(recorded, EDITED_REASON);
         Save(id, channel, failed);
-        return OutcomeOf(id, channel, failed);
+        await PublishProgressAsync(id, channel, recorded, failed, cancellationToken);
+        return OutcomeOf(id, channel, failed, recorded.Posts.Count);
+    }
+
+    private async Task PublishProgressAsync(
+        AnnouncementId id,
+        ChannelId channel,
+        ChannelPublication previous,
+        ChannelPublication current,
+        CancellationToken cancellationToken)
+    {
+        if (current.Posts.Count > previous.Posts.Count)
+        {
+            var post = current.Posts[^1];
+            await commands.PublishAsync(new PostPublished(id, channel, post.Index, post.Ref), cancellationToken: cancellationToken);
+        }
+        else if (current.State is ChannelState.Failed or ChannelState.Indeterminate)
+        {
+            await commands.PublishAsync(new ChannelPublishFailed(id, channel, current.State, current.Reason ?? string.Empty), cancellationToken: cancellationToken);
+        }
     }
 
     private static bool WasEditedAfterPosting(ChannelPublication recorded, Rendering rendering) =>

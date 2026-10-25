@@ -9,9 +9,10 @@ namespace Oyez.Core.Tests;
 /// </summary>
 /// <param name="configure">Changes the options the host is built with, when the test needs non-default limits or channels.</param>
 /// <param name="publicationRecords">Replaces the in-memory publication record store, when the test needs to watch it.</param>
-public abstract class OyezApplicationTest(Action<OyezOptions>? configure = null, IAmAPublicationRecordStore? publicationRecords = null) : IDisposable
+/// <param name="log">Shares an ordered log with the test, when it needs to see the order in which test doubles were called.</param>
+public abstract class OyezApplicationTest(Action<OyezOptions>? configure = null, IAmAPublicationRecordStore? publicationRecords = null, OrderedLog? log = null) : IDisposable
 {
-    protected OyezApplicationHost Host { get; } = new(configure, publicationRecords);
+    protected OyezApplicationHost Host { get; } = new(configure, publicationRecords, log);
 
     protected AnnouncementId Id { get; } = new("2026-11-03-brighter-10-3-0");
 

@@ -29,4 +29,18 @@ namespace Oyez.Core.Publishing;
 /// What a publishing run did.
 /// </summary>
 /// <param name="Outcomes">A <see cref="PublishOutcome"/> for each channel the run tried to publish to.</param>
-public sealed record PublishReport(IReadOnlyList<PublishOutcome> Outcomes);
+public sealed record PublishReport(IReadOnlyList<PublishOutcome> Outcomes)
+{
+    /// <summary>Gets the report as Markdown, for the GitHub Actions job summary.</summary>
+    /// <value>Each channel's state, and the URLs of the posts this run made.</value>
+    public string JobSummary => string.Join('\n', SummaryLines());
+
+    private IEnumerable<string> SummaryLines() =>
+        ["## Oyez publish", string.Empty, "| Announcement | Channel | State | Detail |", "| --- | --- | --- | --- |", .. Outcomes.Select(RowOf)];
+
+    private static string RowOf(PublishOutcome outcome) =>
+        $"| {outcome.Announcement} | {outcome.Channel.DisplayName} | {outcome.State} | {DetailOf(outcome)} |";
+
+    private static string DetailOf(PublishOutcome outcome) =>
+        string.Join(' ', outcome.NewPosts.Select(post => post.Url).OfType<string>().Prepend(outcome.Reason).OfType<string>());
+}
