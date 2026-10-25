@@ -17,7 +17,7 @@ public class ResolveChannelAsNotMadeTests : OyezApplicationTest
         publisher.StopBeingIndeterminate();
         var post1 = Host.PublicationRecords.Load(Id).Channels[ChannelId.X].Posts[0].Ref;
         var attemptsBefore = publisher.Requests.Count;
-        var resolve = new ResolveChannel(Id, ChannelId.X, Posted: null);
+        var resolve = new ResolveChannel(Id, ChannelId.X, posted: null);
 
         //Act
         await Host.CommandProcessor.SendAsync(resolve, cancellationToken: TestContext.Current.CancellationToken);

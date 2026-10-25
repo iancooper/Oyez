@@ -32,22 +32,22 @@ namespace Oyez.Core.Publishing;
 /// <summary>
 /// Clears an indeterminate channel, after someone has checked the platform to see whether the post was made.
 /// </summary>
-/// <param name="Announcement">The <see cref="AnnouncementId"/> of the announcement.</param>
-/// <param name="Channel">The <see cref="ChannelId"/> of the indeterminate channel.</param>
-/// <param name="Posted">The <see cref="PostRef"/> of the post that was made, or <c>null</c> if it was not made.</param>
-public sealed class ResolveChannel(AnnouncementId Announcement, ChannelId Channel, PostRef? Posted) : Command(Id.Random())
+/// <param name="announcement">The <see cref="AnnouncementId"/> of the announcement.</param>
+/// <param name="channel">The <see cref="ChannelId"/> of the indeterminate channel.</param>
+/// <param name="posted">The <see cref="PostRef"/> of the post that was made, or <c>null</c> if it was not made.</param>
+public sealed class ResolveChannel(AnnouncementId announcement, ChannelId channel, PostRef? posted) : Command(Id.Random())
 {
     /// <summary>Gets the announcement.</summary>
     /// <value>The <see cref="AnnouncementId"/> passed to the constructor.</value>
-    public AnnouncementId Announcement { get; } = Announcement;
+    public AnnouncementId Announcement { get; } = announcement;
 
     /// <summary>Gets the channel to resolve.</summary>
     /// <value>The <see cref="ChannelId"/> passed to the constructor.</value>
-    public ChannelId Channel { get; } = Channel;
+    public ChannelId Channel { get; } = channel;
 
     /// <summary>Gets the post that was made, if it was.</summary>
     /// <value>The <see cref="PostRef"/> passed to the constructor, or <c>null</c> if the post was not made.</value>
-    public PostRef? Posted { get; } = Posted;
+    public PostRef? Posted { get; } = posted;
 
     /// <summary>Gets or sets what the channel's state is now.</summary>
     /// <value>The new <see cref="ChannelState"/>, or the errors that stopped the channel being resolved, once the command has been handled.</value>
