@@ -264,6 +264,8 @@ public sealed record PostRequest(
 
 public sealed record PostRef(string Id, string? Url);
 
+public sealed record CredentialStatus(bool IsValid, string Message, DateTimeOffset? ExpiresAt = null);
+
 public abstract record PostResult
 {
     public sealed record Posted(PostRef Ref) : PostResult;
@@ -272,7 +274,9 @@ public abstract record PostResult
 }
 ```
 
-`TimeProvider` (from the BCL) supplies the clock. Tests use `FakeTimeProvider` [AC-17].
+`TimeProvider` (from the BCL) supplies the clock. `AddOyezApplication` registers `TimeProvider.System` unless the host has registered one; tests use `FakeTimeProvider` [AC-17].
+
+`InMemoryChannelPublisher` posts every request and records it. A test can make it answer differently from a given post onward with `RespondFrom(index, PostResult)`, set its `VerifyAsync` answer with `ReportCredentials`, and go back to posting with `RespondNormally()`.
 
 ### 4.8 Publication record [FR-6]
 
@@ -299,7 +303,7 @@ The `state` for each channel is one of:
 - `indeterminate` — an attempt may or may not have succeeded;
 - `failed` — the last attempt was definitely rejected. The next run retries a failed channel.
 
-**Rendering hash.** If a channel is `partial` and the current rendering's hash differs from the recorded one, someone edited the announcement after it was partly published. Resuming could post the wrong continuation, so the channel fails with a message telling you to resolve it [FR-6.2, NFR-7].
+**Rendering hash.** `Rendering.Hash` is a `RenderingHash` value: `sha256:` followed by the hex SHA-256 of the rendering's post texts, which is how it's stored. If a channel has recorded posts (it is `partial`, or `failed` part-way) and the current rendering's hash differs from the recorded one, someone edited the announcement after it was partly published. Resuming could post the wrong continuation, so the channel fails with a message telling you to resolve it [FR-6.2, NFR-7].
 
 **Indeterminate state.** The workflow runs every hour, so retrying an uncertain create automatically risks a duplicate post every hour. Instead, an `indeterminate` channel is skipped on later runs, with a warning, until someone runs `oyez resolve` (§6). This refines NFR-6 to cover runs after the first.
 
@@ -340,8 +344,9 @@ sequenceDiagram
 - Channels run one after another. The volume is tiny, and running them in sequence keeps logs and record writes simple.
 - A channel whose secrets are missing is reported as `Rejected("missing secret OYEZ_…")`. This doesn't stop the other channels.
 - A thread reply always goes to the last *recorded* post. This makes resuming exact [AC-15].
-- The idempotency key is `oyez:{announcementId}:{channel}:{index}:{hash[..12]}`.
-- `PublishReport` sets the exit code [FR-4.5.2] and produces the job summary [NFR-10].
+- The idempotency key is `oyez:{announcementId}:{channel}:{index}:{fingerprint}`, where the fingerprint is the first 12 hex digits of the rendering hash, after `sha256:`.
+- `PublishReport` lists an outcome for each channel attempted or skipped, with its state, its reason (for `failed` and `indeterminate`, the warning) and the posts this run made. Its `JobSummary` is the Markdown for the job summary [NFR-10], and the CLI sets the exit code from the outcomes [FR-4.5.2].
+- `PublishService` chooses the due, valid announcements. For each targeted channel, an internal `ChannelRun` makes the skip decision (complete, or indeterminate with a warning), the edited check and the post loop, saves the record after each post, and raises the event that the post's result implies.
 
 ### 4.10 Application layer: Brighter commands and Darker queries
 
@@ -355,8 +360,8 @@ These are Brighter `Command` subclasses, each with its own `RequestHandlerAsync<
 
 | Command | Handler does | Result |
 |---|---|---|
-| `PublishDueAnnouncements(Now, AnnouncementId?)` | Runs `PublishService` (§4.9). | `PublishReport` |
-| `ResolveChannel(Id, Channel, PostRef?)` | Updates an `indeterminate` channel in the record to `partial`, `complete` or `failed` [FR-6.6]. | — |
+| `PublishDueAnnouncements` | Runs `PublishService` (§4.9). "Now" comes from `TimeProvider`, so the command carries no time. | `PublishReport` |
+| `ResolveChannel(Announcement, Channel, Posted?)` | Updates an `indeterminate` channel in the record: with a `PostRef`, the post was made, so it becomes `partial` or, for the last post, `complete`; without one, `failed`, so the next run retries it [FR-6.6]. | `Result<ChannelState>`: the new state, or a `ValidationError` if the channel isn't indeterminate |
 | `CreateAnnouncement(Slug, PublishAt?)` | Creates the folder from a template. | path |
 | `DraftFromRelease(Repo, Tag)` | Phase 2 [FR-7.4]. | path |
 | `AuthorizeLinkedIn` | Runs the flow in §6. | — |
@@ -372,16 +377,18 @@ These are Darker `IQuery<TResult>` types, each with a `QueryHandlerAsync<TQuery,
 |---|---|
 | `ValidateAnnouncements(Ids?)` | `IReadOnlyList<ValidationError>` [FR-5.2] |
 | `PreviewAnnouncement(Id, Channel?)` | `Preview`: the renderings with counts, limits and the estimated X cost [FR-5.1, FR-5.3] |
-| `GetPublicationStatus(Id?)` | Each channel's state from the publication record |
-| `CheckCredentials` | Each enabled channel's credential status (calls each publisher's read-only `VerifyAsync`) |
+| `GetPublicationStatus(Id)` | The announcement's `PublicationRecord`: each channel's state, posts and reason |
+| `CheckCredentials` | A `CredentialsReport`: each enabled channel's credential status (calls each publisher's read-only `VerifyAsync`), with the days left when a token expires within 14 days [FR-4.3.5] |
 
 **Events**
 
 `PublishService` publishes these in-process with `CommandProcessor.PublishAsync`:
-- `PostPublished(Id, Channel, Index, PostRef)`
-- `ChannelPublishFailed(Id, Channel, State, Reason)`
+- `PostPublished(Announcement, Channel, Index, Post)`
+- `ChannelPublishFailed(Announcement, Channel, State, Reason)`, for a channel that is now `failed` or `indeterminate`
 
-Their handlers log progress and build up the job summary [NFR-10].
+Brighter's `Command` and `Event` already have an `Id`, so the requests here name the announcement `Announcement`.
+
+The job summary is built from the `PublishReport`, not by event handlers, so the events have no handler in Core yet; a logging handler can subscribe without changing `PublishService`.
 
 The publication record is **not** saved by an event handler. `PublishService` saves it directly, before it publishes the event. That keeps the guarantee in FR-6.3 clear and independent of handler ordering.
 
