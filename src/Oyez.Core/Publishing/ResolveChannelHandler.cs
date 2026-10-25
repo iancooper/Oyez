@@ -59,7 +59,7 @@ internal sealed class ResolveChannelHandler(
             return Failure(command, $"{command.Channel} is not a channel of announcement '{command.Announcement}'.");
         }
 
-        var resolved = command.Posted is null ? NotPosted(publication) : Posted(publication, rendering, command.Posted);
+        var resolved = command.Posted is null ? publication.Fail(NOT_POSTED_REASON) : publication.Append(command.Posted, clock.GetUtcNow(), rendering) with { Reason = null };
         Save(command, record, resolved);
         return Result<ChannelState>.Success(resolved.State);
     }
@@ -67,19 +67,8 @@ internal sealed class ResolveChannelHandler(
     private static Result<ChannelState> Failure(ResolveChannel command, string message) =>
         Result<ChannelState>.Failure([new ValidationError(command.Announcement, message, command.Channel)]);
 
-    private static ChannelPublication NotPosted(ChannelPublication publication) =>
-        publication with { State = ChannelState.Failed, Reason = NOT_POSTED_REASON };
-
-    private ChannelPublication Posted(ChannelPublication publication, Rendering rendering, PostRef posted)
-    {
-        var posts = publication.Posts.Append(new PublishedPost(publication.Posts.Count, posted, clock.GetUtcNow())).ToList();
-        var state = posts.Count == rendering.Posts.Count ? ChannelState.Complete : ChannelState.Partial;
-        return publication with { State = state, Posts = posts, Reason = null };
-    }
-
     private void Save(ResolveChannel command, PublicationRecord record, ChannelPublication resolved)
     {
-        var channels = new Dictionary<ChannelId, ChannelPublication>(record.Channels) { [command.Channel] = resolved };
-        records.Save(command.Announcement, new PublicationRecord(channels));
+        records.Save(command.Announcement, record.With(command.Channel, resolved));
     }
 }

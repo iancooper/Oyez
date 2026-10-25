@@ -38,4 +38,30 @@ public sealed record ChannelPublication(
     ChannelState State,
     RenderingHash RenderingHash,
     IReadOnlyList<PublishedPost> Posts,
-    string? Reason = null);
+    string? Reason = null)
+{
+    internal bool HasPostsToMake(Rendering rendering) =>
+        State == ChannelState.Partial && Posts.Count < rendering.Posts.Count;
+
+    internal bool IsEditedSince(Rendering rendering) =>
+        Posts.Count > 0 && RenderingHash != rendering.Hash;
+
+    internal ChannelPublication ResumeFor(Rendering rendering) =>
+        this with { State = ChannelState.Partial, RenderingHash = rendering.Hash, Reason = null };
+
+    internal ChannelPublication Append(PostRef posted, DateTimeOffset at, Rendering rendering)
+    {
+        var posts = Posts.Append(new PublishedPost(Posts.Count, posted, at)).ToList();
+        var state = posts.Count == rendering.Posts.Count ? ChannelState.Complete : ChannelState.Partial;
+        return this with { State = state, Posts = posts };
+    }
+
+    internal ChannelPublication Fail(string reason) =>
+        this with { State = ChannelState.Failed, Reason = reason };
+
+    internal ChannelPublication MarkIndeterminate(string reason) =>
+        this with { State = ChannelState.Indeterminate, Reason = reason };
+
+    internal static ChannelPublication Begin(Rendering rendering) =>
+        new(ChannelState.Partial, rendering.Hash, []);
+}

@@ -36,4 +36,11 @@ public sealed record PublicationRecord(IReadOnlyDictionary<ChannelId, ChannelPub
     /// <summary>Gets a record for an announcement that has never been published.</summary>
     /// <value>A <see cref="PublicationRecord"/> with no channels.</value>
     public static PublicationRecord Empty { get; } = new(new Dictionary<ChannelId, ChannelPublication>());
+
+    internal ChannelPublication? ChannelOrNull(ChannelId channel) => Channels.GetValueOrDefault(channel);
+
+    internal bool IsComplete(ChannelId channel) => ChannelOrNull(channel)?.State == ChannelState.Complete;
+
+    internal PublicationRecord With(ChannelId channel, ChannelPublication publication) =>
+        new(new Dictionary<ChannelId, ChannelPublication>(Channels) { [channel] = publication });
 }
