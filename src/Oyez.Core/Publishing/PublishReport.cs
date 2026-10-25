@@ -29,14 +29,21 @@ namespace Oyez.Core.Publishing;
 /// What a publishing run did.
 /// </summary>
 /// <param name="Outcomes">A <see cref="PublishOutcome"/> for each channel the run tried to publish to.</param>
-public sealed record PublishReport(IReadOnlyList<PublishOutcome> Outcomes)
+/// <param name="NotPublished">The due announcements the run skipped because they could not be read or failed validation.</param>
+public sealed record PublishReport(IReadOnlyList<PublishOutcome> Outcomes, IReadOnlyList<UnpublishedAnnouncement> NotPublished)
 {
     /// <summary>Gets the report as Markdown, for the GitHub Actions job summary.</summary>
     /// <value>Each channel's state, and the URLs of the posts this run made.</value>
     public string JobSummary => string.Join('\n', SummaryLines());
 
     private IEnumerable<string> SummaryLines() =>
-        ["## Oyez publish", string.Empty, "| Announcement | Channel | State | Detail |", "| --- | --- | --- | --- |", .. Outcomes.Select(RowOf)];
+        ["## Oyez publish", string.Empty, "| Announcement | Channel | State | Detail |", "| --- | --- | --- | --- |", .. Outcomes.Select(RowOf), .. NotPublishedLines()];
+
+    private IEnumerable<string> NotPublishedLines() =>
+        NotPublished.Select(unpublished => $"| {unpublished.Announcement} | - | Not published | {DescribeErrors(unpublished)} |");
+
+    private static string DescribeErrors(UnpublishedAnnouncement unpublished) =>
+        unpublished.Errors.Count == 1 ? unpublished.Errors[0].Message : $"{unpublished.Errors[0].Message} (and {unpublished.Errors.Count - 1} more)";
 
     private static string RowOf(PublishOutcome outcome) =>
         $"| {outcome.Announcement} | {outcome.Channel.DisplayName} | {outcome.State} | {DetailOf(outcome)} |";

@@ -49,14 +49,14 @@ internal sealed class ResolveChannelHandler(
         var record = records.Load(command.Announcement);
         if (!record.Channels.TryGetValue(command.Channel, out var publication) || publication.State != ChannelState.Indeterminate)
         {
-            return Failure(command, $"{command.Channel} is not indeterminate, so there is nothing to resolve.");
+            return Failure(command, $"{command.Channel.DisplayName} is not indeterminate, so there is nothing to resolve.");
         }
 
         var read = announcements.ReadAnnouncement(command.Announcement);
         var rendering = read.IsSuccess ? renderer.RenderTargetedChannels(read.Value).FirstOrDefault(candidate => candidate.Channel == command.Channel) : null;
         if (rendering is null)
         {
-            return Failure(command, $"{command.Channel} is not a channel of announcement '{command.Announcement}'.");
+            return Failure(command, $"{command.Channel.DisplayName} is not a channel of announcement '{command.Announcement}'.");
         }
 
         var resolved = command.Posted is null ? publication.Fail(NOT_POSTED_REASON) : publication.Append(command.Posted, clock.GetUtcNow(), rendering) with { Reason = null };

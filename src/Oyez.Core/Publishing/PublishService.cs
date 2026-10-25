@@ -38,22 +38,26 @@ internal sealed class PublishService(
 {
     public async Task<PublishReport> PublishDueAsync(CancellationToken cancellationToken)
     {
+        var due = DueAnnouncements().ToList();
         var outcomes = new List<PublishOutcome>();
-        foreach (var announcement in DueAnnouncements())
+        foreach (var announcement in due.Where(candidate => candidate.Errors.Count == 0))
         {
-            outcomes.AddRange(await PublishAnnouncementAsync(announcement, cancellationToken));
+            outcomes.AddRange(await PublishAnnouncementAsync(announcement.Announcement!, cancellationToken));
         }
 
-        return new PublishReport(outcomes);
+        return new PublishReport(outcomes, due.Where(candidate => candidate.Errors.Count > 0).Select(NotPublished).ToList());
     }
 
-    private IEnumerable<Announcement> DueAnnouncements() =>
+    private static UnpublishedAnnouncement NotPublished(DueAnnouncement candidate) => new(candidate.Id, candidate.Errors);
+
+    private IEnumerable<DueAnnouncement> DueAnnouncements() =>
         announcements.List()
-            .Select(announcements.ReadAnnouncement)
-            .Where(read => read.IsSuccess)
-            .Select(read => read.Value)
-            .Where(IsDue)
-            .Where(announcement => validator.Validate(announcement).Count == 0);
+            .Select(id => (Id: id, Read: announcements.ReadAnnouncement(id)))
+            .Where(item => !item.Read.IsSuccess || IsDue(item.Read.Value))
+            .Select(item => item.Read.IsSuccess ? Validated(item.Id, item.Read.Value) : new DueAnnouncement(item.Id, null, item.Read.Errors));
+
+    private DueAnnouncement Validated(AnnouncementId id, Announcement announcement) =>
+        new(id, announcement, validator.Validate(announcement));
 
     private bool IsDue(Announcement announcement) =>
         announcement.PublishAt is null || announcement.PublishAt <= clock.GetUtcNow();
@@ -68,4 +72,6 @@ internal sealed class PublishService(
 
         return outcomes.OfType<PublishOutcome>().ToList();
     }
+
+    private sealed record DueAnnouncement(AnnouncementId Id, Announcement? Announcement, IReadOnlyList<ValidationError> Errors);
 }
