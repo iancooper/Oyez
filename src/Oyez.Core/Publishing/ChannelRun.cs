@@ -39,7 +39,6 @@ internal sealed class ChannelRun(
     TimeProvider clock)
 {
     private const string EDITED_REASON = "The announcement was edited after it was partly published. Resolve the channel before publishing again.";
-    private const int NO_NEW_POSTS_REPORTED_FOR_SKIPPED_INDETERMINATE = 0;
 
     private ChannelId Channel => rendering.Channel;
 
@@ -52,7 +51,7 @@ internal sealed class ChannelRun(
 
         if (recorded is { State: ChannelState.Indeterminate })
         {
-            return OutcomeOf(recorded, NO_NEW_POSTS_REPORTED_FOR_SKIPPED_INDETERMINATE);
+            return OutcomeOf(recorded, recorded.Posts.Count);
         }
 
         if (recorded?.IsEditedSince(rendering) == true)
