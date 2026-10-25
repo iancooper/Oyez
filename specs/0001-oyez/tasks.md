@@ -252,7 +252,7 @@ Every task in this phase sends Brighter commands, or runs Darker queries, throug
   - `When_a_channel_is_not_targeted_or_not_enabled_should_not_publish_to_it`
 - **Done when:** the tests pass.
 
-### [ ] T-14 Resume, and keep channels independent
+### [x] T-14 Resume, and keep channels independent
 - **Covers:** FR-4.5.1, FR-6.2, AC-14 (Core level), AC-15
 - **Tests (Core):**
   - `When_some_posts_are_recorded_should_publish_only_the_rest` (AC-15)
