@@ -38,6 +38,7 @@ public sealed class InMemoryChannelPublisher(ChannelId channel) : IAmAChannelPub
     private string _rejection = string.Empty;
     private int? _indeterminateFrom;
     private string _uncertainty = string.Empty;
+    private CredentialStatus _credentials = new(true, "Credentials are valid.");
 
     /// <inheritdoc />
     public ChannelId Channel { get; } = channel;
@@ -72,6 +73,13 @@ public sealed class InMemoryChannelPublisher(ChannelId channel) : IAmAChannelPub
 
     /// <summary>Makes the publisher say whether every post was made again.</summary>
     public void StopBeingIndeterminate() => _indeterminateFrom = null;
+
+    /// <summary>Sets what the publisher reports when asked to verify its credentials.</summary>
+    /// <param name="status">The <see cref="CredentialStatus"/> to report. Credentials are valid until this is called.</param>
+    public void ReportCredentials(CredentialStatus status) => _credentials = status;
+
+    /// <inheritdoc />
+    public Task<CredentialStatus> VerifyAsync(CancellationToken cancellationToken) => Task.FromResult(_credentials);
 
     /// <inheritdoc />
     public Task<PostResult> CreateAsync(PostRequest request, CancellationToken cancellationToken)

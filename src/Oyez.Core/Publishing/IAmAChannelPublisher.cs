@@ -45,4 +45,9 @@ public interface IAmAChannelPublisher
     /// <param name="cancellationToken">Cancels the operation.</param>
     /// <returns>A <see cref="PostResult"/> saying whether the post was made.</returns>
     Task<PostResult> CreateAsync(PostRequest request, CancellationToken cancellationToken);
+
+    /// <summary>Asks the platform whether the credentials still work, without making a post.</summary>
+    /// <param name="cancellationToken">Cancels the operation.</param>
+    /// <returns>The <see cref="CredentialStatus"/> the platform reports.</returns>
+    Task<CredentialStatus> VerifyAsync(CancellationToken cancellationToken);
 }
