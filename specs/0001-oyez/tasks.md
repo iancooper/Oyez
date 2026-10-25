@@ -277,7 +277,7 @@ Every task in this phase sends Brighter commands, or runs Darker queries, throug
   - `When_a_post_is_published_should_save_the_record_before_raising_the_event`: a recording store and a recording event handler check the order
 - **Done when:** the tests pass.
 
-### [ ] T-17 Resolve an indeterminate channel
+### [x] T-17 Resolve an indeterminate channel
 - **Covers:** FR-6.6, AC-23 (second part)
 - **Builds:** the command `ResolveChannel`. Removes the T-0 spike command and query, and their tests.
 - **Tests (Core):**
