@@ -295,6 +295,36 @@ Every task in this phase sends Brighter commands, or runs Darker queries, throug
   - `When_the_linkedin_token_expires_soon_should_report_the_days_left`
 - **Done when:** the tests pass.
 
+### [ ] T-18a A skipped indeterminate channel made no new posts
+- **Covers:** NFR-10, FR-6.5
+- **Found by:** the Phase 2 code-smell review. A skipped indeterminate channel reports all its recorded posts as new, so the job summary links old posts as new ones.
+- **Tests (Core):**
+  - `When_an_indeterminate_channel_is_skipped_should_report_no_new_posts`
+- **Done when:** the test passes.
+
+### [ ] T-18b An enabled channel with no publisher
+- **Covers:** FR-4.5.1, NFR-7
+- **Found by:** the Phase 2 code-smell review. Publishing throws, and `CheckCredentials` silently leaves the channel out.
+- **Tests (Core):**
+  - `When_an_enabled_channel_has_no_publisher_should_reject_it_and_publish_the_others`
+  - `When_checking_credentials_for_a_channel_with_no_publisher_should_report_it_invalid`
+- **Done when:** the tests pass.
+
+### [ ] T-18c The channel-failed event
+- **Covers:** §4.10, FR-6.3
+- **Found by:** the Phase 2 code-smell review. `ChannelPublishFailed` is raised but no test observes it.
+- **Tests (Core):**
+  - `When_a_channel_is_rejected_should_raise_channel_publish_failed_after_saving_the_record`
+- **Done when:** the test passes.
+
+### [ ] T-18d Say what was skipped, and name channels for people
+- **Covers:** FR-7.1, FR-5.2
+- **Found by:** the Phase 2 code-smell review. Publishing silently skips a due announcement that fails validation, and `ResolveChannel`'s errors name channels by their configuration key.
+- **Tests (Core):**
+  - `When_a_due_announcement_is_invalid_should_report_it_as_not_published`
+  - `When_resolving_a_channel_that_is_not_indeterminate_should_name_the_channel`
+- **Done when:** the tests pass.
+
 ---
 
 ## Phase 3 — Adapters
