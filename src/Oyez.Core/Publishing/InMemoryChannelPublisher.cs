@@ -1,0 +1,55 @@
+#region Licence
+
+/* The MIT License (MIT)
+Copyright © 2026 Ian Cooper
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE. */
+
+#endregion
+
+using Oyez.Core.Channels;
+
+namespace Oyez.Core.Publishing;
+
+/// <summary>
+/// Pretends to post to a platform, and remembers the requests it was given. Use it in tests, or for a dry run.
+/// </summary>
+/// <param name="channel">The channel to pretend to post to.</param>
+public sealed class InMemoryChannelPublisher(ChannelId channel) : IAmAChannelPublisher
+{
+    private readonly List<PostRequest> _requests = [];
+
+    /// <inheritdoc />
+    public ChannelId Channel { get; } = channel;
+
+    /// <inheritdoc />
+    public bool CreateIsIdempotent => true;
+
+    /// <summary>Gets the requests the publisher has been given.</summary>
+    /// <value>The <see cref="PostRequest"/>s, in the order they arrived.</value>
+    public IReadOnlyList<PostRequest> Requests => _requests;
+
+    /// <inheritdoc />
+    public Task<PostResult> CreateAsync(PostRequest request, CancellationToken cancellationToken)
+    {
+        _requests.Add(request);
+        var post = new PostRef($"{Channel}-{_requests.Count}", $"https://{Channel}.example/{request.Announcement}/{_requests.Count}");
+        return Task.FromResult<PostResult>(new PostResult.Posted(post));
+    }
+}
