@@ -295,7 +295,7 @@ Every task in this phase sends Brighter commands, or runs Darker queries, throug
   - `When_the_linkedin_token_expires_soon_should_report_the_days_left`
 - **Done when:** the tests pass.
 
-### [ ] T-18a A skipped indeterminate channel made no new posts
+### [x] T-18a A skipped indeterminate channel made no new posts
 - **Covers:** NFR-10, FR-6.5
 - **Found by:** the Phase 2 code-smell review. A skipped indeterminate channel reports all its recorded posts as new, so the job summary links old posts as new ones.
 - **Tests (Core):**
