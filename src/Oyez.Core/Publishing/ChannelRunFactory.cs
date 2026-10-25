@@ -37,7 +37,7 @@ internal sealed class ChannelRunFactory(
 {
     public ChannelRun Create(AnnouncementId id, Rendering rendering)
     {
-        var publisher = publishers.Single(candidate => candidate.Channel == rendering.Channel);
+        var publisher = publishers.SingleOrDefault(candidate => candidate.Channel == rendering.Channel) ?? new MissingPublisher(rendering.Channel);
         var recorded = records.Load(id).ChannelOrNull(rendering.Channel);
         return new ChannelRun(id, rendering, publisher, recorded, records, commands, clock);
     }

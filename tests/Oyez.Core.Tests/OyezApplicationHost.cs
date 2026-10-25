@@ -24,7 +24,7 @@ public sealed class OyezApplicationHost : IDisposable
     private readonly Dictionary<ChannelId, InMemoryChannelPublisher> _publishers =
         ChannelId.All.ToDictionary(channel => channel, channel => new InMemoryChannelPublisher(channel));
 
-    public OyezApplicationHost(Action<OyezOptions>? configure = null, IAmAPublicationRecordStore? publicationRecords = null, OrderedLog? log = null)
+    public OyezApplicationHost(Action<OyezOptions>? configure = null, IAmAPublicationRecordStore? publicationRecords = null, OrderedLog? log = null, IReadOnlyCollection<ChannelId>? channelsWithoutPublisher = null)
     {
         PublicationRecords = publicationRecords ?? new InMemoryPublicationRecordStore();
         var services = new ServiceCollection()
@@ -34,7 +34,7 @@ public sealed class OyezApplicationHost : IDisposable
             .AddSingleton<IAmAnAnnouncementStore>(Announcements)
             .AddSingleton(PublicationRecords)
             .AddSingleton(log ?? new OrderedLog());
-        foreach (var publisher in _publishers.Values)
+        foreach (var (channel, publisher) in _publishers.Where(entry => channelsWithoutPublisher?.Contains(entry.Key) != true))
         {
             services.AddSingleton<IAmAChannelPublisher>(publisher);
         }

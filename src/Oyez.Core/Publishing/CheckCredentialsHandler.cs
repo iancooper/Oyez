@@ -48,7 +48,10 @@ internal sealed class CheckCredentialsHandler(
     }
 
     private IEnumerable<IAmAChannelPublisher> EnabledPublishers() =>
-        ChannelId.All.SelectMany(channel => publishers.Where(publisher => publisher.Channel == channel && IsEnabled(channel)));
+        ChannelId.All.Where(IsEnabled).Select(PublisherFor);
+
+    private IAmAChannelPublisher PublisherFor(ChannelId channel) =>
+        publishers.SingleOrDefault(publisher => publisher.Channel == channel) ?? new MissingPublisher(channel);
 
     private bool IsEnabled(ChannelId channel) =>
         profiles.Any(profile => profile.Id == channel && profile.IsEnabled);
