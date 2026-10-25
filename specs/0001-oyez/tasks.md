@@ -241,7 +241,7 @@ Every task in this phase sends Brighter commands, or runs Darker queries, throug
 - **Code-smell finding to resolve here (Phase 1 review):** before the first test, hide the test boilerplate. About 40 tests write the whole announcement text inline where the header isn't the point, and every class repeats the host, the `_id` and `Dispose`. Use `AnnouncementText` where the header isn't evident data, and add a small fixture or base for the host and ID, so the Phase 2 tests start clean.
 - **Done when:** the tests pass.
 
-### [ ] T-13 Publish due announcements
+### [x] T-13 Publish due announcements
 - **Covers:** FR-7.1, FR-6.2, FR-6.3, FR-4.1.1, §4.9
 - **Builds:** the port `IAmAChannelPublisher`, and the command `PublishDueAnnouncements`, which returns a `PublishReport` in its `Result`.
 - **Tests (Core):**
