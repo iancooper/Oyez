@@ -317,7 +317,7 @@ Every task in this phase sends Brighter commands, or runs Darker queries, throug
   - `When_a_channel_is_rejected_should_raise_channel_publish_failed_after_saving_the_record`
 - **Done when:** the test passes.
 
-### [ ] T-18d Say what was skipped, and name channels for people
+### [x] T-18d Say what was skipped, and name channels for people
 - **Covers:** FR-7.1, FR-5.2
 - **Found by:** the Phase 2 code-smell review. Publishing silently skips a due announcement that fails validation, and `ResolveChannel`'s errors name channels by their configuration key.
 - **Tests (Core):**
