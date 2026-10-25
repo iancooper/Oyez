@@ -37,6 +37,8 @@ internal sealed class PublishService(
     IEnumerable<IAmAChannelPublisher> publishers,
     TimeProvider clock)
 {
+    private const string EDITED_REASON = "The announcement was edited after it was partly published. Resolve the channel before publishing again.";
+
     public async Task<PublishReport> PublishDueAsync(CancellationToken cancellationToken)
     {
         var outcomes = new List<PublishOutcome>();
@@ -77,8 +79,14 @@ internal sealed class PublishService(
     private async Task<PublishOutcome> PublishChannelAsync(AnnouncementId id, Rendering rendering, CancellationToken cancellationToken)
     {
         var publisher = publishers.Single(candidate => candidate.Channel == rendering.Channel);
-        var publication = records.Load(id).Channels.GetValueOrDefault(rendering.Channel) ?? new ChannelPublication(ChannelState.Partial, rendering.Hash, []);
-        while (publication.Posts.Count < rendering.Posts.Count && await PostNextAsync(id, rendering, publisher, publication, cancellationToken) is { } next)
+        var recorded = records.Load(id).Channels.GetValueOrDefault(rendering.Channel);
+        if (recorded is not null && WasEditedAfterPosting(recorded, rendering))
+        {
+            return FailEdited(id, rendering.Channel, recorded);
+        }
+
+        var publication = Resume(recorded, rendering);
+        while (publication.State == ChannelState.Partial && publication.Posts.Count < rendering.Posts.Count && await PostNextAsync(id, rendering, publisher, publication, cancellationToken) is { } next)
         {
             publication = next;
             Save(id, rendering.Channel, publication);
@@ -86,6 +94,22 @@ internal sealed class PublishService(
 
         return new PublishOutcome(id, rendering.Channel, publication.State);
     }
+
+    private PublishOutcome FailEdited(AnnouncementId id, ChannelId channel, ChannelPublication recorded)
+    {
+        var failed = Failed(recorded, EDITED_REASON);
+        Save(id, channel, failed);
+        return new PublishOutcome(id, channel, failed.State);
+    }
+
+    private static bool WasEditedAfterPosting(ChannelPublication recorded, Rendering rendering) =>
+        recorded.Posts.Count > 0 && recorded.RenderingHash != rendering.Hash;
+
+    private static ChannelPublication Resume(ChannelPublication? recorded, Rendering rendering) =>
+        (recorded ?? new ChannelPublication(ChannelState.Partial, rendering.Hash, [])) with { State = ChannelState.Partial, RenderingHash = rendering.Hash, Reason = null };
+
+    private static ChannelPublication Failed(ChannelPublication publication, string reason) =>
+        publication with { State = ChannelState.Failed, Reason = reason };
 
     private async Task<ChannelPublication?> PostNextAsync(
         AnnouncementId id,
@@ -98,7 +122,12 @@ internal sealed class PublishService(
         var request = new PostRequest(id, rendering, index, publication.Posts.LastOrDefault()?.Ref, IdempotencyKey(id, rendering, index));
         var result = await publisher.CreateAsync(request, cancellationToken);
 
-        return result is PostResult.Posted posted ? Append(publication, rendering, new PublishedPost(index, posted.Ref, clock.GetUtcNow())) : null;
+        return result switch
+        {
+            PostResult.Posted posted => Append(publication, rendering, new PublishedPost(index, posted.Ref, clock.GetUtcNow())),
+            PostResult.Rejected rejected => Failed(publication, rejected.Reason),
+            _ => null
+        };
     }
 
     private static string IdempotencyKey(AnnouncementId id, Rendering rendering, int index) =>

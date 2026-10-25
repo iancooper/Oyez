@@ -34,6 +34,8 @@ namespace Oyez.Core.Publishing;
 public sealed class InMemoryChannelPublisher(ChannelId channel) : IAmAChannelPublisher
 {
     private readonly List<PostRequest> _requests = [];
+    private int? _rejectFrom;
+    private string _rejection = string.Empty;
 
     /// <inheritdoc />
     public ChannelId Channel { get; } = channel;
@@ -45,10 +47,27 @@ public sealed class InMemoryChannelPublisher(ChannelId channel) : IAmAChannelPub
     /// <value>The <see cref="PostRequest"/>s, in the order they arrived.</value>
     public IReadOnlyList<PostRequest> Requests => _requests;
 
+    /// <summary>Makes the publisher refuse posts, as a platform does when it rejects them or a secret is missing.</summary>
+    /// <param name="index">The first post index to refuse. Earlier posts are still made.</param>
+    /// <param name="reason">The reason to give for the refusal.</param>
+    public void RejectFrom(int index, string reason)
+    {
+        _rejectFrom = index;
+        _rejection = reason;
+    }
+
+    /// <summary>Makes the publisher accept every post again.</summary>
+    public void StopRejecting() => _rejectFrom = null;
+
     /// <inheritdoc />
     public Task<PostResult> CreateAsync(PostRequest request, CancellationToken cancellationToken)
     {
         _requests.Add(request);
+        if (request.Index >= _rejectFrom)
+        {
+            return Task.FromResult<PostResult>(new PostResult.Rejected(_rejection));
+        }
+
         var post = new PostRef($"{Channel}-{_requests.Count}", $"https://{Channel}.example/{request.Announcement}/{_requests.Count}");
         return Task.FromResult<PostResult>(new PostResult.Posted(post));
     }
