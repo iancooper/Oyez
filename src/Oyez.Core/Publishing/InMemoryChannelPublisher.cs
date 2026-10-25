@@ -36,6 +36,8 @@ public sealed class InMemoryChannelPublisher(ChannelId channel) : IAmAChannelPub
     private readonly List<PostRequest> _requests = [];
     private int? _rejectFrom;
     private string _rejection = string.Empty;
+    private int? _indeterminateFrom;
+    private string _uncertainty = string.Empty;
 
     /// <inheritdoc />
     public ChannelId Channel { get; } = channel;
@@ -59,6 +61,15 @@ public sealed class InMemoryChannelPublisher(ChannelId channel) : IAmAChannelPub
     /// <summary>Makes the publisher accept every post again.</summary>
     public void StopRejecting() => _rejectFrom = null;
 
+    /// <summary>Makes the publisher fail to say whether a post was made, as a platform does when a request times out.</summary>
+    /// <param name="index">The first post index to leave in doubt. Earlier posts are still made.</param>
+    /// <param name="reason">The reason to give for the doubt.</param>
+    public void IndeterminateFrom(int index, string reason)
+    {
+        _indeterminateFrom = index;
+        _uncertainty = reason;
+    }
+
     /// <inheritdoc />
     public Task<PostResult> CreateAsync(PostRequest request, CancellationToken cancellationToken)
     {
@@ -66,6 +77,11 @@ public sealed class InMemoryChannelPublisher(ChannelId channel) : IAmAChannelPub
         if (request.Index >= _rejectFrom)
         {
             return Task.FromResult<PostResult>(new PostResult.Rejected(_rejection));
+        }
+
+        if (request.Index >= _indeterminateFrom)
+        {
+            return Task.FromResult<PostResult>(new PostResult.Indeterminate(_uncertainty));
         }
 
         var post = new PostRef($"{Channel}-{_requests.Count}", $"https://{Channel}.example/{request.Announcement}/{_requests.Count}");

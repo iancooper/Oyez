@@ -80,26 +80,37 @@ internal sealed class PublishService(
     {
         var publisher = publishers.Single(candidate => candidate.Channel == rendering.Channel);
         var recorded = records.Load(id).Channels.GetValueOrDefault(rendering.Channel);
+        if (recorded?.State == ChannelState.Indeterminate)
+        {
+            return OutcomeOf(id, rendering.Channel, recorded);
+        }
+
         if (recorded is not null && WasEditedAfterPosting(recorded, rendering))
         {
             return FailEdited(id, rendering.Channel, recorded);
         }
 
         var publication = Resume(recorded, rendering);
-        while (publication.State == ChannelState.Partial && publication.Posts.Count < rendering.Posts.Count && await PostNextAsync(id, rendering, publisher, publication, cancellationToken) is { } next)
+        while (HasPostsToMake(publication, rendering))
         {
-            publication = next;
+            publication = await PostNextAsync(id, rendering, publisher, publication, cancellationToken);
             Save(id, rendering.Channel, publication);
         }
 
-        return new PublishOutcome(id, rendering.Channel, publication.State);
+        return OutcomeOf(id, rendering.Channel, publication);
     }
+
+    private static bool HasPostsToMake(ChannelPublication publication, Rendering rendering) =>
+        publication.State == ChannelState.Partial && publication.Posts.Count < rendering.Posts.Count;
+
+    private static PublishOutcome OutcomeOf(AnnouncementId id, ChannelId channel, ChannelPublication publication) =>
+        new(id, channel, publication.State, publication.Reason);
 
     private PublishOutcome FailEdited(AnnouncementId id, ChannelId channel, ChannelPublication recorded)
     {
         var failed = Failed(recorded, EDITED_REASON);
         Save(id, channel, failed);
-        return new PublishOutcome(id, channel, failed.State);
+        return OutcomeOf(id, channel, failed);
     }
 
     private static bool WasEditedAfterPosting(ChannelPublication recorded, Rendering rendering) =>
@@ -111,7 +122,7 @@ internal sealed class PublishService(
     private static ChannelPublication Failed(ChannelPublication publication, string reason) =>
         publication with { State = ChannelState.Failed, Reason = reason };
 
-    private async Task<ChannelPublication?> PostNextAsync(
+    private async Task<ChannelPublication> PostNextAsync(
         AnnouncementId id,
         Rendering rendering,
         IAmAChannelPublisher publisher,
@@ -126,7 +137,8 @@ internal sealed class PublishService(
         {
             PostResult.Posted posted => Append(publication, rendering, new PublishedPost(index, posted.Ref, clock.GetUtcNow())),
             PostResult.Rejected rejected => Failed(publication, rejected.Reason),
-            _ => null
+            PostResult.Indeterminate indeterminate => publication with { State = ChannelState.Indeterminate, Reason = indeterminate.Reason },
+            _ => throw new InvalidOperationException($"Unknown post result {result}")
         };
     }
 

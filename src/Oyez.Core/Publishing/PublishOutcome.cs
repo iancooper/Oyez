@@ -34,4 +34,5 @@ namespace Oyez.Core.Publishing;
 /// <param name="Announcement">The <see cref="AnnouncementId"/> of the announcement.</param>
 /// <param name="Channel">The <see cref="ChannelId"/> that was published to.</param>
 /// <param name="State">The <see cref="ChannelState"/> the channel reached.</param>
-public sealed record PublishOutcome(AnnouncementId Announcement, ChannelId Channel, ChannelState State);
+/// <param name="Reason">Why the channel is <see cref="ChannelState.Failed"/> or <see cref="ChannelState.Indeterminate"/>, if it is. For an indeterminate channel that was skipped, this is the reason it was marked, and is the warning to show.</param>
+public sealed record PublishOutcome(AnnouncementId Announcement, ChannelId Channel, ChannelState State, string? Reason = null);
