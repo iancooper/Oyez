@@ -229,7 +229,7 @@ Parsing, counting, rendering and validation are internal to `Oyez.Core`. Every t
 
 Every task in this phase sends Brighter commands, or runs Darker queries, through the real processors. In-memory publishers stand in for the platforms (they're test doubles for I/O). `InMemoryPublicationRecordStore` and `FakeTimeProvider` stand in for storage and the clock.
 
-### [ ] T-12 Publication status
+### [x] T-12 Publication status
 - **Covers:** FR-6.1, §4.8
 - **Builds:**
   - the public `PublicationRecord` and its channel states (`partial`, `complete`, `indeterminate`, `failed`);
