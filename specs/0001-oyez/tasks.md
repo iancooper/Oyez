@@ -287,7 +287,7 @@ Every task in this phase sends Brighter commands, or runs Darker queries, throug
   - `When_resolving_a_channel_that_is_not_indeterminate_should_report_an_error`
 - **Done when:** the tests pass.
 
-### [ ] T-18 Check credentials
+### [x] T-18 Check credentials
 - **Covers:** FR-4.3.5, NFR-7, §6 (`check`)
 - **Builds:** `IAmAChannelPublisher.VerifyAsync`, and the query `CheckCredentials`.
 - **Tests (Core):**
