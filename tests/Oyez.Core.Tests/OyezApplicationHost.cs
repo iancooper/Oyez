@@ -33,7 +33,8 @@ public sealed class OyezApplicationHost : IDisposable
             .AddSingleton<TimeProvider>(Clock)
             .AddSingleton<IAmAnAnnouncementStore>(Announcements)
             .AddSingleton(PublicationRecords)
-            .AddSingleton(log ?? new OrderedLog());
+            .AddSingleton(log ?? new OrderedLog())
+            .AddSingleton(SeenChannelFailures);
         foreach (var (channel, publisher) in _publishers.Where(entry => channelsWithoutPublisher?.Contains(entry.Key) != true))
         {
             services.AddSingleton<IAmAChannelPublisher>(publisher);
@@ -45,6 +46,8 @@ public sealed class OyezApplicationHost : IDisposable
     }
 
     public InMemoryAnnouncementStore Announcements { get; } = new();
+
+    public SeenChannelFailures SeenChannelFailures { get; } = new();
 
     public IAmAPublicationRecordStore PublicationRecords { get; }
 

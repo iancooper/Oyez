@@ -16,6 +16,8 @@ public abstract class OyezApplicationTest(Action<OyezOptions>? configure = null,
 {
     protected OyezApplicationHost Host { get; } = new(configure, publicationRecords, log, channelsWithoutPublisher);
 
+    protected SeenChannelFailures SeenChannelFailures => Host.SeenChannelFailures;
+
     protected AnnouncementId Id { get; } = new("2026-11-03-brighter-10-3-0");
 
     public void Dispose() => Host.Dispose();
