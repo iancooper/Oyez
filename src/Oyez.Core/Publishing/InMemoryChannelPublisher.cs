@@ -70,6 +70,9 @@ public sealed class InMemoryChannelPublisher(ChannelId channel) : IAmAChannelPub
         _uncertainty = reason;
     }
 
+    /// <summary>Makes the publisher say whether every post was made again.</summary>
+    public void StopBeingIndeterminate() => _indeterminateFrom = null;
+
     /// <inheritdoc />
     public Task<PostResult> CreateAsync(PostRequest request, CancellationToken cancellationToken)
     {
