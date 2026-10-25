@@ -262,7 +262,7 @@ Every task in this phase sends Brighter commands, or runs Darker queries, throug
   - `When_a_channels_secret_is_missing_should_reject_it_and_publish_the_others`
 - **Done when:** the tests pass.
 
-### [ ] T-15 The indeterminate state
+### [x] T-15 The indeterminate state
 - **Covers:** FR-6.5, NFR-6, AC-23 (first part)
 - **Tests (Core):**
   - `When_a_post_may_have_been_made_should_mark_the_channel_indeterminate_and_stop_it`
