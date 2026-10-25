@@ -310,7 +310,7 @@ Every task in this phase sends Brighter commands, or runs Darker queries, throug
   - `When_checking_credentials_for_a_channel_with_no_publisher_should_report_it_invalid`
 - **Done when:** the tests pass.
 
-### [ ] T-18c The channel-failed event
+### [x] T-18c The channel-failed event
 - **Covers:** §4.10, FR-6.3
 - **Found by:** the Phase 2 code-smell review. `ChannelPublishFailed` is raised but no test observes it.
 - **Tests (Core):**
