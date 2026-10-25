@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Oyez.Core.Announcements;
 using Oyez.Core.Application;
 using Oyez.Core.Configuration;
+using Oyez.Core.Publishing;
 using Paramore.Darker;
 
 namespace Oyez.Core.Tests;
@@ -24,11 +25,14 @@ public sealed class OyezApplicationHost : IDisposable
             .AddLogging()
             .AddSingleton<ILoggerFactory>(NullLoggerFactory.Instance)
             .AddSingleton<IAmAnAnnouncementStore>(Announcements)
+            .AddSingleton<IAmAPublicationRecordStore>(PublicationRecords)
             .AddOyezApplication(configure)
             .BuildServiceProvider();
     }
 
     public InMemoryAnnouncementStore Announcements { get; } = new();
+
+    public InMemoryPublicationRecordStore PublicationRecords { get; } = new();
 
     public IQueryProcessor QueryProcessor => _provider.GetRequiredService<IQueryProcessor>();
 
