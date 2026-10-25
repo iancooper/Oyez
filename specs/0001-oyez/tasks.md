@@ -302,7 +302,7 @@ Every task in this phase sends Brighter commands, or runs Darker queries, throug
   - `When_an_indeterminate_channel_is_skipped_should_report_no_new_posts`
 - **Done when:** the test passes.
 
-### [ ] T-18b An enabled channel with no publisher
+### [x] T-18b An enabled channel with no publisher
 - **Covers:** FR-4.5.1, NFR-7
 - **Found by:** the Phase 2 code-smell review. Publishing throws, and `CheckCredentials` silently leaves the channel out.
 - **Tests (Core):**
