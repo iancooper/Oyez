@@ -9,7 +9,7 @@ public class ChannelIndependenceTests : OyezApplicationTest
     public async Task When_one_channel_is_rejected_should_still_publish_the_others()
     {
         //Arrange
-        Host.Announcements.Add(PublishingTestData.Announcement(Id.Value, "x, mastodon", null, "Released"));
+        Host.Announcements.Add(PublishingTestData.Announcement(Id, "x, mastodon", ["Released"]));
         Host.PublisherFor(ChannelId.X).RespondFrom(index: 0, result: new PostResult.Rejected("account suspended"));
         var command = new PublishDueAnnouncements();
 

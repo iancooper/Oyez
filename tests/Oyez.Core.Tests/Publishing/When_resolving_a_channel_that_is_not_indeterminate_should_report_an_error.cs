@@ -9,8 +9,7 @@ public class ResolveChannelErrorTests : OyezApplicationTest
     public async Task When_resolving_a_channel_that_is_not_indeterminate_should_report_an_error()
     {
         //Arrange
-        Host.Announcements.Add(PublishingTestData.Announcement(
-            Id.Value, "x", null, AnnouncementText.OfLength(250, 'a'), AnnouncementText.OfLength(250, 'b')));
+        Host.Announcements.Add(PublishingTestData.Announcement(Id, "x", [AnnouncementText.OfLength(250, 'a'), AnnouncementText.OfLength(250, 'b')]));
         Host.PublisherFor(ChannelId.X).RespondFrom(index: 1, result: new PostResult.Rejected("rate limited"));
         await Host.CommandProcessor.SendAsync(new PublishDueAnnouncements(), cancellationToken: TestContext.Current.CancellationToken);
         var before = Host.PublicationRecords.Load(Id);

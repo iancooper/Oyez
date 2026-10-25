@@ -9,7 +9,7 @@ public class JobSummaryTests : OyezApplicationTest
     public async Task When_publishing_should_summarise_each_channels_state_with_links_to_new_posts()
     {
         //Arrange
-        Host.Announcements.Add(PublishingTestData.Announcement(Id.Value, "x, mastodon", null, "Released"));
+        Host.Announcements.Add(PublishingTestData.Announcement(Id, "x, mastodon", ["Released"]));
         Host.PublisherFor(ChannelId.X).RespondFrom(index: 0, result: new PostResult.Rejected("account suspended"));
         var command = new PublishDueAnnouncements();
 

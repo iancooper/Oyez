@@ -9,8 +9,7 @@ public class ResolveLastPostAsMadeTests : OyezApplicationTest
     public async Task When_resolving_the_last_post_as_made_should_mark_the_channel_complete()
     {
         //Arrange
-        Host.Announcements.Add(PublishingTestData.Announcement(
-            Id.Value, "x", null, AnnouncementText.OfLength(250, 'a'), AnnouncementText.OfLength(250, 'b')));
+        Host.Announcements.Add(PublishingTestData.Announcement(Id, "x", [AnnouncementText.OfLength(250, 'a'), AnnouncementText.OfLength(250, 'b')]));
         var publisher = Host.PublisherFor(ChannelId.X);
         publisher.RespondFrom(index: 1, result: new PostResult.Indeterminate("timed out creating post 2"));
         await Host.CommandProcessor.SendAsync(new PublishDueAnnouncements(), cancellationToken: TestContext.Current.CancellationToken);

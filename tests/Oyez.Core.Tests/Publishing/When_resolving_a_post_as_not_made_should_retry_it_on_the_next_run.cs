@@ -9,8 +9,7 @@ public class ResolveChannelAsNotMadeTests : OyezApplicationTest
     public async Task When_resolving_a_post_as_not_made_should_retry_it_on_the_next_run()
     {
         //Arrange
-        Host.Announcements.Add(PublishingTestData.Announcement(
-            Id.Value, "x", null, AnnouncementText.OfLength(250, 'a'), AnnouncementText.OfLength(250, 'b'), AnnouncementText.OfLength(250, 'c')));
+        Host.Announcements.Add(PublishingTestData.Announcement(Id, "x", [AnnouncementText.OfLength(250, 'a'), AnnouncementText.OfLength(250, 'b'), AnnouncementText.OfLength(250, 'c')]));
         var publisher = Host.PublisherFor(ChannelId.X);
         publisher.RespondFrom(index: 1, result: new PostResult.Indeterminate("timed out creating post 2"));
         await Host.CommandProcessor.SendAsync(new PublishDueAnnouncements(), cancellationToken: TestContext.Current.CancellationToken);

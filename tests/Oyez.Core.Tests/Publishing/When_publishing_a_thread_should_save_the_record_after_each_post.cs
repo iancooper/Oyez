@@ -18,7 +18,7 @@ public sealed class SaveAfterEachPostTests : OyezApplicationTest
     public async Task When_publishing_a_thread_should_save_the_record_after_each_post()
     {
         //Arrange
-        Host.Announcements.Add(PublishingTestData.Announcement(Id.Value, "x", null, AnnouncementText.OfLength(250, 'a'), AnnouncementText.OfLength(250, 'b')));
+        Host.Announcements.Add(PublishingTestData.Announcement(Id, "x", [AnnouncementText.OfLength(250, 'a'), AnnouncementText.OfLength(250, 'b')]));
 
         //Act
         await Host.CommandProcessor.SendAsync(new PublishDueAnnouncements(), cancellationToken: TestContext.Current.CancellationToken);

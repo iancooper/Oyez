@@ -11,7 +11,7 @@ public class ThreadChainingTests : OyezApplicationTest
         //Arrange
         var firstPost = AnnouncementText.OfLength(250, 'a');
         var secondPost = AnnouncementText.OfLength(250, 'b');
-        Host.Announcements.Add(PublishingTestData.Announcement(Id.Value, "x", null, firstPost, secondPost));
+        Host.Announcements.Add(PublishingTestData.Announcement(Id, "x", [firstPost, secondPost]));
 
         //Act
         await Host.CommandProcessor.SendAsync(new PublishDueAnnouncements(), cancellationToken: TestContext.Current.CancellationToken);

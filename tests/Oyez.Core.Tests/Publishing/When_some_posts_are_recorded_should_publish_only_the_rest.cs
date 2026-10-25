@@ -10,7 +10,7 @@ public class ResumeTests : OyezApplicationTest
     {
         //Arrange
         var posts = new[] { AnnouncementText.OfLength(250, 'a'), AnnouncementText.OfLength(250, 'b'), AnnouncementText.OfLength(250, 'c') };
-        Host.Announcements.Add(PublishingTestData.Announcement(Id.Value, "x", null, posts));
+        Host.Announcements.Add(PublishingTestData.Announcement(Id, "x", posts));
         var publisher = Host.PublisherFor(ChannelId.X);
         publisher.RespondFrom(index: 1, result: new PostResult.Rejected("rate limited"));
         await Host.CommandProcessor.SendAsync(new PublishDueAnnouncements(), cancellationToken: TestContext.Current.CancellationToken);

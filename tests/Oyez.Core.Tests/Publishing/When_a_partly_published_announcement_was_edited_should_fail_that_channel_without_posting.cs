@@ -10,13 +10,13 @@ public class EditedAfterPartialPublishTests : OyezApplicationTest
     {
         //Arrange
         var first = AnnouncementText.OfLength(250, 'a');
-        Host.Announcements.Add(PublishingTestData.Announcement(Id.Value, "x", null, first, AnnouncementText.OfLength(250, 'b')));
+        Host.Announcements.Add(PublishingTestData.Announcement(Id, "x", [first, AnnouncementText.OfLength(250, 'b')]));
         var publisher = Host.PublisherFor(ChannelId.X);
         publisher.RespondFrom(index: 1, result: new PostResult.Rejected("rate limited"));
         await Host.CommandProcessor.SendAsync(new PublishDueAnnouncements(), cancellationToken: TestContext.Current.CancellationToken);
         publisher.RespondNormally();
         var attemptsBefore = publisher.Requests.Count;
-        Host.Announcements.Add(PublishingTestData.Announcement(Id.Value, "x", null, first, AnnouncementText.OfLength(250, 'c')));
+        Host.Announcements.Add(PublishingTestData.Announcement(Id, "x", [first, AnnouncementText.OfLength(250, 'c')]));
         var command = new PublishDueAnnouncements();
 
         //Act

@@ -9,7 +9,7 @@ public class UntargetedChannelTests() : OyezApplicationTest(options => options.M
     public async Task When_a_channel_is_not_targeted_or_not_enabled_should_not_publish_to_it()
     {
         //Arrange
-        Host.Announcements.Add(PublishingTestData.Announcement(Id.Value, "x, mastodon, linkedin", null, "Released"));
+        Host.Announcements.Add(PublishingTestData.Announcement(Id, "x, mastodon, linkedin", ["Released"]));
 
         //Act
         await Host.CommandProcessor.SendAsync(new PublishDueAnnouncements(), cancellationToken: TestContext.Current.CancellationToken);

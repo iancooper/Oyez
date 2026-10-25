@@ -9,9 +9,9 @@ public class RetryFailedChannelTests : OyezApplicationTest
     public async Task When_a_channel_failed_last_time_should_retry_it()
     {
         //Arrange
-        Host.Announcements.Add(PublishingTestData.Announcement(Id.Value, "x", null, "Released"));
+        Host.Announcements.Add(PublishingTestData.Announcement(Id, "x", ["Released"]));
         var failed = new ChannelPublication(ChannelState.Failed, new RenderingHash("sha256:earlier"), [], "account suspended");
-        Host.PublicationRecords.Save(Id, new PublicationRecord(new Dictionary<ChannelId, ChannelPublication> { [ChannelId.X] = failed }));
+        Host.PublicationRecords.Save(Id, PublishingTestData.RecordWith((ChannelId.X, failed)));
 
         //Act
         await Host.CommandProcessor.SendAsync(new PublishDueAnnouncements(), cancellationToken: TestContext.Current.CancellationToken);

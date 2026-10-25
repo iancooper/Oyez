@@ -9,8 +9,7 @@ public class MarkChannelIndeterminateTests : OyezApplicationTest
     public async Task When_a_post_may_have_been_made_should_mark_the_channel_indeterminate_and_stop_it()
     {
         //Arrange
-        Host.Announcements.Add(PublishingTestData.Announcement(
-            Id.Value, "x, mastodon", null, AnnouncementText.OfLength(250, 'a'), AnnouncementText.OfLength(250, 'b'), AnnouncementText.OfLength(250, 'c')));
+        Host.Announcements.Add(PublishingTestData.Announcement(Id, "x, mastodon", [AnnouncementText.OfLength(250, 'a'), AnnouncementText.OfLength(250, 'b'), AnnouncementText.OfLength(250, 'c')]));
         Host.PublisherFor(ChannelId.X).RespondFrom(index: 1, result: new PostResult.Indeterminate("timed out creating post 2"));
         var command = new PublishDueAnnouncements();
 

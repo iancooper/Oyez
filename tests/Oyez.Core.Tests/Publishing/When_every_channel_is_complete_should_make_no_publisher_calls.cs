@@ -9,13 +9,9 @@ public class CompleteChannelTests : OyezApplicationTest
     public async Task When_every_channel_is_complete_should_make_no_publisher_calls()
     {
         //Arrange
-        Host.Announcements.Add(PublishingTestData.Announcement(Id.Value, "x, mastodon", null, "Released"));
+        Host.Announcements.Add(PublishingTestData.Announcement(Id, "x, mastodon", ["Released"]));
         var done = new ChannelPublication(ChannelState.Complete, new RenderingHash("sha256:earlier"), []);
-        Host.PublicationRecords.Save(Id, new PublicationRecord(new Dictionary<ChannelId, ChannelPublication>
-        {
-            [ChannelId.X] = done,
-            [ChannelId.Mastodon] = done
-        }));
+        Host.PublicationRecords.Save(Id, PublishingTestData.RecordWith((ChannelId.X, done), (ChannelId.Mastodon, done)));
 
         //Act
         await Host.CommandProcessor.SendAsync(new PublishDueAnnouncements(), cancellationToken: TestContext.Current.CancellationToken);
