@@ -26,21 +26,16 @@ THE SOFTWARE. */
 using Oyez.Core.Announcements;
 using Oyez.Core.Channels;
 using Oyez.Core.Validating;
-using Paramore.Brighter;
 
 namespace Oyez.Core.Publishing;
 
 internal sealed class PublishService(
     IAmAnAnnouncementStore announcements,
-    IAmAPublicationRecordStore records,
     Renderer renderer,
     Validator validator,
-    IEnumerable<IAmAChannelPublisher> publishers,
-    IAmACommandProcessor commands,
+    ChannelRunFactory runs,
     TimeProvider clock)
 {
-    private const string EDITED_REASON = "The announcement was edited after it was partly published. Resolve the channel before publishing again.";
-
     public async Task<PublishReport> PublishDueAsync(CancellationToken cancellationToken)
     {
         var outcomes = new List<PublishOutcome>();
@@ -65,97 +60,12 @@ internal sealed class PublishService(
 
     private async Task<IReadOnlyList<PublishOutcome>> PublishAnnouncementAsync(Announcement announcement, CancellationToken cancellationToken)
     {
-        var outcomes = new List<PublishOutcome>();
-        var record = records.Load(announcement.Id);
-        foreach (var rendering in renderer.RenderTargetedChannels(announcement).Where(rendering => !record.IsComplete(rendering.Channel)))
+        var outcomes = new List<PublishOutcome?>();
+        foreach (var rendering in renderer.RenderTargetedChannels(announcement))
         {
-            outcomes.Add(await PublishChannelAsync(announcement.Id, rendering, cancellationToken));
+            outcomes.Add(await runs.Create(announcement.Id, rendering).PublishAsync(cancellationToken));
         }
 
-        return outcomes;
-    }
-
-    private async Task<PublishOutcome> PublishChannelAsync(AnnouncementId id, Rendering rendering, CancellationToken cancellationToken)
-    {
-        var publisher = publishers.Single(candidate => candidate.Channel == rendering.Channel);
-        var recorded = records.Load(id).ChannelOrNull(rendering.Channel);
-        if (recorded?.State == ChannelState.Indeterminate)
-        {
-            return OutcomeOf(id, rendering.Channel, recorded, 0);
-        }
-
-        if (recorded?.IsEditedSince(rendering) == true)
-        {
-            return await FailEditedAsync(id, rendering.Channel, recorded, cancellationToken);
-        }
-
-        var publication = (recorded ?? ChannelPublication.Begin(rendering)).ResumeFor(rendering);
-        var alreadyPosted = publication.Posts.Count;
-        while (publication.HasPostsToMake(rendering))
-        {
-            var previous = publication;
-            publication = await PostNextAsync(id, rendering, publisher, publication, cancellationToken);
-            Save(id, rendering.Channel, publication);
-            await PublishProgressAsync(id, rendering.Channel, previous, publication, cancellationToken);
-        }
-
-        return OutcomeOf(id, rendering.Channel, publication, alreadyPosted);
-    }
-
-    private static PublishOutcome OutcomeOf(AnnouncementId id, ChannelId channel, ChannelPublication publication, int alreadyPosted) =>
-        new(id, channel, publication.State, publication.Reason, publication.Posts.Skip(alreadyPosted).Select(post => post.Ref).ToList());
-
-    private async Task<PublishOutcome> FailEditedAsync(AnnouncementId id, ChannelId channel, ChannelPublication recorded, CancellationToken cancellationToken)
-    {
-        var failed = recorded.Fail(EDITED_REASON);
-        Save(id, channel, failed);
-        await PublishProgressAsync(id, channel, recorded, failed, cancellationToken);
-        return OutcomeOf(id, channel, failed, recorded.Posts.Count);
-    }
-
-    private async Task PublishProgressAsync(
-        AnnouncementId id,
-        ChannelId channel,
-        ChannelPublication previous,
-        ChannelPublication current,
-        CancellationToken cancellationToken)
-    {
-        if (current.Posts.Count > previous.Posts.Count)
-        {
-            var post = current.Posts[^1];
-            await commands.PublishAsync(new PostPublished(id, channel, post.Index, post.Ref), cancellationToken: cancellationToken);
-        }
-        else if (current.State is ChannelState.Failed or ChannelState.Indeterminate)
-        {
-            await commands.PublishAsync(new ChannelPublishFailed(id, channel, current.State, current.Reason ?? string.Empty), cancellationToken: cancellationToken);
-        }
-    }
-
-    private async Task<ChannelPublication> PostNextAsync(
-        AnnouncementId id,
-        Rendering rendering,
-        IAmAChannelPublisher publisher,
-        ChannelPublication publication,
-        CancellationToken cancellationToken)
-    {
-        var index = publication.Posts.Count;
-        var request = new PostRequest(id, rendering, index, publication.Posts.LastOrDefault()?.Ref, IdempotencyKey(id, rendering, index));
-        var result = await publisher.CreateAsync(request, cancellationToken);
-
-        return result switch
-        {
-            PostResult.Posted posted => publication.Append(posted.Ref, clock.GetUtcNow(), rendering) with { RenderingHash = rendering.Hash },
-            PostResult.Rejected rejected => publication.Fail(rejected.Reason),
-            PostResult.Indeterminate indeterminate => publication.MarkIndeterminate(indeterminate.Reason),
-            _ => throw new InvalidOperationException($"Unknown post result {result}")
-        };
-    }
-
-    private static string IdempotencyKey(AnnouncementId id, Rendering rendering, int index) =>
-        $"oyez:{id}:{rendering.Channel}:{index}:{rendering.Hash.Fingerprint}";
-
-    private void Save(AnnouncementId id, ChannelId channel, ChannelPublication publication)
-    {
-        records.Save(id, records.Load(id).With(channel, publication));
+        return outcomes.OfType<PublishOutcome>().ToList();
     }
 }

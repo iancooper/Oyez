@@ -69,6 +69,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<Renderer>();
         services.AddSingleton<Validator>();
         services.AddSingleton<XCostEstimator>();
+        services.AddSingleton<ChannelRunFactory>();
         services.AddSingleton<PublishService>();
 
         return services;
