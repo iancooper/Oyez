@@ -60,15 +60,10 @@ internal sealed class ResolveChannelHandler(
         }
 
         var resolved = command.Posted is null ? publication.Fail(NOT_POSTED_REASON) : publication.Append(command.Posted, clock.GetUtcNow(), rendering);
-        Save(command, record, resolved);
+        records.SaveChannel(command.Announcement, command.Channel, resolved);
         return Result<ChannelState>.Success(resolved.State);
     }
 
     private static Result<ChannelState> Failure(ResolveChannel command, string message) =>
         Result<ChannelState>.Failure([new ValidationError(command.Announcement, message, command.Channel)]);
-
-    private void Save(ResolveChannel command, PublicationRecord record, ChannelPublication resolved)
-    {
-        records.Save(command.Announcement, record.With(command.Channel, resolved));
-    }
 }

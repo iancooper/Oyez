@@ -115,7 +115,7 @@ internal sealed class ChannelRun(
         $"oyez:{id}:{Channel}:{index}:{rendering.Hash.Fingerprint}";
 
     private void Save(ChannelPublication publication) =>
-        records.Save(id, records.Load(id).With(Channel, publication));
+        records.SaveChannel(id, Channel, publication);
 
     private PublishOutcome OutcomeOf(ChannelPublication publication, int alreadyPosted) =>
         new(id, Channel, publication.State, publication.Reason, publication.Posts.Skip(alreadyPosted).Select(post => post.Ref).ToList());
