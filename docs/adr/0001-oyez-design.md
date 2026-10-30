@@ -303,7 +303,7 @@ The `state` for each channel is one of:
 - `indeterminate` — an attempt may or may not have succeeded;
 - `failed` — the last attempt was definitely rejected. The next run retries a failed channel.
 
-**Rendering hash.** `Rendering.Hash` is a `RenderingHash` value: `sha256:` followed by the hex SHA-256 of the rendering's post texts, which is how it's stored. If a channel has recorded posts (it is `partial`, or `failed` part-way) and the current rendering's hash differs from the recorded one, someone edited the announcement after it was partly published. Resuming could post the wrong continuation, so the channel fails with a message telling you to resolve it [FR-6.2, NFR-7].
+**Rendering hash.** `Rendering.Hash` is a `RenderingHash` value: `sha256:` followed by the hex SHA-256 of the rendering's post texts, which is how it's stored. If a channel has recorded posts (it is `partial`, or `failed` part-way) and the current rendering's hash differs from the recorded one, someone edited the announcement after it was partly published. Resuming could post the wrong continuation, so the channel fails with a message telling you to resolve it [FR-6.2, NFR-7]. Resolving an indeterminate channel (`ResolveChannel`) keeps the recorded hash rather than taking the current one, so an edit made before you resolve is still caught on the next run.
 
 **Indeterminate state.** The workflow runs every hour, so retrying an uncertain create automatically risks a duplicate post every hour. Instead, an `indeterminate` channel is skipped on later runs, with a warning, until someone runs `oyez resolve` (§6). This refines NFR-6 to cover runs after the first.
 
