@@ -53,7 +53,7 @@ public sealed record ChannelPublication(
     {
         var posts = Posts.Append(new PublishedPost(Posts.Count, posted, at)).ToList();
         var state = posts.Count == rendering.Posts.Count ? ChannelState.Complete : ChannelState.Partial;
-        return this with { State = state, Posts = posts };
+        return this with { State = state, Posts = posts, Reason = null };
     }
 
     internal ChannelPublication Fail(string reason) =>

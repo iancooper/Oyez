@@ -98,7 +98,7 @@ internal sealed class ChannelRun(
     private async Task<ChannelPublication> AcceptAsync(ChannelPublication publication, PostResult.Posted posted, CancellationToken cancellationToken)
     {
         var index = publication.Posts.Count;
-        var accepted = publication.Append(posted.Ref, clock.GetUtcNow(), rendering) with { RenderingHash = rendering.Hash };
+        var accepted = publication.Append(posted.Ref, clock.GetUtcNow(), rendering);
         Save(accepted);
         await commands.PublishAsync(new PostPublished(id, Channel, index, posted.Ref), cancellationToken: cancellationToken);
         return accepted;

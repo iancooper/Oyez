@@ -59,7 +59,7 @@ internal sealed class ResolveChannelHandler(
             return Failure(command, $"{command.Channel.DisplayName} is not a channel of announcement '{command.Announcement}'.");
         }
 
-        var resolved = command.Posted is null ? publication.Fail(NOT_POSTED_REASON) : publication.Append(command.Posted, clock.GetUtcNow(), rendering) with { Reason = null };
+        var resolved = command.Posted is null ? publication.Fail(NOT_POSTED_REASON) : publication.Append(command.Posted, clock.GetUtcNow(), rendering);
         Save(command, record, resolved);
         return Result<ChannelState>.Success(resolved.State);
     }
