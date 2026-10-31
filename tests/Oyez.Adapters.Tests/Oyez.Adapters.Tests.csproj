@@ -3,8 +3,6 @@
     <OutputType>Exe</OutputType>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
-    <!-- No tests yet: don't fail on exit code 8 (zero tests ran). Remove in T-19, with the first test. -->
-    <TestingPlatformCommandLineArguments>--ignore-exit-code 8</TestingPlatformCommandLineArguments>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\Oyez.Adapters\Oyez.Adapters.csproj" />
