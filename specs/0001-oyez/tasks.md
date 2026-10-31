@@ -341,7 +341,7 @@ Every task in this phase tests a port implementation registered by `AddOyezAdapt
   - `When_verifying_write_as_credentials_should_call_me`
 - **Done when:** the tests pass.
 
-### [ ] T-20 X publisher, with OAuth 1.0a
+### [x] T-20 X publisher, with OAuth 1.0a
 - **Covers:** FR-4.1, FR-4.1.2, AC-11, §5.2
 - **Builds:** `XPublisher`. The clock (`TimeProvider`) and the nonce source are public seams, so the signature can be tested against X's published example.
 - **Tests (Adapter):**
