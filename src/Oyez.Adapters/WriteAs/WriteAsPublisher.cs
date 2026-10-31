@@ -39,18 +39,31 @@ internal sealed class WriteAsPublisher(HttpClient http, WriteAsOptions options) 
     public async Task<PostResult> CreateAsync(PostRequest request, CancellationToken cancellationToken)
     {
         var post = new { title = request.Rendering.Title, body = request.Rendering.Posts[request.Index].Text };
-        using var message = new HttpRequestMessage(HttpMethod.Post, $"{options.ApiBase}/collections/{options.Collection}/posts")
-        {
-            Content = JsonContent.Create(post)
-        };
-        message.Headers.TryAddWithoutValidation("Authorization", $"Token {options.AccessToken}");
+        using var message = Authorised(HttpMethod.Post, $"collections/{options.Collection}/posts");
+        message.Content = JsonContent.Create(post);
 
         using var response = await http.SendAsync(message, cancellationToken);
 
-        return await PostedFromAsync(response, cancellationToken);
+        return await PostResultFromAsync(response, cancellationToken);
     }
 
-    private async Task<PostResult> PostedFromAsync(HttpResponseMessage response, CancellationToken cancellationToken)
+    public async Task<CredentialStatus> VerifyAsync(CancellationToken cancellationToken)
+    {
+        using var message = Authorised(HttpMethod.Get, "me");
+
+        using var response = await http.SendAsync(message, cancellationToken);
+
+        return new CredentialStatus(response.IsSuccessStatusCode, $"Write.as returned {(int)response.StatusCode}");
+    }
+
+    private HttpRequestMessage Authorised(HttpMethod method, string path)
+    {
+        var message = new HttpRequestMessage(method, $"{options.ApiBase}/{path}");
+        message.Headers.TryAddWithoutValidation("Authorization", $"Token {options.AccessToken}");
+        return message;
+    }
+
+    private async Task<PostResult> PostResultFromAsync(HttpResponseMessage response, CancellationToken cancellationToken)
     {
         using var body = await JsonDocument.ParseAsync(await response.Content.ReadAsStreamAsync(cancellationToken), cancellationToken: cancellationToken);
         if (!response.IsSuccessStatusCode)
@@ -62,6 +75,4 @@ internal sealed class WriteAsPublisher(HttpClient http, WriteAsOptions options) 
         var slug = data.GetProperty("slug").GetString();
         return new PostResult.Posted(new PostRef(data.GetProperty("id").GetString()!, $"{options.BlogUrl}/{slug}"));
     }
-
-    public Task<CredentialStatus> VerifyAsync(CancellationToken cancellationToken) => throw new NotImplementedException();
 }
