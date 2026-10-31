@@ -399,7 +399,7 @@ Every task in this phase tests a port implementation registered by `AddOyezAdapt
   - `When_loading_an_announcement_that_does_not_exist_should_return_nothing`
 - **Done when:** the tests pass.
 
-### [ ] T-26 File-system publication record store
+### [x] T-26 File-system publication record store
 - **Covers:** FR-6.1, FR-6.3, §4.8, §5.6
 - **Tests (Adapter):** in temporary folders.
   - `When_saving_a_record_should_write_camel_case_indented_json`
