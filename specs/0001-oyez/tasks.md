@@ -383,7 +383,7 @@ Every task in this phase tests a port implementation registered by `AddOyezAdapt
   - `When_verifying_linkedin_credentials_should_call_userinfo`
 - **Done when:** the tests pass.
 
-### [ ] T-24 Keep secrets out of the logs
+### [x] T-24 Keep secrets out of the logs
 - **Covers:** FR-8.2, NFR-5, AC-19 (adapter level)
 - **Tests (Adapter):** through any publisher, with logs captured.
   - `When_logging_a_request_should_never_log_headers`
