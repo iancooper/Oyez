@@ -47,5 +47,7 @@ public sealed class OyezAdaptersHost : IDisposable
     public IAmAChannelPublisher PublisherFor(ChannelId channel) =>
         _provider.GetServices<IAmAChannelPublisher>().Single(publisher => publisher.Channel == channel);
 
+    public T Service<T>() where T : notnull => _provider.GetRequiredService<T>();
+
     public void Dispose() => _provider.Dispose();
 }

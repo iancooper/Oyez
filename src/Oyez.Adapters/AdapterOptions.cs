@@ -53,4 +53,10 @@ public sealed class AdapterOptions
     /// </summary>
     /// <value>Settings with no access token, pointing at <c>https://api.linkedin.com</c>.</value>
     public LinkedInOptions LinkedIn { get; } = new();
+
+    /// <summary>
+    /// Gets or sets the folder that holds the announcements, one sub-folder for each.
+    /// </summary>
+    /// <value>A relative path, <c>announcements</c>, unless set.</value>
+    public string AnnouncementsPath { get; set; } = "announcements";
 }

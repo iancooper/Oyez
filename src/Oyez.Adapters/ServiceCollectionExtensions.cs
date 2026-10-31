@@ -26,6 +26,8 @@ THE SOFTWARE. */
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
+using Oyez.Adapters.FileSystem;
+using Oyez.Core.Announcements;
 using Oyez.Core.Publishing;
 
 namespace Oyez.Adapters;
@@ -48,6 +50,7 @@ public static class ServiceCollectionExtensions
         var options = new AdapterOptions();
         configure(options);
         services.AddSingleton(new SecretRedactor(options));
+        services.AddSingleton<IAmAnAnnouncementStore>(new FileSystemAnnouncementStore(options.AnnouncementsPath));
 
         services.AddHttpClient<WriteAsPublisher>().RemoveAllLoggers().AddHttpMessageHandler(RetryHandlerFor).AddHttpMessageHandler(LoggingHandlerFor).AddTypedClient((http, _) => new WriteAsPublisher(http, options.WriteAs));
         services.AddTransient<IAmAChannelPublisher>(provider => provider.GetRequiredService<WriteAsPublisher>());
