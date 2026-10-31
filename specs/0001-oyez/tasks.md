@@ -331,7 +331,7 @@ Every task in this phase sends Brighter commands, or runs Darker queries, throug
 
 Every task in this phase tests a port implementation registered by `AddOyezAdapters`. HTTP handlers, OAuth signing and JSON shapes are internal, and are observed through the publishers.
 
-### [ ] T-19 Write.as publisher, and the HTTP test fake
+### [x] T-19 Write.as publisher, and the HTTP test fake
 - **Covers:** FR-4.4.1, AC-13, §5.5
 - **Builds:** `AddOyezAdapters`, `WriteAsPublisher`, and, in the tests, `FakeHttpMessageHandler`. Removes the "zero tests" exit-code exemption from `Oyez.Adapters.Tests`.
 - **Tests (Adapter):**
