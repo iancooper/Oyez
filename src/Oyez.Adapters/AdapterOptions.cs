@@ -35,4 +35,10 @@ public sealed class AdapterOptions
     /// </summary>
     /// <value>Settings with no access token and no collection.</value>
     public WriteAsOptions WriteAs { get; } = new();
+
+    /// <summary>
+    /// Gets the settings for reaching X.
+    /// </summary>
+    /// <value>Settings with no credentials.</value>
+    public XOptions X { get; } = new();
 }

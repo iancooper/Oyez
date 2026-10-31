@@ -24,6 +24,7 @@ THE SOFTWARE. */
 #endregion
 
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Oyez.Core.Publishing;
 
 namespace Oyez.Adapters;
@@ -41,12 +42,19 @@ public static class ServiceCollectionExtensions
     /// <returns>The same <paramref name="services"/>, for chaining.</returns>
     public static IServiceCollection AddOyezAdapters(this IServiceCollection services, Action<AdapterOptions> configure)
     {
+        services.TryAddSingleton(TimeProvider.System);
+        services.TryAddSingleton<IAmANonceSource, RandomNonceSource>();
         var options = new AdapterOptions();
         configure(options);
 
         services.AddHttpClient<WriteAsPublisher>().AddTypedClient((http, _) => new WriteAsPublisher(http, options.WriteAs));
         services.AddTransient<IAmAChannelPublisher>(provider => provider.GetRequiredService<WriteAsPublisher>());
 
+        services.AddHttpClient<XPublisher>().AddTypedClient((http, provider) => new XPublisher(http, options.X, SignerFor(options.X, provider)));
+        services.AddTransient<IAmAChannelPublisher>(provider => provider.GetRequiredService<XPublisher>());
         return services;
     }
+
+    private static OAuth1Signer SignerFor(XOptions options, IServiceProvider provider) =>
+        new(options, provider.GetRequiredService<TimeProvider>(), provider.GetRequiredService<IAmANonceSource>());
 }

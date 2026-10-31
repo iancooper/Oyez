@@ -40,6 +40,12 @@ public sealed class FakeHttpMessageHandler : HttpMessageHandler
     public void RespondWith(HttpStatusCode status, string body) =>
         _respond = _ => new HttpResponseMessage(status) { Content = new StringContent(body, Encoding.UTF8, "application/json") };
 
+    public void RespondInSequence(params string[] okBodies) =>
+        _respond = sent => new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = new StringContent(okBodies[_requests.Count - 1], Encoding.UTF8, "application/json")
+        };
+
     protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {
         var body = request.Content is null ? "" : await request.Content.ReadAsStringAsync(cancellationToken);

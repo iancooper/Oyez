@@ -33,13 +33,13 @@ public sealed class OyezAdaptersHost : IDisposable
 {
     private readonly ServiceProvider _provider;
 
-    public OyezAdaptersHost(Action<AdapterOptions> configure)
+    public OyezAdaptersHost(Action<AdapterOptions> configure, Action<IServiceCollection>? seams = null)
     {
-        _provider = new ServiceCollection()
+        var services = new ServiceCollection()
             .AddLogging()
-            .ConfigureHttpClientDefaults(client => client.ConfigurePrimaryHttpMessageHandler(() => Http))
-            .AddOyezAdapters(configure)
-            .BuildServiceProvider();
+            .ConfigureHttpClientDefaults(client => client.ConfigurePrimaryHttpMessageHandler(() => Http));
+        seams?.Invoke(services);
+        _provider = services.AddOyezAdapters(configure).BuildServiceProvider();
     }
 
     public FakeHttpMessageHandler Http { get; } = new();
