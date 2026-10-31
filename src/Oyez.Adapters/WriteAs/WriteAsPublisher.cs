@@ -53,6 +53,11 @@ internal sealed class WriteAsPublisher(HttpClient http, WriteAsOptions options) 
     private async Task<PostResult> PostedFromAsync(HttpResponseMessage response, CancellationToken cancellationToken)
     {
         using var body = await JsonDocument.ParseAsync(await response.Content.ReadAsStreamAsync(cancellationToken), cancellationToken: cancellationToken);
+        if (!response.IsSuccessStatusCode)
+        {
+            return new PostResult.Rejected($"Write.as returned {(int)response.StatusCode}: {body.RootElement.GetProperty("error_msg").GetString()}");
+        }
+
         var data = body.RootElement.GetProperty("data");
         var slug = data.GetProperty("slug").GetString();
         return new PostResult.Posted(new PostRef(data.GetProperty("id").GetString()!, $"{options.BlogUrl}/{slug}"));
