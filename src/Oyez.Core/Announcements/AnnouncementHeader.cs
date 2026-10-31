@@ -36,6 +36,7 @@ internal sealed class AnnouncementHeader
     private const string CHANNELS_KEY = "channels";
 
     private static readonly string[] KNOWN_KEYS = [TITLE_KEY, PUBLISH_KEY, CHANNELS_KEY];
+    private static readonly string CHANNEL_NAMES = string.Join(", ", ChannelId.All);
     private static readonly string[] ISO_8601_FORMATS =
         ["yyyy-MM-dd'T'HH:mmK", "yyyy-MM-dd'T'HH:mm:ssK", "yyyy-MM-dd'T'HH:mm:ss.FFFFFFFK"];
 
@@ -137,14 +138,14 @@ internal sealed class AnnouncementHeader
     {
         var channels = new HashSet<ChannelId>();
         var listed = names.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        if (listed.Length == 0)
+        {
+            Report($"The channels header names no channel. List at least one of {CHANNEL_NAMES}, or remove the header to target every channel.");
+        }
+
         foreach (var name in listed)
         {
             AddChannel(channels, name);
-        }
-
-        if (listed.Length == 0)
-        {
-            Report($"The channels header names no channel. List at least one of {string.Join(", ", ChannelId.All)}, or remove the header to target every channel.");
         }
 
         return channels;
@@ -158,7 +159,7 @@ internal sealed class AnnouncementHeader
         }
         else
         {
-            Report($"'{name}' isn't a channel. Use {string.Join(", ", ChannelId.All)}.");
+            Report($"'{name}' isn't a channel. Use {CHANNEL_NAMES}.");
         }
     }
 

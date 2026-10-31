@@ -213,13 +213,23 @@ Parsing, counting, rendering and validation are internal to `Oyez.Core`. Every t
   - `When_a_segment_is_over_xs_limit_should_report_it_once`: the segment check and the post check don't both report it
 - **Done when:** the tests pass.
 
+### [x] T-11e Channels named for people in messages
+- **Covers:** FR-5.2
+- **Found by:** the Phase 1 code-smell review after the phase was merged. Since T-11d, messages name a channel by its configuration key ("over x's limit", "The linkedin rendering", "The writeas rendering"). Messages about the `channels` header keep the keys, because those are what the user types.
+- **Builds:** an internal display name on each channel (X, Mastodon, LinkedIn, Write.as), used in rendering and limit messages.
+- **Tests (Core):** through `ValidateAnnouncements`.
+  - `When_a_post_is_over_its_channels_limit_should_name_the_channel`: Mastodon's limit configured below a segment's length; the message says "Mastodon"
+  - `When_a_rendering_needs_more_than_one_post_should_name_the_channel`: the message says "LinkedIn"
+  - `When_the_write_as_body_is_empty_should_name_the_channel`: the message says "Write.as"
+- **Done when:** the tests pass.
+
 ---
 
 ## Phase 2 — Publishing, through the application layer
 
 Every task in this phase sends Brighter commands, or runs Darker queries, through the real processors. In-memory publishers stand in for the platforms (they're test doubles for I/O). `InMemoryPublicationRecordStore` and `FakeTimeProvider` stand in for storage and the clock.
 
-### [ ] T-12 Publication status
+### [x] T-12 Publication status
 - **Covers:** FR-6.1, §4.8
 - **Builds:**
   - the public `PublicationRecord` and its channel states (`partial`, `complete`, `indeterminate`, `failed`);
@@ -231,7 +241,7 @@ Every task in this phase sends Brighter commands, or runs Darker queries, throug
 - **Code-smell finding to resolve here (Phase 1 review):** before the first test, hide the test boilerplate. About 40 tests write the whole announcement text inline where the header isn't the point, and every class repeats the host, the `_id` and `Dispose`. Use `AnnouncementText` where the header isn't evident data, and add a small fixture or base for the host and ID, so the Phase 2 tests start clean.
 - **Done when:** the tests pass.
 
-### [ ] T-13 Publish due announcements
+### [x] T-13 Publish due announcements
 - **Covers:** FR-7.1, FR-6.2, FR-6.3, FR-4.1.1, §4.9
 - **Builds:** the port `IAmAChannelPublisher`, and the command `PublishDueAnnouncements`, which returns a `PublishReport` in its `Result`.
 - **Tests (Core):**
@@ -242,7 +252,7 @@ Every task in this phase sends Brighter commands, or runs Darker queries, throug
   - `When_a_channel_is_not_targeted_or_not_enabled_should_not_publish_to_it`
 - **Done when:** the tests pass.
 
-### [ ] T-14 Resume, and keep channels independent
+### [x] T-14 Resume, and keep channels independent
 - **Covers:** FR-4.5.1, FR-6.2, AC-14 (Core level), AC-15
 - **Tests (Core):**
   - `When_some_posts_are_recorded_should_publish_only_the_rest` (AC-15)
@@ -252,14 +262,14 @@ Every task in this phase sends Brighter commands, or runs Darker queries, throug
   - `When_a_channels_secret_is_missing_should_reject_it_and_publish_the_others`
 - **Done when:** the tests pass.
 
-### [ ] T-15 The indeterminate state
+### [x] T-15 The indeterminate state
 - **Covers:** FR-6.5, NFR-6, AC-23 (first part)
 - **Tests (Core):**
   - `When_a_post_may_have_been_made_should_mark_the_channel_indeterminate_and_stop_it`
   - `When_a_channel_is_indeterminate_should_skip_it_with_a_warning`
 - **Done when:** the tests pass.
 
-### [ ] T-16 Events and the job summary
+### [x] T-16 Events and the job summary
 - **Covers:** §4.10, FR-4.5.2, NFR-10
 - **Builds:** the events `PostPublished` and `ChannelPublishFailed`, and the job summary in the `PublishReport`.
 - **Tests (Core):**
@@ -267,7 +277,7 @@ Every task in this phase sends Brighter commands, or runs Darker queries, throug
   - `When_a_post_is_published_should_save_the_record_before_raising_the_event`: a recording store and a recording event handler check the order
 - **Done when:** the tests pass.
 
-### [ ] T-17 Resolve an indeterminate channel
+### [x] T-17 Resolve an indeterminate channel
 - **Covers:** FR-6.6, AC-23 (second part)
 - **Builds:** the command `ResolveChannel`. Removes the T-0 spike command and query, and their tests.
 - **Tests (Core):**
@@ -277,12 +287,42 @@ Every task in this phase sends Brighter commands, or runs Darker queries, throug
   - `When_resolving_a_channel_that_is_not_indeterminate_should_report_an_error`
 - **Done when:** the tests pass.
 
-### [ ] T-18 Check credentials
+### [x] T-18 Check credentials
 - **Covers:** FR-4.3.5, NFR-7, §6 (`check`)
 - **Builds:** `IAmAChannelPublisher.VerifyAsync`, and the query `CheckCredentials`.
 - **Tests (Core):**
   - `When_checking_credentials_should_report_each_enabled_channels_status`
   - `When_the_linkedin_token_expires_soon_should_report_the_days_left`
+- **Done when:** the tests pass.
+
+### [x] T-18a A skipped indeterminate channel made no new posts
+- **Covers:** NFR-10, FR-6.5
+- **Found by:** the Phase 2 code-smell review. A skipped indeterminate channel reports all its recorded posts as new, so the job summary links old posts as new ones.
+- **Tests (Core):**
+  - `When_an_indeterminate_channel_is_skipped_should_report_no_new_posts`
+- **Done when:** the test passes.
+
+### [x] T-18b An enabled channel with no publisher
+- **Covers:** FR-4.5.1, NFR-7
+- **Found by:** the Phase 2 code-smell review. Publishing throws, and `CheckCredentials` silently leaves the channel out.
+- **Tests (Core):**
+  - `When_an_enabled_channel_has_no_publisher_should_reject_it_and_publish_the_others`
+  - `When_checking_credentials_for_a_channel_with_no_publisher_should_report_it_invalid`
+- **Done when:** the tests pass.
+
+### [x] T-18c The channel-failed event
+- **Covers:** §4.10, FR-6.3
+- **Found by:** the Phase 2 code-smell review. `ChannelPublishFailed` is raised but no test observes it.
+- **Tests (Core):**
+  - `When_a_channel_is_rejected_should_raise_channel_publish_failed_after_saving_the_record`
+- **Done when:** the test passes.
+
+### [x] T-18d Say what was skipped, and name channels for people
+- **Covers:** FR-7.1, FR-5.2
+- **Found by:** the Phase 2 code-smell review. Publishing silently skips a due announcement that fails validation, and `ResolveChannel`'s errors name channels by their configuration key.
+- **Tests (Core):**
+  - `When_a_due_announcement_is_invalid_should_report_it_as_not_published`
+  - `When_resolving_a_channel_that_is_not_indeterminate_should_name_the_channel`
 - **Done when:** the tests pass.
 
 ---

@@ -40,5 +40,6 @@ public class ChannelOptions
     /// Gets or sets the most characters a post may have on this channel, counted the way the channel counts them.
     /// </summary>
     /// <value>The limit, or <c>null</c> when the channel has none.</value>
+    /// <remarks>Write.as publishes a document, so a limit set for it is shown in the preview but never enforced.</remarks>
     public int? Limit { get; set; }
 }

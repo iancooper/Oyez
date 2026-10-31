@@ -4,11 +4,8 @@ using Oyez.Core.Previewing;
 
 namespace Oyez.Core.Tests.Counting;
 
-public class XKeycapEmojiCountingTests : IDisposable
+public class XKeycapEmojiCountingTests : OyezApplicationTest
 {
-    private readonly OyezApplicationHost _host = new();
-    private readonly AnnouncementId _id = new("2026-11-03-brighter-10-3-0");
-
     [Theory]
     [InlineData("1⃣")]
     [InlineData("1️⃣")]
@@ -18,23 +15,13 @@ public class XKeycapEmojiCountingTests : IDisposable
     {
         //Arrange
         var text = $"{keycap} abcdefghi";
-        _host.Announcements.Add(new AnnouncementDocument(
-            _id,
-            $"""
-            title: Release
-            channels: X
-            ---
-            {text}
-            """,
-            WriteAsMarkdown: null));
+        Host.Announcements.Add(new AnnouncementDocument(Id, AnnouncementText.With("X", text), WriteAsMarkdown: null));
 
         //Act
-        var result = await _host.QueryProcessor.ExecuteAsync(new PreviewAnnouncement(_id), TestContext.Current.CancellationToken);
+        var result = await Host.QueryProcessor.ExecuteAsync(new PreviewAnnouncement(Id), TestContext.Current.CancellationToken);
 
         //Assert
         var post = Assert.Single(Assert.Single(result.Value.Renderings).Posts);
         Assert.Equal(12, post.Count);
     }
-
-    public void Dispose() => _host.Dispose();
 }

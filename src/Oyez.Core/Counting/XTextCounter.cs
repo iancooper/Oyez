@@ -34,9 +34,9 @@ internal sealed class XTextCounter : IAmATextCounter
     private const int HEAVY_WEIGHT = 2;
     private const int LIGHT_WEIGHT = 1;
 
-    private static readonly (int Start, int End)[] LIGHT_RANGES =
+    private static readonly CodePointRange[] LIGHT_RANGES =
     [
-        (0x0000, 0x10FF), (0x2000, 0x200D), (0x2010, 0x201F), (0x2032, 0x2037)
+        new(0x0000, 0x10FF), new(0x2000, 0x200D), new(0x2010, 0x201F), new(0x2032, 0x2037)
     ];
 
     private readonly UrlMatcher _urls = UrlMatcher.ForX;
@@ -57,5 +57,5 @@ internal sealed class XTextCounter : IAmATextCounter
         EmojiRanges.IsEmojiCluster(cluster) ? EMOJI_WEIGHT : cluster.EnumerateRunes().Sum(rune => WeightOf(rune.Value));
 
     private static int WeightOf(int codePoint) =>
-        LIGHT_RANGES.Any(range => codePoint >= range.Start && codePoint <= range.End) ? LIGHT_WEIGHT : HEAVY_WEIGHT;
+        LIGHT_RANGES.Any(range => range.Contains(codePoint)) ? LIGHT_WEIGHT : HEAVY_WEIGHT;
 }

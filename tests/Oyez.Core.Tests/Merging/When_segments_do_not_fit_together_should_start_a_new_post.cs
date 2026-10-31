@@ -3,11 +3,8 @@ using Oyez.Core.Previewing;
 
 namespace Oyez.Core.Tests.Merging;
 
-public class GreedyMergeTests : IDisposable
+public class GreedyMergeTests() : OyezApplicationTest(options => options.Mastodon.Limit = 450)
 {
-    private readonly OyezApplicationHost _host = new(options => options.Mastodon.Limit = 450);
-    private readonly AnnouncementId _id = new("2026-11-03-brighter-10-3-0");
-
     [Fact]
     public async Task When_segments_do_not_fit_together_should_start_a_new_post()
     {
@@ -15,16 +12,14 @@ public class GreedyMergeTests : IDisposable
         var first = AnnouncementText.OfLength(200, 'a');
         var second = AnnouncementText.OfLength(200, 'b');
         var third = AnnouncementText.OfLength(200, 'c');
-        _host.Announcements.Add(new AnnouncementDocument(_id, AnnouncementText.With("mastodon", first, second, third), WriteAsMarkdown: null));
+        Host.Announcements.Add(new AnnouncementDocument(Id, AnnouncementText.With("mastodon", first, second, third), WriteAsMarkdown: null));
 
         //Act
-        var result = await _host.QueryProcessor.ExecuteAsync(new PreviewAnnouncement(_id), TestContext.Current.CancellationToken);
+        var result = await Host.QueryProcessor.ExecuteAsync(new PreviewAnnouncement(Id), TestContext.Current.CancellationToken);
 
         //Assert
         var posts = Assert.Single(result.Value.Renderings).Posts;
         Assert.Equal([$"{first}\n\n{second}", third], posts.Select(p => p.Text));
         Assert.Equal([402, 200], posts.Select(p => p.Count));
     }
-
-    public void Dispose() => _host.Dispose();
 }

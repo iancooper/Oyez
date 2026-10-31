@@ -4,22 +4,19 @@ using Oyez.Core.Previewing;
 
 namespace Oyez.Core.Tests.Previewing;
 
-public class PreviewEveryChannelTests : IDisposable
-{
-    private readonly OyezApplicationHost _host = new(options =>
+public class PreviewEveryChannelTests() : OyezApplicationTest(options =>
     {
         options.X.Limit = 40;
         options.Mastodon.Limit = 40;
         options.LinkedIn.Limit = 40;
-    });
-    private readonly AnnouncementId _id = new("2026-11-03-brighter-10-3-0");
-
+    })
+{
     [Fact]
     public async Task When_previewing_an_announcement_should_show_its_title_segments_and_markdown_for_every_channel()
     {
         //Arrange
-        _host.Announcements.Add(new AnnouncementDocument(
-            _id,
+        Host.Announcements.Add(new AnnouncementDocument(
+            Id,
             """
             title: Brighter 10.3.0 released
             ---
@@ -30,12 +27,12 @@ public class PreviewEveryChannelTests : IDisposable
             WriteAsMarkdown: "# Brighter 10.3.0\n\nRelease notes."));
 
         //Act
-        var result = await _host.QueryProcessor.ExecuteAsync(new PreviewAnnouncement(_id), TestContext.Current.CancellationToken);
+        var result = await Host.QueryProcessor.ExecuteAsync(new PreviewAnnouncement(Id), TestContext.Current.CancellationToken);
 
         //Assert
         Assert.True(result.IsSuccess);
         var preview = result.Value;
-        Assert.Equal(_id, preview.Id);
+        Assert.Equal(Id, preview.Id);
         Assert.Equal("Brighter 10.3.0 released", preview.Title);
         Assert.Null(preview.PublishAt);
         Assert.Equal(ChannelId.All, preview.Renderings.Select(r => r.Channel));
@@ -48,6 +45,4 @@ public class PreviewEveryChannelTests : IDisposable
         Assert.Equal("Brighter 10.3.0 released", writeAs.Title);
         Assert.Equal("# Brighter 10.3.0\n\nRelease notes.", Assert.Single(writeAs.Posts).Text);
     }
-
-    public void Dispose() => _host.Dispose();
 }

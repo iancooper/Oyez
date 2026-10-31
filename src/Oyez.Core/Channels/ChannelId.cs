@@ -31,18 +31,22 @@ namespace Oyez.Core.Channels;
 public readonly record struct ChannelId
 {
     /// <summary>X (formerly Twitter).</summary>
-    public static readonly ChannelId X = new("x");
+    public static readonly ChannelId X = new("x", "X");
 
     /// <summary>Mastodon.</summary>
-    public static readonly ChannelId Mastodon = new("mastodon");
+    public static readonly ChannelId Mastodon = new("mastodon", "Mastodon");
 
     /// <summary>LinkedIn, posting to a personal profile.</summary>
-    public static readonly ChannelId LinkedIn = new("linkedin");
+    public static readonly ChannelId LinkedIn = new("linkedin", "LinkedIn");
 
     /// <summary>Write.as, posting to a blog.</summary>
-    public static readonly ChannelId WriteAs = new("writeas");
+    public static readonly ChannelId WriteAs = new("writeas", "Write.as");
 
-    private ChannelId(string value) => Value = value;
+    private ChannelId(string value, string displayName)
+    {
+        Value = value;
+        DisplayName = displayName;
+    }
 
     /// <summary>Gets every channel, in the order Oyez shows and publishes them.</summary>
     /// <value>The <see cref="ChannelId"/>s for X, Mastodon, LinkedIn and Write.as.</value>
@@ -52,6 +56,8 @@ public readonly record struct ChannelId
     /// <value>A lower-case <see cref="string"/>, such as <c>x</c> or <c>writeas</c>.</value>
     public string Value { get; }
 
+    internal string DisplayName { get; }
+
     /// <summary>Finds the channel with a given name, ignoring case and surrounding whitespace.</summary>
     /// <param name="name">The name to look for, such as <c>WriteAs</c>.</param>
     /// <param name="channel">The matching <see cref="ChannelId"/>, if there is one.</param>
@@ -60,7 +66,7 @@ public readonly record struct ChannelId
     {
         var normalised = name.Trim().ToLowerInvariant();
         var isChannel = All.Any(c => c.Value == normalised);
-        channel = isChannel ? new ChannelId(normalised) : default;
+        channel = isChannel ? All.First(c => c.Value == normalised) : default;
         return isChannel;
     }
 

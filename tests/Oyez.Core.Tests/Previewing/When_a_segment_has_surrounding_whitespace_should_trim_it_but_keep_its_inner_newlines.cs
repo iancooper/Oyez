@@ -4,17 +4,14 @@ using Oyez.Core.Previewing;
 
 namespace Oyez.Core.Tests.Previewing;
 
-public class PreviewSegmentWhitespaceTests : IDisposable
+public class PreviewSegmentWhitespaceTests() : OyezApplicationTest(options => options.X.Limit = 30)
 {
-    private readonly OyezApplicationHost _host = new(options => options.X.Limit = 30);
-    private readonly AnnouncementId _id = new("2026-11-03-brighter-10-3-0");
-
     [Fact]
     public async Task When_a_segment_has_surrounding_whitespace_should_trim_it_but_keep_its_inner_newlines()
     {
         //Arrange
-        _host.Announcements.Add(new AnnouncementDocument(
-            _id,
+        Host.Announcements.Add(new AnnouncementDocument(
+            Id,
             """
             title: Release
             ---
@@ -28,12 +25,10 @@ public class PreviewSegmentWhitespaceTests : IDisposable
             WriteAsMarkdown: null));
 
         //Act
-        var result = await _host.QueryProcessor.ExecuteAsync(new PreviewAnnouncement(_id), TestContext.Current.CancellationToken);
+        var result = await Host.QueryProcessor.ExecuteAsync(new PreviewAnnouncement(Id), TestContext.Current.CancellationToken);
 
         //Assert
         var x = result.Value.Renderings.Single(r => r.Channel == ChannelId.X);
         Assert.Equal("First line\nSecond line", x.Posts[0].Text);
     }
-
-    public void Dispose() => _host.Dispose();
 }

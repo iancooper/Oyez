@@ -30,13 +30,10 @@ namespace Oyez.Core.Channels;
 internal sealed class Renderer(IEnumerable<IAmAChannelProfile> profiles)
 {
     public IReadOnlyList<Rendering> RenderTargetedChannels(Announcement announcement) =>
-        TargetedProfiles(announcement).Select(profile => Render(announcement, profile)).ToList();
+        TargetedProfiles(announcement).Select(profile => profile.Render(announcement)).ToList();
 
     public IEnumerable<IAmAChannelProfile> TargetedProfiles(Announcement announcement) =>
         ChannelId.All
             .Where(announcement.Channels.Contains)
             .SelectMany(channel => profiles.Where(profile => profile.Id == channel && profile.IsEnabled));
-
-    public Rendering Render(Announcement announcement, IAmAChannelProfile profile) =>
-        profile.Policy.Render(announcement, profile);
 }

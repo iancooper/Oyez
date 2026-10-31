@@ -24,12 +24,11 @@ THE SOFTWARE. */
 #endregion
 
 using Oyez.Core.Announcements;
-using Oyez.Core.Validating;
 
 namespace Oyez.Core.Channels;
 
 internal interface IAmARenderingPolicy
 {
     Rendering Render(Announcement announcement, IAmAChannelProfile profile);
-    IEnumerable<ValidationError> Errors(Announcement announcement, IAmAChannelProfile profile, Rendering rendering);
+    IEnumerable<ValidationError> Errors(Announcement announcement, IAmAChannelProfile profile);
 }

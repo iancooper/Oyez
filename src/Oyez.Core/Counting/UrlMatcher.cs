@@ -33,6 +33,12 @@ internal sealed partial class UrlMatcher
 
     private const string PLACEHOLDER = "x";
 
+    public const string TOKEN_START = @"(?<![\p{L}\p{N}_@./:-])";
+
+    private const string DNS_LABEL = @"[\p{L}\p{N}](?:[\p{L}\p{N}-]{0,61}[\p{L}\p{N}])?";
+
+    private const string LINK_END = """[^\s.,;:!?'"()\[\]{}<>]""";
+
     private readonly bool _includeBareDomains;
 
     private UrlMatcher(bool includeBareDomains) => _includeBareDomains = includeBareDomains;
@@ -54,13 +60,13 @@ internal sealed partial class UrlMatcher
         match.Groups["scheme"].Success || (_includeBareDomains && TopLevelDomains.Contains(match.Groups["tld"].Value));
 
     [GeneratedRegex(
-        """
-        (?<scheme>https?://\S*[^\s.,;:!?'"()\[\]{}<>])
+        $$"""
+        (?<scheme>https?://\S*{{LINK_END}})
         |
-        (?<![\p{L}\p{N}_@./:-])
-        (?:[\p{L}\p{N}](?:[\p{L}\p{N}-]{0,61}[\p{L}\p{N}])?\.)+(?<tld>[\p{L}\p{N}](?:[\p{L}\p{N}-]{0,61}[\p{L}\p{N}])?)
+        {{TOKEN_START}}
+        (?:{{DNS_LABEL}}\.)+(?<tld>{{DNS_LABEL}})
         (?![\p{L}\p{N}_@-])
-        (?:/(?:\S*[^\s.,;:!?'"()\[\]{}<>])?)?
+        (?:/(?:\S*{{LINK_END}})?)?
         """,
         RegexOptions.IgnorePatternWhitespace | RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
     private static partial Regex LinkPattern();

@@ -25,10 +25,13 @@ THE SOFTWARE. */
 
 using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Oyez.Core.Channels;
 using Oyez.Core.Configuration;
 using Oyez.Core.Costing;
+using Oyez.Core.Publishing;
 using Oyez.Core.Validating;
+using Paramore.Brighter;
 using Paramore.Brighter.Extensions.DependencyInjection;
 using Paramore.Darker;
 using Paramore.Darker.AspNetCore;
@@ -55,7 +58,8 @@ public static class ServiceCollectionExtensions
 
         var core = typeof(ServiceCollectionExtensions).Assembly;
 
-        services.AddBrighter().AutoFromAssemblies([core]);
+        services.AddBrighter().AutoFromAssemblies([core]).AsyncHandlers(registry => RegisterInternalCommandHandlers(registry, core));
+        services.TryAddSingleton(TimeProvider.System);
         services.AddDarker().AddHandlers(registry => RegisterQueryHandlers(registry, core));
 
         services.AddSingleton<IAmAChannelProfile, XProfile>();
@@ -65,9 +69,29 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<Renderer>();
         services.AddSingleton<Validator>();
         services.AddSingleton<XCostEstimator>();
+        services.AddSingleton<ChannelRunFactory>();
+        services.AddSingleton<PublishService>();
 
         return services;
     }
+
+    private static readonly MethodInfo REGISTER_ASYNC = typeof(IAmAnAsyncSubcriberRegistry).GetMethods()
+        .Single(method => method.Name == nameof(IAmAnAsyncSubcriberRegistry.RegisterAsync) && method.GetGenericArguments().Length == 2);
+
+    // Brighter's assembly scan only finds public handlers, and most of Oyez's are internal.
+    private static void RegisterInternalCommandHandlers(IAmAnAsyncSubcriberRegistry registry, Assembly assembly)
+    {
+        foreach (var (request, handler) in InternalCommandHandlersIn(assembly))
+        {
+            REGISTER_ASYNC.MakeGenericMethod(request, handler).Invoke(registry, null);
+        }
+    }
+
+    private static IEnumerable<(Type Request, Type Handler)> InternalCommandHandlersIn(Assembly assembly) =>
+        from type in assembly.GetTypes()
+        where type is { IsClass: true, IsAbstract: false, IsVisible: false }
+        where type.BaseType is { IsGenericType: true } baseType && baseType.GetGenericTypeDefinition() == typeof(RequestHandlerAsync<>)
+        select (type.BaseType!.GetGenericArguments()[0], type);
 
     // Darker's own assembly scan only finds public handlers, and most of Oyez's are internal.
     private static void RegisterQueryHandlers(IQueryHandlerRegistry registry, Assembly assembly)

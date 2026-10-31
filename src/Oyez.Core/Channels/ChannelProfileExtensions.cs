@@ -29,6 +29,12 @@ namespace Oyez.Core.Channels;
 
 internal static class ChannelProfileExtensions
 {
+    public static Rendering Render(this IAmAChannelProfile profile, Announcement announcement) =>
+        profile.Policy.Render(announcement, profile);
+
+    public static IEnumerable<ValidationError> Errors(this IAmAChannelProfile profile, Announcement announcement) =>
+        profile.Policy.Errors(announcement, profile);
+
     public static int Measure(this IAmAChannelProfile profile, string text) =>
         profile.Counter.Count(profile.Prepare(text));
 
@@ -47,5 +53,5 @@ internal static class ChannelProfileExtensions
             : [];
 
     private static ValidationError OverLimit(Announcement announcement, Segment segment, ChannelId channel, int limit) =>
-        new(announcement.Id, $"Segment {segment.Number} is over {channel}'s limit of {limit} characters. Shorten it, or split it into two segments.", channel, segment.Number);
+        new(announcement.Id, $"Segment {segment.Number} is over {channel.DisplayName}'s limit of {limit} characters. Shorten it, or split it into two segments.", channel, segment.Number);
 }

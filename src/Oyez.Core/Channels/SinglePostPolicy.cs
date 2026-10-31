@@ -24,7 +24,6 @@ THE SOFTWARE. */
 #endregion
 
 using Oyez.Core.Announcements;
-using Oyez.Core.Validating;
 
 namespace Oyez.Core.Channels;
 
@@ -33,8 +32,11 @@ internal sealed class SinglePostPolicy : IAmARenderingPolicy
     public Rendering Render(Announcement announcement, IAmAChannelProfile profile) =>
         SegmentMerger.Render(announcement, profile);
 
-    public IEnumerable<ValidationError> Errors(Announcement announcement, IAmAChannelProfile profile, Rendering rendering) =>
-        profile.OverLimitSegments(announcement).Concat(rendering.Posts.Count == 1
+    public IEnumerable<ValidationError> Errors(Announcement announcement, IAmAChannelProfile profile) =>
+        profile.OverLimitSegments(announcement).Concat(MoreThanOnePostErrors(announcement, Render(announcement, profile)));
+
+    private static IEnumerable<ValidationError> MoreThanOnePostErrors(Announcement announcement, Rendering rendering) =>
+        rendering.Posts.Count == 1
             ? []
-            : [new ValidationError(announcement.Id, $"The {rendering.Channel} rendering doesn't fit in one post: it needs {rendering.Posts.Count}, and {rendering.Channel} takes one. Shorten the announcement, or remove {rendering.Channel} from 'channels'.", rendering.Channel)]);
+            : [new ValidationError(announcement.Id, $"The {rendering.Channel.DisplayName} rendering doesn't fit in one post: it needs {rendering.Posts.Count}, and {rendering.Channel.DisplayName} takes one. Shorten the announcement, or remove {rendering.Channel} from 'channels'.", rendering.Channel)];
 }

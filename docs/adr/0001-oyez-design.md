@@ -166,7 +166,7 @@ X turns bare domains into links and counts them as 23 characters. If we didn't d
 | `XTextCounter` | Follows twitter-text configuration v3 [FR-2.1]. NFC-normalise. Replace each URL with 23 units. Split the rest into grapheme clusters (`StringInfo`). A cluster that is an emoji (it contains an `Extended_Pictographic` code point; the ranges are embedded) counts 2. Otherwise each code point counts 1 if it's in X's light ranges (U+0000–U+10FF, U+2000–U+200D, U+2010–U+201F, U+2032–U+2037), and 2 if not. |
 | `MastodonTextCounter` | Replace each `http(s)` URL with 23 units. Replace each `@user@domain` mention with `@user`. Then count grapheme clusters [FR-2.2]. |
 | `LinkedInTextCounter` | Count UTF-16 code units of the text after preparation (escaping, §4.5). This deliberately overcounts characters outside the Basic Multilingual Plane, so we stay safely under the limit [FR-2.3]. |
-| Write.as | Has no counter and no limit. |
+| Write.as | Counts UTF-16 code units, for display only. It has no limit by default, and a configured one is shown but never enforced. |
 
 The counters are internal. Their tests are the worked examples from the acceptance criteria (AC-3 and AC-4 for X, AC-5 for Mastodon), observed through the counts that the `PreviewAnnouncement` query reports.
 
@@ -181,29 +181,29 @@ internal interface IAmAChannelProfile
     IAmARenderingPolicy Policy { get; }  // ThreadPolicy | SinglePostPolicy | DocumentPolicy
     bool IsEnabled { get; }              // from configuration
     int? Limit { get; }                  // null = no limit
-    IAmATextCounter Counter { get; }     // Write.as counts code units, though it has no limit
+    IAmATextCounter Counter { get; }     // Write.as counts code units, for display only
     string Prepare(string text);         // LinkedIn escapes text; the others return it unchanged
 }
 
 internal interface IAmARenderingPolicy
 {
     Rendering Render(Announcement announcement, IAmAChannelProfile profile);
-    IEnumerable<ValidationError> Errors(Announcement announcement, Rendering rendering);
+    IEnumerable<ValidationError> Errors(Announcement announcement, IAmAChannelProfile profile);
 }
 ```
 
-Each policy renders and also reports the errors particular to its shape (§4.6), so neither the `Renderer` nor the `Validator` branches on the kind of channel.
+Each policy renders and also reports the errors particular to its shape (§4.6), so neither the `Renderer` nor the `Validator` branches on the kind of channel. A policy that needs the rendering to find its errors renders it itself. Callers don't reach through to the policy: internal extensions on the profile, `profile.Render(announcement)` and `profile.Errors(announcement)`, hand the profile to its own policy.
 
 | Profile | Policy | Limit (default, from `oyez.json`) |
 |---|---|---|
 | `XProfile` | Thread | 280 |
 | `MastodonProfile` | Thread | 2,263 |
 | `LinkedInProfile` | SinglePost | 3,000 |
-| `WriteAsProfile` | Document | none |
+| `WriteAsProfile` | Document | none (a configured limit is shown, not enforced) |
 
 ### 4.4 Rendering [FR-3]
 
-`Renderer.Render(Announcement, IAmAChannelProfile) → Rendering` (internal) delegates to the profile's policy; Thread and SinglePost share a `SegmentMerger`. Renderings come out in `ChannelId.All` order. Rendering is pure and deterministic [FR-3.5].
+The internal `Renderer` picks the targeted, enabled profiles and renders each with `profile.Render(announcement) → Rendering`, which delegates to the profile's policy; Thread and SinglePost share a `SegmentMerger`. Renderings come out in `ChannelId.All` order. Rendering is pure and deterministic [FR-3.5].
 
 - **Thread and SinglePost.** Merge segments greedily. Start with the first segment as the current post. For each following segment, form `candidate = current + "\n\n" + next`. If `Count(Prepare(candidate)) <= Limit`, the candidate becomes the current post. Otherwise, emit the current post and start a new one with `next` [FR-3.1–3.3].
   - X needs no special case [FR-3.4]. Segments are written close to 280 characters, so joining two almost always goes over the limit and each becomes its own post. If two short segments do fit together, they're merged, which saves a post. AC-8 uses segments of about 250 characters, so it gets one post per segment.
@@ -225,7 +225,7 @@ The text is counted after preparation [AC-10].
 
 - **Header errors** come from the parser: a missing title, a bad or zoneless time, an unknown channel or key, a key that appears twice, a line with no colon, an empty `channels:` value, no segments, an empty segment, or an ID that isn't a valid folder name.
 - **Nowhere to publish:** at least one targeted channel must be enabled in configuration.
-- **Segment check:** for each targeted Thread or SinglePost channel, every segment must fit the channel's limit, counted on the prepared text. X is checked even when it isn't targeted, because segments are always written to the strictest limit [AC-6]; it is reported once either way.
+- **Segment check:** for each targeted Thread or SinglePost channel, every segment must fit the channel's limit, counted on the prepared text. X is checked even when it isn't targeted or is disabled, because segments are always written to the strictest limit [AC-6]. The validator checks X's profile alongside the targeted ones, de-duplicated by channel, so X is reported once by construction. Document channels have no segment check, so a configured Write.as limit is never enforced.
 - **SinglePost check:** for each targeted channel with this policy, the rendering must have exactly one post.
 - **Document check:** a Write.as rendering must have a body that isn't empty. (A missing title is already a header error.)
 
@@ -264,6 +264,8 @@ public sealed record PostRequest(
 
 public sealed record PostRef(string Id, string? Url);
 
+public sealed record CredentialStatus(bool IsValid, string Message, DateTimeOffset? ExpiresAt = null);
+
 public abstract record PostResult
 {
     public sealed record Posted(PostRef Ref) : PostResult;
@@ -272,7 +274,9 @@ public abstract record PostResult
 }
 ```
 
-`TimeProvider` (from the BCL) supplies the clock. Tests use `FakeTimeProvider` [AC-17].
+`TimeProvider` (from the BCL) supplies the clock. `AddOyezApplication` registers `TimeProvider.System` unless the host has registered one; tests use `FakeTimeProvider` [AC-17].
+
+`InMemoryChannelPublisher` posts every request and records it. A test can make it answer differently from a given post onward with `RespondFrom(index, PostResult)`, set its `VerifyAsync` answer with `ReportCredentials`, and go back to posting with `RespondNormally()`.
 
 ### 4.8 Publication record [FR-6]
 
@@ -299,7 +303,7 @@ The `state` for each channel is one of:
 - `indeterminate` — an attempt may or may not have succeeded;
 - `failed` — the last attempt was definitely rejected. The next run retries a failed channel.
 
-**Rendering hash.** If a channel is `partial` and the current rendering's hash differs from the recorded one, someone edited the announcement after it was partly published. Resuming could post the wrong continuation, so the channel fails with a message telling you to resolve it [FR-6.2, NFR-7].
+**Rendering hash.** `Rendering.Hash` is a `RenderingHash` value: `sha256:` followed by the hex SHA-256 of the rendering's post texts, which is how it's stored. If a channel has recorded posts (it is `partial`, or `failed` part-way) and the current rendering's hash differs from the recorded one, someone edited the announcement after it was partly published. Resuming could post the wrong continuation, so the channel fails with a message telling you to resolve it [FR-6.2, NFR-7]. Resolving an indeterminate channel (`ResolveChannel`) keeps the recorded hash rather than taking the current one, so an edit made before you resolve is still caught on the next run.
 
 **Indeterminate state.** The workflow runs every hour, so retrying an uncertain create automatically risks a duplicate post every hour. Instead, an `indeterminate` channel is skipped on later runs, with a warning, until someone runs `oyez resolve` (§6). This refines NFR-6 to cover runs after the first.
 
@@ -340,8 +344,9 @@ sequenceDiagram
 - Channels run one after another. The volume is tiny, and running them in sequence keeps logs and record writes simple.
 - A channel whose secrets are missing is reported as `Rejected("missing secret OYEZ_…")`. This doesn't stop the other channels.
 - A thread reply always goes to the last *recorded* post. This makes resuming exact [AC-15].
-- The idempotency key is `oyez:{announcementId}:{channel}:{index}:{hash[..12]}`.
-- `PublishReport` sets the exit code [FR-4.5.2] and produces the job summary [NFR-10].
+- The idempotency key is `oyez:{announcementId}:{channel}:{index}:{fingerprint}`, where the fingerprint is the first 12 hex digits of the rendering hash, after `sha256:`.
+- `PublishReport` lists an outcome for each channel attempted or skipped, with its state, its reason (for `failed` and `indeterminate`, the warning) and the posts this run made. Its `JobSummary` is the Markdown for the job summary [NFR-10], and the CLI sets the exit code from the outcomes [FR-4.5.2].
+- `PublishService` chooses the due, valid announcements. For each targeted channel, an internal `ChannelRun` makes the skip decision (complete, or indeterminate with a warning), the edited check and the post loop, saves the record after each post, and raises the event that the post's result implies.
 
 ### 4.10 Application layer: Brighter commands and Darker queries
 
@@ -355,8 +360,8 @@ These are Brighter `Command` subclasses, each with its own `RequestHandlerAsync<
 
 | Command | Handler does | Result |
 |---|---|---|
-| `PublishDueAnnouncements(Now, AnnouncementId?)` | Runs `PublishService` (§4.9). | `PublishReport` |
-| `ResolveChannel(Id, Channel, PostRef?)` | Updates an `indeterminate` channel in the record to `partial`, `complete` or `failed` [FR-6.6]. | — |
+| `PublishDueAnnouncements` | Runs `PublishService` (§4.9). "Now" comes from `TimeProvider`, so the command carries no time. | `PublishReport` |
+| `ResolveChannel(Announcement, Channel, Posted?)` | Updates an `indeterminate` channel in the record: with a `PostRef`, the post was made, so it becomes `partial` or, for the last post, `complete`; without one, `failed`, so the next run retries it [FR-6.6]. | `Result<ChannelState>`: the new state, or a `ValidationError` if the channel isn't indeterminate |
 | `CreateAnnouncement(Slug, PublishAt?)` | Creates the folder from a template. | path |
 | `DraftFromRelease(Repo, Tag)` | Phase 2 [FR-7.4]. | path |
 | `AuthorizeLinkedIn` | Runs the flow in §6. | — |
@@ -372,16 +377,18 @@ These are Darker `IQuery<TResult>` types, each with a `QueryHandlerAsync<TQuery,
 |---|---|
 | `ValidateAnnouncements(Ids?)` | `IReadOnlyList<ValidationError>` [FR-5.2] |
 | `PreviewAnnouncement(Id, Channel?)` | `Preview`: the renderings with counts, limits and the estimated X cost [FR-5.1, FR-5.3] |
-| `GetPublicationStatus(Id?)` | Each channel's state from the publication record |
-| `CheckCredentials` | Each enabled channel's credential status (calls each publisher's read-only `VerifyAsync`) |
+| `GetPublicationStatus(Id)` | The announcement's `PublicationRecord`: each channel's state, posts and reason |
+| `CheckCredentials` | A `CredentialsReport`: each enabled channel's credential status (calls each publisher's read-only `VerifyAsync`), with the days left when a token expires within 14 days [FR-4.3.5] |
 
 **Events**
 
 `PublishService` publishes these in-process with `CommandProcessor.PublishAsync`:
-- `PostPublished(Id, Channel, Index, PostRef)`
-- `ChannelPublishFailed(Id, Channel, State, Reason)`
+- `PostPublished(Announcement, Channel, Index, Post)`
+- `ChannelPublishFailed(Announcement, Channel, State, Reason)`, for a channel that is now `failed` or `indeterminate`
 
-Their handlers log progress and build up the job summary [NFR-10].
+Brighter's `Command` and `Event` already have an `Id`, so the requests here name the announcement `Announcement`.
+
+The job summary is built from the `PublishReport`, not by event handlers, so the events have no handler in Core yet; a logging handler can subscribe without changing `PublishService`.
 
 The publication record is **not** saved by an event handler. `PublishService` saves it directly, before it publishes the event. That keeps the guarantee in FR-6.3 clear and independent of handler ordering.
 

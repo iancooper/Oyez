@@ -50,14 +50,14 @@ internal static class SegmentMerger
 
     private static void Append(List<string> posts, string text, IAmAChannelProfile profile)
     {
-        var candidate = posts.Count == 0 ? text : posts[^1] + SEGMENT_SEPARATOR + text;
-        if (posts.Count == 0 || !profile.Fits(candidate))
+        var candidate = posts.Count == 0 ? null : posts[^1] + SEGMENT_SEPARATOR + text;
+        if (candidate is not null && profile.Fits(candidate))
         {
-            posts.Add(text);
+            posts[^1] = candidate;
         }
         else
         {
-            posts[^1] = candidate;
+            posts.Add(text);
         }
     }
 }

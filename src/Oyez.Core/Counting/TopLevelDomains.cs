@@ -34,14 +34,8 @@ internal static class TopLevelDomains
     public static bool Contains(string label) => TLDS.Value.Contains(label);
 
     // The embedded list is IANA's tlds-alpha-by-domain.txt, version 2026102400 (24 October 2026).
-    private static HashSet<string> Load()
-    {
-        using var stream = typeof(TopLevelDomains).Assembly.GetManifestResourceStream(RESOURCE_NAME)
-                           ?? throw new InvalidOperationException($"The embedded resource {RESOURCE_NAME} is missing.");
-        using var reader = new StreamReader(stream);
-        var lines = reader.ReadToEnd().Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-        return lines
+    private static HashSet<string> Load() =>
+        EmbeddedResource.ReadLines(RESOURCE_NAME)
             .Where(line => !line.StartsWith('#'))
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
-    }
 }
