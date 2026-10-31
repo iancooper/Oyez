@@ -51,6 +51,7 @@ public static class ServiceCollectionExtensions
         configure(options);
         services.AddSingleton(new SecretRedactor(options));
         services.AddSingleton<IAmAnAnnouncementStore>(new FileSystemAnnouncementStore(options.AnnouncementsPath));
+        services.AddSingleton<IAmAPublicationRecordStore>(new FileSystemPublicationRecordStore(options.AnnouncementsPath));
 
         services.AddHttpClient<WriteAsPublisher>().RemoveAllLoggers().AddHttpMessageHandler(RetryHandlerFor).AddHttpMessageHandler(LoggingHandlerFor).AddTypedClient((http, _) => new WriteAsPublisher(http, options.WriteAs));
         services.AddTransient<IAmAChannelPublisher>(provider => provider.GetRequiredService<WriteAsPublisher>());
