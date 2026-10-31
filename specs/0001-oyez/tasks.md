@@ -353,7 +353,7 @@ Every task in this phase tests a port implementation registered by `AddOyezAdapt
   - `When_verifying_x_credentials_should_call_users_me`
 - **Done when:** the tests pass.
 
-### [ ] T-21 Safe retries for posts that can't be repeated
+### [x] T-21 Safe retries for posts that can't be repeated
 - **Covers:** NFR-6, AC-20, §5.1
 - **Tests (Adapter):** through `XPublisher` and `WriteAsPublisher`.
   - `When_creating_a_post_times_out_should_return_indeterminate_without_retrying` (AC-20)
