@@ -391,7 +391,7 @@ Every task in this phase tests a port implementation registered by `AddOyezAdapt
   - `When_logging_an_exception_should_redact_secrets`
 - **Done when:** the tests pass.
 
-### [ ] T-25 File-system announcement store
+### [x] T-25 File-system announcement store
 - **Covers:** FR-1.1, §5.6
 - **Tests (Adapter):** in temporary folders.
   - `When_listing_announcements_should_return_each_folder_and_ignore_dot_files`
