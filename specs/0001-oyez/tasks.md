@@ -373,7 +373,7 @@ Every task in this phase tests a port implementation registered by `AddOyezAdapt
   - `When_verifying_mastodon_credentials_should_call_verify_credentials`
 - **Done when:** the tests pass.
 
-### [ ] T-23 LinkedIn publisher
+### [x] T-23 LinkedIn publisher
 - **Covers:** FR-4.3.1, FR-4.3.5, §5.4
 - **Tests (Adapter):**
   - `When_publishing_to_linkedin_should_post_to_the_members_profile_with_the_api_version`
