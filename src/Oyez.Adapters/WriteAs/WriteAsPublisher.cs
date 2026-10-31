@@ -42,14 +42,13 @@ internal sealed class WriteAsPublisher(HttpClient http, WriteAsOptions options) 
         using var message = Authorised(HttpMethod.Post, $"collections/{options.Collection}/posts");
         message.Content = JsonContent.Create(post);
 
-        using var response = await http.SendAsync(message, cancellationToken);
-
-        return await PostResultFromAsync(response, cancellationToken);
+        return await PostSender.SendAsync(http, message, "Write.as", PostResultFromAsync, cancellationToken);
     }
 
     public async Task<CredentialStatus> VerifyAsync(CancellationToken cancellationToken)
     {
         using var message = Authorised(HttpMethod.Get, "me");
+        message.Options.Set(RetryHandler.IDEMPOTENT, true);
 
         using var response = await http.SendAsync(message, cancellationToken);
 

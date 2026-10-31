@@ -47,13 +47,16 @@ public static class ServiceCollectionExtensions
         var options = new AdapterOptions();
         configure(options);
 
-        services.AddHttpClient<WriteAsPublisher>().AddTypedClient((http, _) => new WriteAsPublisher(http, options.WriteAs));
+        services.AddHttpClient<WriteAsPublisher>().AddHttpMessageHandler(RetryHandlerFor).AddTypedClient((http, _) => new WriteAsPublisher(http, options.WriteAs));
         services.AddTransient<IAmAChannelPublisher>(provider => provider.GetRequiredService<WriteAsPublisher>());
 
-        services.AddHttpClient<XPublisher>().AddTypedClient((http, provider) => new XPublisher(http, options.X, SignerFor(options.X, provider)));
+        services.AddHttpClient<XPublisher>().AddHttpMessageHandler(RetryHandlerFor).AddTypedClient((http, provider) => new XPublisher(http, options.X, SignerFor(options.X, provider)));
         services.AddTransient<IAmAChannelPublisher>(provider => provider.GetRequiredService<XPublisher>());
         return services;
     }
+
+    private static RetryHandler RetryHandlerFor(IServiceProvider provider) =>
+        new(provider.GetRequiredService<TimeProvider>());
 
     private static OAuth1Signer SignerFor(XOptions options, IServiceProvider provider) =>
         new(options, provider.GetRequiredService<TimeProvider>(), provider.GetRequiredService<IAmANonceSource>());

@@ -41,13 +41,13 @@ internal sealed class XPublisher(HttpClient http, XOptions options, OAuth1Signer
         using var message = new HttpRequestMessage(HttpMethod.Post, $"{options.ApiBase}/2/tweets");
         message.Content = JsonContent.Create(PostBodyFor(request));
         Sign(message);
-        using var response = await http.SendAsync(message, cancellationToken);
-        return await PostResultFromAsync(response, cancellationToken);
+        return await PostSender.SendAsync(http, message, "X", PostResultFromAsync, cancellationToken);
     }
 
     public async Task<CredentialStatus> VerifyAsync(CancellationToken cancellationToken)
     {
         using var message = new HttpRequestMessage(HttpMethod.Get, $"{options.ApiBase}/2/users/me");
+        message.Options.Set(RetryHandler.IDEMPOTENT, true);
         Sign(message);
         using var response = await http.SendAsync(message, cancellationToken);
         return new CredentialStatus(response.IsSuccessStatusCode, $"X returned {(int)response.StatusCode}");
