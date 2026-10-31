@@ -24,6 +24,7 @@ THE SOFTWARE. */
 #endregion
 
 using System.Net.Http.Json;
+using System.Text.Json;
 using Oyez.Core.Channels;
 using Oyez.Core.Publishing;
 
@@ -44,9 +45,17 @@ internal sealed class WriteAsPublisher(HttpClient http, WriteAsOptions options) 
         };
         message.Headers.TryAddWithoutValidation("Authorization", $"Token {options.AccessToken}");
 
-        await http.SendAsync(message, cancellationToken);
+        using var response = await http.SendAsync(message, cancellationToken);
 
-        return new PostResult.Indeterminate("The response is not handled yet");
+        return await PostedFromAsync(response, cancellationToken);
+    }
+
+    private async Task<PostResult> PostedFromAsync(HttpResponseMessage response, CancellationToken cancellationToken)
+    {
+        using var body = await JsonDocument.ParseAsync(await response.Content.ReadAsStreamAsync(cancellationToken), cancellationToken: cancellationToken);
+        var data = body.RootElement.GetProperty("data");
+        var slug = data.GetProperty("slug").GetString();
+        return new PostResult.Posted(new PostRef(data.GetProperty("id").GetString()!, $"{options.BlogUrl}/{slug}"));
     }
 
     public Task<CredentialStatus> VerifyAsync(CancellationToken cancellationToken) => throw new NotImplementedException();
