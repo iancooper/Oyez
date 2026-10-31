@@ -407,7 +407,7 @@ Every task in this phase tests a port implementation registered by `AddOyezAdapt
   - `When_saving_fails_part_way_should_leave_the_previous_record_intact`
 - **Done when:** the tests pass.
 
-### [ ] T-27 GitHub secret store (`gh` CLI)
+### [x] T-27 GitHub secret store (`gh` CLI)
 - **Covers:** FR-4.3.4, FR-4.4.2, §5.7
 - **Builds:** the port `IAmAGitHubSecretStore` in Core, and `GhCli` in Adapters. The process runner is a public seam, so tests can use a fake.
 - **Tests (Adapter):**
