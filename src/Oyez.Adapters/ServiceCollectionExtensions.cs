@@ -52,6 +52,8 @@ public static class ServiceCollectionExtensions
 
         services.AddHttpClient<XPublisher>().AddHttpMessageHandler(RetryHandlerFor).AddTypedClient((http, provider) => new XPublisher(http, options.X, SignerFor(options.X, provider)));
         services.AddTransient<IAmAChannelPublisher>(provider => provider.GetRequiredService<XPublisher>());
+        services.AddHttpClient<MastodonPublisher>().AddHttpMessageHandler(RetryHandlerFor).AddTypedClient((http, _) => new MastodonPublisher(http, options.Mastodon));
+        services.AddTransient<IAmAChannelPublisher>(provider => provider.GetRequiredService<MastodonPublisher>());
         return services;
     }
 

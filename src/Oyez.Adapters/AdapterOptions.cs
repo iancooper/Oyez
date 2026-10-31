@@ -41,4 +41,10 @@ public sealed class AdapterOptions
     /// </summary>
     /// <value>Settings with no credentials.</value>
     public XOptions X { get; } = new();
+
+    /// <summary>
+    /// Gets the settings for reaching Mastodon.
+    /// </summary>
+    /// <value>Settings with no access token, pointing at <c>https://hachyderm.io</c>.</value>
+    public MastodonOptions Mastodon { get; } = new();
 }
