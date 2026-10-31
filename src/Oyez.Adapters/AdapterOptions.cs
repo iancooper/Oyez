@@ -47,4 +47,10 @@ public sealed class AdapterOptions
     /// </summary>
     /// <value>Settings with no access token, pointing at <c>https://hachyderm.io</c>.</value>
     public MastodonOptions Mastodon { get; } = new();
+
+    /// <summary>
+    /// Gets the settings for reaching LinkedIn.
+    /// </summary>
+    /// <value>Settings with no access token, pointing at <c>https://api.linkedin.com</c>.</value>
+    public LinkedInOptions LinkedIn { get; } = new();
 }

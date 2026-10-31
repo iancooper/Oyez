@@ -25,6 +25,7 @@ THE SOFTWARE. */
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Logging;
 using Oyez.Core.Publishing;
 
 namespace Oyez.Adapters;
@@ -54,6 +55,9 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IAmAChannelPublisher>(provider => provider.GetRequiredService<XPublisher>());
         services.AddHttpClient<MastodonPublisher>().AddHttpMessageHandler(RetryHandlerFor).AddTypedClient((http, _) => new MastodonPublisher(http, options.Mastodon));
         services.AddTransient<IAmAChannelPublisher>(provider => provider.GetRequiredService<MastodonPublisher>());
+        services.AddHttpClient<LinkedInPublisher>().AddHttpMessageHandler(RetryHandlerFor).AddTypedClient((http, provider) => new LinkedInPublisher(http, options.LinkedIn, provider.GetRequiredService<TimeProvider>(), provider.GetRequiredService<ILogger<LinkedInPublisher>>()));
+        services.AddTransient<IAmAChannelPublisher>(provider => provider.GetRequiredService<LinkedInPublisher>());
+
         return services;
     }
 
