@@ -364,7 +364,7 @@ Every task in this phase tests a port implementation registered by `AddOyezAdapt
   - `When_a_read_gets_a_server_error_should_retry_with_backoff`
 - **Done when:** the tests pass.
 
-### [ ] T-22 Mastodon publisher
+### [x] T-22 Mastodon publisher
 - **Covers:** FR-4.2, AC-12, §5.3
 - **Tests (Adapter):**
   - `When_publishing_a_thread_to_mastodon_should_reply_to_the_previous_post_publicly` (AC-12)
