@@ -47,6 +47,8 @@ public static class ServiceCollectionExtensions
     {
         services.TryAddSingleton(TimeProvider.System);
         services.TryAddSingleton<IAmANonceSource, RandomNonceSource>();
+        services.TryAddSingleton<IAmAProcessRunner, SystemProcessRunner>();
+        services.AddSingleton<IAmAGitHubSecretStore, GhCli>();
         var options = new AdapterOptions();
         configure(options);
         services.AddSingleton(new SecretRedactor(options));
