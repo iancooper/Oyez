@@ -56,17 +56,19 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IAmAnAnnouncementStore>(new FileSystemAnnouncementStore(folders));
         services.AddSingleton<IAmAPublicationRecordStore>(new FileSystemPublicationRecordStore(folders));
 
-        services.AddHttpClient<WriteAsPublisher>().RemoveAllLoggers().AddHttpMessageHandler(RetryHandlerFor).AddHttpMessageHandler(LoggingHandlerFor).AddTypedClient((http, _) => new WriteAsPublisher(http, options.WriteAs));
-        services.AddTransient<IAmAChannelPublisher>(provider => provider.GetRequiredService<WriteAsPublisher>());
-
-        services.AddHttpClient<XPublisher>().RemoveAllLoggers().AddHttpMessageHandler(RetryHandlerFor).AddHttpMessageHandler(LoggingHandlerFor).AddTypedClient((http, provider) => new XPublisher(http, options.X, SignerFor(options.X, provider)));
-        services.AddTransient<IAmAChannelPublisher>(provider => provider.GetRequiredService<XPublisher>());
-        services.AddHttpClient<MastodonPublisher>().RemoveAllLoggers().AddHttpMessageHandler(RetryHandlerFor).AddHttpMessageHandler(LoggingHandlerFor).AddTypedClient((http, _) => new MastodonPublisher(http, options.Mastodon));
-        services.AddTransient<IAmAChannelPublisher>(provider => provider.GetRequiredService<MastodonPublisher>());
-        services.AddHttpClient<LinkedInPublisher>().RemoveAllLoggers().AddHttpMessageHandler(RetryHandlerFor).AddHttpMessageHandler(LoggingHandlerFor).AddTypedClient((http, provider) => new LinkedInPublisher(http, options.LinkedIn, provider.GetRequiredService<TimeProvider>(), provider.GetRequiredService<ILogger<LinkedInPublisher>>()));
-        services.AddTransient<IAmAChannelPublisher>(provider => provider.GetRequiredService<LinkedInPublisher>());
+        AddChannel(services, (http, _) => new WriteAsPublisher(http, options.WriteAs));
+        AddChannel(services, (http, provider) => new XPublisher(http, options.X, SignerFor(options.X, provider)));
+        AddChannel(services, (http, _) => new MastodonPublisher(http, options.Mastodon));
+        AddChannel(services, (http, provider) => new LinkedInPublisher(http, options.LinkedIn, provider.GetRequiredService<TimeProvider>(), provider.GetRequiredService<ILogger<LinkedInPublisher>>()));
 
         return services;
+    }
+
+    private static void AddChannel<TPublisher>(IServiceCollection services, Func<HttpClient, IServiceProvider, TPublisher> create)
+        where TPublisher : class, IAmAChannelPublisher
+    {
+        services.AddHttpClient<TPublisher>().RemoveAllLoggers().AddHttpMessageHandler(RetryHandlerFor).AddHttpMessageHandler(LoggingHandlerFor).AddTypedClient(create);
+        services.AddTransient<IAmAChannelPublisher>(provider => provider.GetRequiredService<TPublisher>());
     }
 
     private static RetryHandler RetryHandlerFor(IServiceProvider provider) =>
