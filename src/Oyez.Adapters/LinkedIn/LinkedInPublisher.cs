@@ -33,6 +33,8 @@ namespace Oyez.Adapters;
 
 internal sealed class LinkedInPublisher(HttpClient http, LinkedInOptions options, TimeProvider clock, ILogger<LinkedInPublisher> logger) : IAmAChannelPublisher
 {
+    private readonly PlatformClient _platform = new(http, "LinkedIn");
+
     private static readonly TimeSpan EXPIRY_WARNING_PERIOD = TimeSpan.FromDays(14);
 
     public ChannelId Channel => ChannelId.LinkedIn;
@@ -49,17 +51,11 @@ internal sealed class LinkedInPublisher(HttpClient http, LinkedInOptions options
         using var message = new HttpRequestMessage(HttpMethod.Post, $"{options.ApiBase}/rest/posts");
         message.Content = JsonContent.Create(PostBodyFor(request));
         AddHeaders(message);
-        return await PostSender.SendAsync(http, message, "LinkedIn", PostResultFromAsync, cancellationToken);
+        return await _platform.SendPostAsync(message, PostResultFromAsync, cancellationToken);
     }
 
-    public async Task<CredentialStatus> VerifyAsync(CancellationToken cancellationToken)
-    {
-        using var message = new HttpRequestMessage(HttpMethod.Get, $"{options.ApiBase}/v2/userinfo");
-        message.Options.Set(RetryHandler.IDEMPOTENT, true);
-        AddHeaders(message);
-        using var response = await http.SendAsync(message, cancellationToken);
-        return new CredentialStatus(response.IsSuccessStatusCode, $"LinkedIn returned {(int)response.StatusCode}", options.TokenExpiresAt);
-    }
+    public Task<CredentialStatus> VerifyAsync(CancellationToken cancellationToken) =>
+        _platform.VerifyAsync($"{options.ApiBase}/v2/userinfo", AddHeaders, options.TokenExpiresAt, cancellationToken);
 
     private bool TokenHasExpired() =>
         options.TokenExpiresAt is not null && options.TokenExpiresAt <= clock.GetUtcNow();
@@ -84,14 +80,14 @@ internal sealed class LinkedInPublisher(HttpClient http, LinkedInOptions options
         new
         {
             author = options.PersonUrn,
-            commentary = request.Rendering.Posts[request.Index].Text,
+            commentary = request.PostText(),
             visibility = "PUBLIC",
             distribution = new { feedDistribution = "MAIN_FEED", targetEntities = Array.Empty<string>(), thirdPartyDistributionChannels = Array.Empty<string>() },
             lifecycleState = "PUBLISHED",
             isReshareDisabledByAuthor = false
         };
 
-    private static async Task<PostResult> PostResultFromAsync(HttpResponseMessage response, CancellationToken cancellationToken)
+    private async Task<PostResult> PostResultFromAsync(HttpResponseMessage response, CancellationToken cancellationToken)
     {
         if (!response.IsSuccessStatusCode)
         {
@@ -101,9 +97,9 @@ internal sealed class LinkedInPublisher(HttpClient http, LinkedInOptions options
         return new PostResult.Posted(new PostRef(urn, $"https://www.linkedin.com/feed/update/{urn}"));
     }
 
-    private static async Task<string> RejectionReasonAsync(HttpResponseMessage response, CancellationToken cancellationToken)
+    private async Task<string> RejectionReasonAsync(HttpResponseMessage response, CancellationToken cancellationToken)
     {
-        var status = $"LinkedIn returned {(int)response.StatusCode}";
+        var status = _platform.StatusOf(response);
         var message = MessageFrom(await response.Content.ReadAsStringAsync(cancellationToken));
         return message is null ? status : $"{status}: {message}";
     }

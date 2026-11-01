@@ -24,23 +24,22 @@ THE SOFTWARE. */
 #endregion
 
 using System.Net;
+using System.Text.Json;
 using Oyez.Core.Publishing;
 
 namespace Oyez.Adapters;
 
-internal static class PostSender
+internal sealed class PlatformClient(HttpClient http, string platform)
 {
-    public static async Task<PostResult> SendAsync(
-        HttpClient http,
+    public async Task<PostResult> SendPostAsync(
         HttpRequestMessage message,
-        string platform,
         Func<HttpResponseMessage, CancellationToken, Task<PostResult>> readAccepted,
         CancellationToken cancellationToken)
     {
         try
         {
             using var response = await http.SendAsync(message, cancellationToken);
-            return await ResultFromAsync(response, platform, readAccepted, cancellationToken);
+            return await ResultFromAsync(response, readAccepted, cancellationToken);
         }
         catch (TaskCanceledException) when (!cancellationToken.IsCancellationRequested)
         {
@@ -48,15 +47,36 @@ internal static class PostSender
         }
     }
 
-    private static Task<PostResult> ResultFromAsync(
+    public async Task<CredentialStatus> VerifyAsync(
+        string url,
+        Action<HttpRequestMessage> authorise,
+        DateTimeOffset? expiresAt,
+        CancellationToken cancellationToken)
+    {
+        using var message = new HttpRequestMessage(HttpMethod.Get, url);
+        message.Options.Set(RetryHandler.IDEMPOTENT, true);
+        authorise(message);
+        using var response = await http.SendAsync(message, cancellationToken);
+        return new CredentialStatus(response.IsSuccessStatusCode, StatusOf(response), expiresAt);
+    }
+
+    public string StatusOf(HttpResponseMessage response) =>
+        $"{platform} returned {(int)response.StatusCode}";
+
+    public PostResult RejectedBecause(HttpResponseMessage response, string? reason) =>
+        new PostResult.Rejected($"{StatusOf(response)}: {reason}");
+
+    public static async Task<JsonDocument> ReadJsonAsync(HttpResponseMessage response, CancellationToken cancellationToken) =>
+        await JsonDocument.ParseAsync(await response.Content.ReadAsStreamAsync(cancellationToken), cancellationToken: cancellationToken);
+
+    private Task<PostResult> ResultFromAsync(
         HttpResponseMessage response,
-        string platform,
         Func<HttpResponseMessage, CancellationToken, Task<PostResult>> readAccepted,
         CancellationToken cancellationToken) =>
         response.StatusCode switch
         {
             HttpStatusCode.TooManyRequests => Task.FromResult<PostResult>(new PostResult.Rejected($"{platform} is rate limiting requests, so the post was not made")),
-            >= HttpStatusCode.InternalServerError => Task.FromResult<PostResult>(new PostResult.Indeterminate($"{platform} returned {(int)response.StatusCode}, so the post may have been made")),
+            >= HttpStatusCode.InternalServerError => Task.FromResult<PostResult>(new PostResult.Indeterminate($"{StatusOf(response)}, so the post may have been made")),
             _ => readAccepted(response, cancellationToken)
         };
 }

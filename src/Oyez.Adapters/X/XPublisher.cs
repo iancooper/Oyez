@@ -24,7 +24,6 @@ THE SOFTWARE. */
 #endregion
 
 using System.Net.Http.Json;
-using System.Text.Json;
 using Oyez.Core.Channels;
 using Oyez.Core.Publishing;
 
@@ -32,6 +31,8 @@ namespace Oyez.Adapters;
 
 internal sealed class XPublisher(HttpClient http, XOptions options, OAuth1Signer signer) : IAmAChannelPublisher
 {
+    private readonly PlatformClient _platform = new(http, "X");
+
     public ChannelId Channel => ChannelId.X;
 
     public bool CreateIsIdempotent => false;
@@ -41,24 +42,18 @@ internal sealed class XPublisher(HttpClient http, XOptions options, OAuth1Signer
         using var message = new HttpRequestMessage(HttpMethod.Post, $"{options.ApiBase}/2/tweets");
         message.Content = JsonContent.Create(PostBodyFor(request));
         Sign(message);
-        return await PostSender.SendAsync(http, message, "X", PostResultFromAsync, cancellationToken);
+        return await _platform.SendPostAsync(message, PostResultFromAsync, cancellationToken);
     }
 
-    public async Task<CredentialStatus> VerifyAsync(CancellationToken cancellationToken)
-    {
-        using var message = new HttpRequestMessage(HttpMethod.Get, $"{options.ApiBase}/2/users/me");
-        message.Options.Set(RetryHandler.IDEMPOTENT, true);
-        Sign(message);
-        using var response = await http.SendAsync(message, cancellationToken);
-        return new CredentialStatus(response.IsSuccessStatusCode, $"X returned {(int)response.StatusCode}");
-    }
+    public Task<CredentialStatus> VerifyAsync(CancellationToken cancellationToken) =>
+        _platform.VerifyAsync($"{options.ApiBase}/2/users/me", Sign, null, cancellationToken);
 
     private void Sign(HttpRequestMessage message) =>
         message.Headers.TryAddWithoutValidation("Authorization", signer.AuthorizationFor(message.Method, message.RequestUri!));
 
     private static Dictionary<string, object> PostBodyFor(PostRequest request)
     {
-        var body = new Dictionary<string, object> { ["text"] = request.Rendering.Posts[request.Index].Text };
+        var body = new Dictionary<string, object> { ["text"] = request.PostText() };
         if (request.ReplyTo is not null)
         {
             body["reply"] = new { in_reply_to_tweet_id = request.ReplyTo.Id };
@@ -68,10 +63,10 @@ internal sealed class XPublisher(HttpClient http, XOptions options, OAuth1Signer
 
     private async Task<PostResult> PostResultFromAsync(HttpResponseMessage response, CancellationToken cancellationToken)
     {
-        using var body = await JsonDocument.ParseAsync(await response.Content.ReadAsStreamAsync(cancellationToken), cancellationToken: cancellationToken);
+        using var body = await PlatformClient.ReadJsonAsync(response, cancellationToken);
         if (!response.IsSuccessStatusCode)
         {
-            return new PostResult.Rejected($"X returned {(int)response.StatusCode}: {body.RootElement.GetProperty("detail").GetString()}");
+            return _platform.RejectedBecause(response, body.RootElement.GetProperty("detail").GetString());
         }
         var id = body.RootElement.GetProperty("data").GetProperty("id").GetString()!;
         return new PostResult.Posted(new PostRef(id, $"https://x.com/{options.Handle}/status/{id}"));

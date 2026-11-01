@@ -24,7 +24,6 @@ THE SOFTWARE. */
 #endregion
 
 using System.Net.Http.Json;
-using System.Text.Json;
 using Oyez.Core.Channels;
 using Oyez.Core.Publishing;
 
@@ -32,6 +31,8 @@ namespace Oyez.Adapters;
 
 internal sealed class MastodonPublisher(HttpClient http, MastodonOptions options) : IAmAChannelPublisher
 {
+    private readonly PlatformClient _platform = new(http, "Mastodon");
+
     public ChannelId Channel => ChannelId.Mastodon;
 
     public bool CreateIsIdempotent => true;
@@ -43,17 +44,11 @@ internal sealed class MastodonPublisher(HttpClient http, MastodonOptions options
         message.Options.Set(RetryHandler.IDEMPOTENT, true);
         message.Headers.TryAddWithoutValidation("Idempotency-Key", request.IdempotencyKey);
         Authorise(message);
-        return await PostSender.SendAsync(http, message, "Mastodon", PostResultFromAsync, cancellationToken);
+        return await _platform.SendPostAsync(message, PostResultFromAsync, cancellationToken);
     }
 
-    public async Task<CredentialStatus> VerifyAsync(CancellationToken cancellationToken)
-    {
-        using var message = new HttpRequestMessage(HttpMethod.Get, $"{options.Instance}/api/v1/accounts/verify_credentials");
-        message.Options.Set(RetryHandler.IDEMPOTENT, true);
-        Authorise(message);
-        using var response = await http.SendAsync(message, cancellationToken);
-        return new CredentialStatus(response.IsSuccessStatusCode, $"Mastodon returned {(int)response.StatusCode}");
-    }
+    public Task<CredentialStatus> VerifyAsync(CancellationToken cancellationToken) =>
+        _platform.VerifyAsync($"{options.Instance}/api/v1/accounts/verify_credentials", Authorise, null, cancellationToken);
 
     private void Authorise(HttpRequestMessage message) =>
         message.Headers.TryAddWithoutValidation("Authorization", $"Bearer {options.AccessToken}");
@@ -62,7 +57,7 @@ internal sealed class MastodonPublisher(HttpClient http, MastodonOptions options
     {
         var body = new Dictionary<string, object>
         {
-            ["status"] = request.Rendering.Posts[request.Index].Text,
+            ["status"] = request.PostText(),
             ["visibility"] = "public"
         };
         if (request.ReplyTo is not null)
@@ -72,12 +67,12 @@ internal sealed class MastodonPublisher(HttpClient http, MastodonOptions options
         return body;
     }
 
-    private static async Task<PostResult> PostResultFromAsync(HttpResponseMessage response, CancellationToken cancellationToken)
+    private async Task<PostResult> PostResultFromAsync(HttpResponseMessage response, CancellationToken cancellationToken)
     {
-        using var body = await JsonDocument.ParseAsync(await response.Content.ReadAsStreamAsync(cancellationToken), cancellationToken: cancellationToken);
+        using var body = await PlatformClient.ReadJsonAsync(response, cancellationToken);
         if (!response.IsSuccessStatusCode)
         {
-            return new PostResult.Rejected($"Mastodon returned {(int)response.StatusCode}: {body.RootElement.GetProperty("error").GetString()}");
+            return _platform.RejectedBecause(response, body.RootElement.GetProperty("error").GetString());
         }
         return new PostResult.Posted(new PostRef(body.RootElement.GetProperty("id").GetString()!, body.RootElement.GetProperty("url").GetString()!));
     }

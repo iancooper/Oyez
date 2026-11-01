@@ -24,7 +24,6 @@ THE SOFTWARE. */
 #endregion
 
 using System.Net.Http.Json;
-using System.Text.Json;
 using Oyez.Core.Channels;
 using Oyez.Core.Publishing;
 
@@ -32,42 +31,40 @@ namespace Oyez.Adapters;
 
 internal sealed class WriteAsPublisher(HttpClient http, WriteAsOptions options) : IAmAChannelPublisher
 {
+    private readonly PlatformClient _platform = new(http, "Write.as");
+
     public ChannelId Channel => ChannelId.WriteAs;
 
     public bool CreateIsIdempotent => false;
 
     public async Task<PostResult> CreateAsync(PostRequest request, CancellationToken cancellationToken)
     {
-        var post = new { title = request.Rendering.Title, body = request.Rendering.Posts[request.Index].Text };
+        var post = new { title = request.Rendering.Title, body = request.PostText() };
         using var message = Authorised(HttpMethod.Post, $"collections/{options.Collection}/posts");
         message.Content = JsonContent.Create(post);
 
-        return await PostSender.SendAsync(http, message, "Write.as", PostResultFromAsync, cancellationToken);
+        return await _platform.SendPostAsync(message, PostResultFromAsync, cancellationToken);
     }
 
-    public async Task<CredentialStatus> VerifyAsync(CancellationToken cancellationToken)
-    {
-        using var message = Authorised(HttpMethod.Get, "me");
-        message.Options.Set(RetryHandler.IDEMPOTENT, true);
-
-        using var response = await http.SendAsync(message, cancellationToken);
-
-        return new CredentialStatus(response.IsSuccessStatusCode, $"Write.as returned {(int)response.StatusCode}");
-    }
+    public Task<CredentialStatus> VerifyAsync(CancellationToken cancellationToken) =>
+        _platform.VerifyAsync($"{options.ApiBase}/me", Authorise, null, cancellationToken);
 
     private HttpRequestMessage Authorised(HttpMethod method, string path)
     {
         var message = new HttpRequestMessage(method, $"{options.ApiBase}/{path}");
-        message.Headers.TryAddWithoutValidation("Authorization", $"Token {options.AccessToken}");
+        Authorise(message);
         return message;
     }
 
+    private void Authorise(HttpRequestMessage message) =>
+        message.Headers.TryAddWithoutValidation("Authorization", $"Token {options.AccessToken}");
+
     private async Task<PostResult> PostResultFromAsync(HttpResponseMessage response, CancellationToken cancellationToken)
     {
-        using var body = await JsonDocument.ParseAsync(await response.Content.ReadAsStreamAsync(cancellationToken), cancellationToken: cancellationToken);
+        using var body = await PlatformClient.ReadJsonAsync(response, cancellationToken);
         if (!response.IsSuccessStatusCode)
         {
-            return new PostResult.Rejected($"Write.as returned {(int)response.StatusCode}: {body.RootElement.GetProperty("error_msg").GetString()}");
+            return _platform.RejectedBecause(response, body.RootElement.GetProperty("error_msg").GetString());
         }
 
         var data = body.RootElement.GetProperty("data");
