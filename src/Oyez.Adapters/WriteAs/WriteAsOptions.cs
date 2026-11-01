@@ -53,4 +53,6 @@ public sealed class WriteAsOptions
     /// </summary>
     /// <value>The blog's address, with no trailing slash.</value>
     public string BlogUrl { get; set; } = "";
+
+    internal IEnumerable<string> Secrets() => [AccessToken];
 }

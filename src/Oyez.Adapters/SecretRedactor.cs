@@ -38,16 +38,8 @@ internal sealed class SecretRedactor
         _secrets.Aggregate(text, (redacted, secret) => redacted.Replace(secret, PLACEHOLDER));
 
     private static string[] SecretsIn(AdapterOptions options) =>
-        new[]
-        {
-            options.WriteAs.AccessToken,
-            options.X.ConsumerKey,
-            options.X.ConsumerSecret,
-            options.X.AccessToken,
-            options.X.AccessTokenSecret,
-            options.Mastodon.AccessToken,
-            options.LinkedIn.AccessToken
-        }
+        new[] { options.WriteAs.Secrets(), options.X.Secrets(), options.Mastodon.Secrets(), options.LinkedIn.Secrets() }
+        .SelectMany(secrets => secrets)
         .Where(secret => secret.Length > 0)
         .Distinct()
         .OrderByDescending(secret => secret.Length)

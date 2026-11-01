@@ -65,4 +65,6 @@ public sealed class XOptions
     /// </summary>
     /// <value>The handle, without the leading <c>@</c>.</value>
     public string Handle { get; set; } = "";
+
+    internal IEnumerable<string> Secrets() => [ConsumerKey, ConsumerSecret, AccessToken, AccessTokenSecret];
 }

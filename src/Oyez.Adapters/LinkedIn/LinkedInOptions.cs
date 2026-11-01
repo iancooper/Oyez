@@ -59,4 +59,6 @@ public sealed class LinkedInOptions
     /// </summary>
     /// <value>The version as <c>yyyyMM</c>, such as <c>202609</c>.</value>
     public string ApiVersion { get; set; } = "202609";
+
+    internal IEnumerable<string> Secrets() => [AccessToken];
 }

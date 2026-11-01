@@ -41,4 +41,6 @@ public sealed class MastodonOptions
     /// </summary>
     /// <value>Defaults to <c>https://hachyderm.io</c>.</value>
     public string Instance { get; set; } = "https://hachyderm.io";
+
+    internal IEnumerable<string> Secrets() => [AccessToken];
 }
