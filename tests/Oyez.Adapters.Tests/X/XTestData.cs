@@ -34,17 +34,4 @@ public static class XTestData
         services.AddSingleton<TimeProvider>(clock);
         services.AddSingleton<IAmANonceSource>(new FixedNonceSource("kYjzVBB8Y0ZFabxSWbWovY3uYSQ2pTgmZeNu2VS4cg"));
     }
-
-    public static PostRequest Request(int index = 0, PostRef? replyTo = null)
-    {
-        var posts = new[] { "Brighter 10.1 is out.", "It adds batching.", "Read more at the link." }
-            .Select((text, i) => new Post(i, text, text.Length))
-            .ToList();
-        return new(
-            new AnnouncementId("brighter-10-1"),
-            new Rendering(ChannelId.X, null, 280, posts),
-            index,
-            replyTo,
-            "sha256:0123456789ab");
-    }
 }

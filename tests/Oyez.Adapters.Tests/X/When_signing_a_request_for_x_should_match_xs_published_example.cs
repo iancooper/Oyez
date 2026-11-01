@@ -22,7 +22,7 @@ public class XSignatureTests
         host.Http.RespondWith(HttpStatusCode.Created, """{"data":{"id":"1001"}}""");
 
         //Act
-        await host.PublisherFor(ChannelId.X).CreateAsync(XTestData.Request(), CancellationToken.None);
+        await host.PublisherFor(ChannelId.X).CreateAsync(PostRequests.Thread(ChannelId.X, 280), CancellationToken.None);
 
         //Assert
         var sent = Assert.Single(host.Http.Requests);

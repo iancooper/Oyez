@@ -15,7 +15,7 @@ public class LoggingErrorBodyTests
         host.Http.RespondWith(HttpStatusCode.Unauthorized, """{"code":401,"error_msg":"Invalid access token writeas-secret."}""");
 
         //Act
-        await host.PublisherFor(ChannelId.WriteAs).CreateAsync(WriteAsTestData.Request(), CancellationToken.None);
+        await host.PublisherFor(ChannelId.WriteAs).CreateAsync(WriteAsTestData.Article(), CancellationToken.None);
 
         //Assert
         var rejection = Assert.Single(logs.Entries, entry => entry.Message.Contains("Invalid access token"));

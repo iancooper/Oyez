@@ -20,7 +20,7 @@ public class MastodonServerErrorTests
             : RetryTestData.Respond(HttpStatusCode.OK, """{"id":"1001","url":"https://hachyderm.io/@ian/1001"}"""));
 
         //Act
-        var pending = host.PublisherFor(ChannelId.Mastodon).CreateAsync(MastodonTestData.Request(), CancellationToken.None);
+        var pending = host.PublisherFor(ChannelId.Mastodon).CreateAsync(PostRequests.Thread(ChannelId.Mastodon, 500), CancellationToken.None);
         var result = await RetryTestData.CompleteWithClockRunningAsync(pending, clock);
 
         //Assert

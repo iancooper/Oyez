@@ -7,16 +7,15 @@ namespace Oyez.Adapters.Tests.Retries;
 public class BriefRateLimitCreateTests
 {
     [Theory]
-    [InlineData("x")]
-    [InlineData("writeas")]
-    public async Task When_rate_limited_briefly_should_wait_and_retry(string channel)
+    [MemberData(nameof(ChannelUnderTest.ALL), MemberType = typeof(ChannelUnderTest))]
+    public async Task When_rate_limited_briefly_should_wait_and_retry(ChannelUnderTest channel)
     {
         //Arrange
         var clock = new FakeTimeProvider();
         using var host = RetryTestData.HostWith(clock);
         host.Http.RespondWith(requestNumber => requestNumber == 1
             ? RetryTestData.RateLimited(retryAfterSeconds: 30)
-            : RetryTestData.Respond(HttpStatusCode.OK, RetryTestData.AcceptedBodyFor(channel)));
+            : RetryTestData.Respond(HttpStatusCode.OK, channel.AcceptedBody));
 
         //Act
         var pending = RetryTestData.CreateAsync(host, channel);

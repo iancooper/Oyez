@@ -13,7 +13,7 @@ public class LinkedInPublishTests
         host.Http.RespondWith(_ => LinkedInTestData.CreatedWithId("urn:li:share:7251"));
 
         //Act
-        await host.PublisherFor(ChannelId.LinkedIn).CreateAsync(LinkedInTestData.Request(), CancellationToken.None);
+        await host.PublisherFor(ChannelId.LinkedIn).CreateAsync(PostRequests.Build(ChannelId.LinkedIn, 3000, null, ["Brighter 10.1 is out. It adds batching."]), CancellationToken.None);
 
         //Assert
         var sent = Assert.Single(host.Http.Requests);

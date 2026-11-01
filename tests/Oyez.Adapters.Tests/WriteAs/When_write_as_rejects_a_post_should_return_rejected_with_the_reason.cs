@@ -14,7 +14,7 @@ public class WriteAsRejectsPostTests
         host.Http.RespondWith(HttpStatusCode.Unauthorized, """{"code":401,"error_msg":"Invalid access token."}""");
 
         //Act
-        var result = await host.PublisherFor(ChannelId.WriteAs).CreateAsync(WriteAsTestData.Request(), CancellationToken.None);
+        var result = await host.PublisherFor(ChannelId.WriteAs).CreateAsync(WriteAsTestData.Article(), CancellationToken.None);
 
         //Assert
         var rejected = Assert.IsType<PostResult.Rejected>(result);

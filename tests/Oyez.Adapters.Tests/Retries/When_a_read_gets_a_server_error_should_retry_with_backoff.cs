@@ -6,9 +6,8 @@ namespace Oyez.Adapters.Tests.Retries;
 public class ReadServerErrorTests
 {
     [Theory]
-    [InlineData("x")]
-    [InlineData("writeas")]
-    public async Task When_a_read_gets_a_server_error_should_retry_with_backoff(string channel)
+    [MemberData(nameof(ChannelUnderTest.ALL), MemberType = typeof(ChannelUnderTest))]
+    public async Task When_a_read_gets_a_server_error_should_retry_with_backoff(ChannelUnderTest channel)
     {
         //Arrange
         var clock = new FakeTimeProvider();

@@ -15,9 +15,9 @@ public class XThreadTests
         var publisher = host.PublisherFor(ChannelId.X);
 
         //Act
-        var first = Assert.IsType<PostResult.Posted>(await publisher.CreateAsync(XTestData.Request(0), CancellationToken.None));
-        var second = Assert.IsType<PostResult.Posted>(await publisher.CreateAsync(XTestData.Request(1, first.Ref), CancellationToken.None));
-        await publisher.CreateAsync(XTestData.Request(2, second.Ref), CancellationToken.None);
+        var first = Assert.IsType<PostResult.Posted>(await publisher.CreateAsync(PostRequests.Thread(ChannelId.X, 280, 0), CancellationToken.None));
+        var second = Assert.IsType<PostResult.Posted>(await publisher.CreateAsync(PostRequests.Thread(ChannelId.X, 280, 1, first.Ref), CancellationToken.None));
+        await publisher.CreateAsync(PostRequests.Thread(ChannelId.X, 280, 2, second.Ref), CancellationToken.None);
 
         //Assert
         Assert.Equal(3, host.Http.Requests.Count);

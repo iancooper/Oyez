@@ -14,7 +14,7 @@ public class WriteAsAcceptsPostTests
         host.Http.RespondWith(HttpStatusCode.Created, """{"code":201,"data":{"id":"abc123","slug":"brighter-10-1"}}""");
 
         //Act
-        var result = await host.PublisherFor(ChannelId.WriteAs).CreateAsync(WriteAsTestData.Request(), CancellationToken.None);
+        var result = await host.PublisherFor(ChannelId.WriteAs).CreateAsync(WriteAsTestData.Article(), CancellationToken.None);
 
         //Assert
         var posted = Assert.IsType<PostResult.Posted>(result);

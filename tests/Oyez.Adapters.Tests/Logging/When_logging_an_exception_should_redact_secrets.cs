@@ -15,7 +15,7 @@ public class LoggingExceptionTests
 
         //Act
         await Assert.ThrowsAsync<HttpRequestException>(() =>
-            host.PublisherFor(ChannelId.WriteAs).CreateAsync(WriteAsTestData.Request(), CancellationToken.None));
+            host.PublisherFor(ChannelId.WriteAs).CreateAsync(WriteAsTestData.Article(), CancellationToken.None));
 
         //Assert
         var failure = Assert.Single(logs.Entries, entry => entry.Message.Contains("Connection to"));

@@ -7,9 +7,8 @@ namespace Oyez.Adapters.Tests.Retries;
 public class ServerErrorCreateTests
 {
     [Theory]
-    [InlineData("x")]
-    [InlineData("writeas")]
-    public async Task When_creating_a_post_gets_a_server_error_should_return_indeterminate_without_retrying(string channel)
+    [MemberData(nameof(ChannelUnderTest.ALL), MemberType = typeof(ChannelUnderTest))]
+    public async Task When_creating_a_post_gets_a_server_error_should_return_indeterminate_without_retrying(ChannelUnderTest channel)
     {
         //Arrange
         using var host = RetryTestData.HostWith(new FakeTimeProvider());

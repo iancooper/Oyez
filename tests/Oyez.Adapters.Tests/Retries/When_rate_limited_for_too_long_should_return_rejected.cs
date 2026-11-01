@@ -6,9 +6,8 @@ namespace Oyez.Adapters.Tests.Retries;
 public class LongRateLimitCreateTests
 {
     [Theory]
-    [InlineData("x")]
-    [InlineData("writeas")]
-    public async Task When_rate_limited_for_too_long_should_return_rejected(string channel)
+    [MemberData(nameof(ChannelUnderTest.ALL), MemberType = typeof(ChannelUnderTest))]
+    public async Task When_rate_limited_for_too_long_should_return_rejected(ChannelUnderTest channel)
     {
         //Arrange
         using var host = RetryTestData.HostWith(new FakeTimeProvider());

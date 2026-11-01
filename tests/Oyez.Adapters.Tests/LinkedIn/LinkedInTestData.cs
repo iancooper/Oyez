@@ -40,17 +40,4 @@ public static class LinkedInTestData
         response.Headers.Add("x-restli-id", urn);
         return response;
     }
-
-    public static PostRequest Request()
-    {
-        var posts = new[] { "Brighter 10.1 is out. It adds batching." }
-            .Select((text, i) => new Post(i, text, text.Length))
-            .ToList();
-        return new(
-            new AnnouncementId("brighter-10-1"),
-            new Rendering(ChannelId.LinkedIn, null, 3000, posts),
-            0,
-            null,
-            "sha256:0123456789ab");
-    }
 }

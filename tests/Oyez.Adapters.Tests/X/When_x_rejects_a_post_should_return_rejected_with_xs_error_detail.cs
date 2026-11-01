@@ -14,7 +14,7 @@ public class XRejectsPostTests
         host.Http.RespondWith(HttpStatusCode.Forbidden, """{"title":"Forbidden","detail":"You are not permitted to create a Tweet with duplicate content.","type":"about:blank","status":403}""");
 
         //Act
-        var result = await host.PublisherFor(ChannelId.X).CreateAsync(XTestData.Request(), CancellationToken.None);
+        var result = await host.PublisherFor(ChannelId.X).CreateAsync(PostRequests.Thread(ChannelId.X, 280), CancellationToken.None);
 
         //Assert
         var rejected = Assert.IsType<PostResult.Rejected>(result);

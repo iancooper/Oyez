@@ -18,9 +18,9 @@ public class MastodonThreadTests
         var publisher = host.PublisherFor(ChannelId.Mastodon);
 
         //Act
-        var first = Assert.IsType<PostResult.Posted>(await publisher.CreateAsync(MastodonTestData.Request(0), CancellationToken.None));
-        var second = Assert.IsType<PostResult.Posted>(await publisher.CreateAsync(MastodonTestData.Request(1, first.Ref), CancellationToken.None));
-        await publisher.CreateAsync(MastodonTestData.Request(2, second.Ref), CancellationToken.None);
+        var first = Assert.IsType<PostResult.Posted>(await publisher.CreateAsync(PostRequests.Thread(ChannelId.Mastodon, 500, 0), CancellationToken.None));
+        var second = Assert.IsType<PostResult.Posted>(await publisher.CreateAsync(PostRequests.Thread(ChannelId.Mastodon, 500, 1, first.Ref), CancellationToken.None));
+        await publisher.CreateAsync(PostRequests.Thread(ChannelId.Mastodon, 500, 2, second.Ref), CancellationToken.None);
 
         //Assert
         Assert.Equal("https://hachyderm.io/@ian/1001", first.Ref.Url);

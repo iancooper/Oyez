@@ -14,11 +14,6 @@ public static class WriteAsTestData
         options.WriteAs.BlogUrl = "https://ian-cooper.writeas.com";
     }
 
-    public static PostRequest Request(string title = "Brighter 10.1", string markdown = "Brighter 10.1 is out.\n\nSee what changed.") =>
-        new(
-            new AnnouncementId("brighter-10-1"),
-            new Rendering(ChannelId.WriteAs, title, null, [new Post(0, markdown, markdown.Length)]),
-            0,
-            null,
-            "sha256:0123456789ab");
+    public static PostRequest Article(string title = "Brighter 10.1", string markdown = "Brighter 10.1 is out.\n\nSee what changed.") =>
+        PostRequests.Build(ChannelId.WriteAs, null, title, [markdown]);
 }

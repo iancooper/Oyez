@@ -3,7 +3,6 @@ using System.Net.Sockets;
 using System.Text;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Time.Testing;
-using Oyez.Core.Channels;
 using Oyez.Core.Publishing;
 
 namespace Oyez.Adapters.Tests.Retries;
@@ -19,11 +18,11 @@ public static class RetryTestData
             },
             services => services.AddSingleton<TimeProvider>(clock));
 
-    public static Task<PostResult> CreateAsync(OyezAdaptersHost host, string channel) =>
-        host.PublisherFor(ChannelIdNamed(channel)).CreateAsync(RequestFor(channel), CancellationToken.None);
+    public static Task<PostResult> CreateAsync(OyezAdaptersHost host, ChannelUnderTest channel) =>
+        host.PublisherFor(channel.Channel).CreateAsync(channel.Request(), CancellationToken.None);
 
-    public static Task<CredentialStatus> VerifyAsync(OyezAdaptersHost host, string channel) =>
-        host.PublisherFor(ChannelIdNamed(channel)).VerifyAsync(CancellationToken.None);
+    public static Task<CredentialStatus> VerifyAsync(OyezAdaptersHost host, ChannelUnderTest channel) =>
+        host.PublisherFor(channel.Channel).VerifyAsync(CancellationToken.None);
 
     public static HttpResponseMessage Respond(HttpStatusCode status, string body = "{}") =>
         new(status) { Content = new StringContent(body, Encoding.UTF8, "application/json") };
@@ -44,11 +43,6 @@ public static class RetryTestData
         }
     }
 
-    public static string AcceptedBodyFor(string channel) =>
-        channel == "x"
-            ? """{"data":{"id":"1","text":"Brighter 10.1 is out."}}"""
-            : """{"code":201,"data":{"id":"abc","slug":"brighter-10-1"}}""";
-
     public static HttpRequestException ConnectionRefused() =>
         new("Connection refused", new SocketException((int)SocketError.ConnectionRefused));
 
@@ -61,10 +55,4 @@ public static class RetryTestData
         }
         return await pending;
     }
-
-    private static ChannelId ChannelIdNamed(string channel) =>
-        ChannelId.TryParse(channel, out var id) ? id : throw new ArgumentException(channel);
-
-    private static PostRequest RequestFor(string channel) =>
-        channel == "x" ? X.XTestData.Request() : WriteAs.WriteAsTestData.Request();
 }

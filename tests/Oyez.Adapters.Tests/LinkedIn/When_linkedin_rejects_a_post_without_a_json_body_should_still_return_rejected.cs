@@ -14,7 +14,7 @@ public class LinkedInRejectsPostWithoutJsonTests
         host.Http.RespondWith(HttpStatusCode.Unauthorized, "<html>Unauthorized</html>");
 
         //Act
-        var result = await host.PublisherFor(ChannelId.LinkedIn).CreateAsync(LinkedInTestData.Request(), CancellationToken.None);
+        var result = await host.PublisherFor(ChannelId.LinkedIn).CreateAsync(PostRequests.Build(ChannelId.LinkedIn, 3000, null, ["Brighter 10.1 is out. It adds batching."]), CancellationToken.None);
 
         //Assert
         var rejected = Assert.IsType<PostResult.Rejected>(result);

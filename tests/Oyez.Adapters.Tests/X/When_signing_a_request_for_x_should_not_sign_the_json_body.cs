@@ -15,8 +15,8 @@ public class XBodySignatureTests
         var publisher = host.PublisherFor(ChannelId.X);
 
         //Act
-        await publisher.CreateAsync(XTestData.Request(0), CancellationToken.None);
-        await publisher.CreateAsync(XTestData.Request(1, new PostRef("1001", null)), CancellationToken.None);
+        await publisher.CreateAsync(PostRequests.Thread(ChannelId.X, 280, 0), CancellationToken.None);
+        await publisher.CreateAsync(PostRequests.Thread(ChannelId.X, 280, 1, new PostRef("1001", null)), CancellationToken.None);
 
         //Assert
         var (first, second) = (host.Http.Requests[0], host.Http.Requests[1]);

@@ -14,7 +14,7 @@ public class XAcceptsPostTests
         host.Http.RespondWith(HttpStatusCode.Created, """{"data":{"id":"1846987139428636021","text":"Brighter 10.1 is out."}}""");
 
         //Act
-        var result = await host.PublisherFor(ChannelId.X).CreateAsync(XTestData.Request(), CancellationToken.None);
+        var result = await host.PublisherFor(ChannelId.X).CreateAsync(PostRequests.Thread(ChannelId.X, 280), CancellationToken.None);
 
         //Assert
         var posted = Assert.IsType<PostResult.Posted>(result);

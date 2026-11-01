@@ -15,7 +15,7 @@ public class LoggingRequestTests
         host.Http.RespondWith(HttpStatusCode.Created, """{"code":201,"data":{"id":"abc123","slug":"brighter-10-1"}}""");
 
         //Act
-        await host.PublisherFor(ChannelId.WriteAs).CreateAsync(WriteAsTestData.Request(), CancellationToken.None);
+        await host.PublisherFor(ChannelId.WriteAs).CreateAsync(WriteAsTestData.Article(), CancellationToken.None);
 
         //Assert
         var request = Assert.Single(logs.Entries, entry => entry.Message.Contains("/api/collections/ian-cooper/posts"));

@@ -10,7 +10,7 @@ public class MastodonIdempotencyTests
         //Arrange
         using var host = new OyezAdaptersHost(MastodonTestData.Configure);
         host.Http.RespondInSequence("""{"id":"1001","url":"https://hachyderm.io/@ian/1001"}""");
-        var request = MastodonTestData.Request();
+        var request = PostRequests.Thread(ChannelId.Mastodon, 500);
 
         //Act
         await host.PublisherFor(ChannelId.Mastodon).CreateAsync(request, CancellationToken.None);

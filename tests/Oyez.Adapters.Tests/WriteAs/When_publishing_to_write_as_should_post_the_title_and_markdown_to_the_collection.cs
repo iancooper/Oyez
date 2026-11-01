@@ -12,7 +12,7 @@ public class PublishToWriteAsTests
         //Arrange
         using var host = new OyezAdaptersHost(WriteAsTestData.Configure);
         host.Http.RespondWith(HttpStatusCode.Created, """{"code":201,"data":{"id":"abc123","slug":"brighter-10-1"}}""");
-        var request = WriteAsTestData.Request(title: "Brighter 10.1", markdown: "Brighter 10.1 is out.\n\nSee what changed.");
+        var request = WriteAsTestData.Article();
 
         //Act
         await host.PublisherFor(ChannelId.WriteAs).CreateAsync(request, CancellationToken.None);
