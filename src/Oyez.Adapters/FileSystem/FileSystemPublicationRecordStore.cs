@@ -30,7 +30,7 @@ using Oyez.Core.Publishing;
 
 namespace Oyez.Adapters.FileSystem;
 
-internal sealed class FileSystemPublicationRecordStore(string root) : IAmAPublicationRecordStore
+internal sealed class FileSystemPublicationRecordStore(AnnouncementFolders folders) : IAmAPublicationRecordStore
 {
     private const string RECORD_FILE = "published.json";
 
@@ -42,7 +42,7 @@ internal sealed class FileSystemPublicationRecordStore(string root) : IAmAPublic
 
     public PublicationRecord Load(AnnouncementId id)
     {
-        var path = Path.Combine(root, id.Value, RECORD_FILE);
+        var path = folders.FileOf(id, RECORD_FILE);
         return File.Exists(path)
             ? JsonSerializer.Deserialize<PublicationRecordFile>(File.ReadAllText(path), JSON_OPTIONS)!.ToRecord()
             : PublicationRecord.Empty;
@@ -50,10 +50,9 @@ internal sealed class FileSystemPublicationRecordStore(string root) : IAmAPublic
 
     public void Save(AnnouncementId id, PublicationRecord record)
     {
-        var folder = Path.Combine(root, id.Value);
-        Directory.CreateDirectory(folder);
-        var temporaryPath = Path.Combine(folder, $"{RECORD_FILE}.{Guid.NewGuid():N}.tmp");
+        Directory.CreateDirectory(folders.FolderOf(id));
+        var temporaryPath = folders.FileOf(id, $"{RECORD_FILE}.{Guid.NewGuid():N}.tmp");
         File.WriteAllText(temporaryPath, JsonSerializer.Serialize(PublicationRecordFile.From(record), JSON_OPTIONS));
-        File.Move(temporaryPath, Path.Combine(folder, RECORD_FILE), overwrite: true);
+        File.Move(temporaryPath, folders.FileOf(id, RECORD_FILE), overwrite: true);
     }
 }

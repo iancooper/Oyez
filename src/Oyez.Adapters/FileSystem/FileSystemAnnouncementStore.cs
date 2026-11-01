@@ -27,26 +27,26 @@ using Oyez.Core.Announcements;
 
 namespace Oyez.Adapters.FileSystem;
 
-internal sealed class FileSystemAnnouncementStore(string root) : IAmAnAnnouncementStore
+internal sealed class FileSystemAnnouncementStore(AnnouncementFolders folders) : IAmAnAnnouncementStore
 {
     private const string ANNOUNCEMENT_FILE = "announcement.txt";
     private const string WRITEAS_FILE = "writeas.md";
 
     public IReadOnlyList<AnnouncementId> List() =>
-        !Directory.Exists(root)
+        !Directory.Exists(folders.Root)
             ? []
-            : Directory.EnumerateDirectories(root)
+            : Directory.EnumerateDirectories(folders.Root)
                 .Select(Path.GetFileName)
                 .OfType<string>()
                 .Where(name => !name.StartsWith('.'))
-                .Where(name => File.Exists(Path.Combine(root, name, ANNOUNCEMENT_FILE)))
+                .Where(name => File.Exists(folders.FileOf(new AnnouncementId(name), ANNOUNCEMENT_FILE)))
                 .Order(StringComparer.Ordinal)
                 .Select(name => new AnnouncementId(name))
                 .ToList();
 
     public AnnouncementDocument? Load(AnnouncementId id)
     {
-        var textPath = Path.Combine(root, id.Value, ANNOUNCEMENT_FILE);
+        var textPath = folders.FileOf(id, ANNOUNCEMENT_FILE);
         return File.Exists(textPath)
             ? new AnnouncementDocument(id, File.ReadAllText(textPath), ReadMarkdown(id))
             : null;
@@ -54,7 +54,7 @@ internal sealed class FileSystemAnnouncementStore(string root) : IAmAnAnnounceme
 
     private string? ReadMarkdown(AnnouncementId id)
     {
-        var markdownPath = Path.Combine(root, id.Value, WRITEAS_FILE);
+        var markdownPath = folders.FileOf(id, WRITEAS_FILE);
         return File.Exists(markdownPath) ? File.ReadAllText(markdownPath) : null;
     }
 }
