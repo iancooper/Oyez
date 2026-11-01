@@ -1,4 +1,3 @@
-using Microsoft.Extensions.Time.Testing;
 using Oyez.Core.Publishing;
 
 namespace Oyez.Adapters.Tests.Retries;
@@ -10,14 +9,17 @@ public class ConnectionRefusedCreateTests
     public async Task When_the_connection_is_refused_should_retry_the_post(ChannelUnderTest channel)
     {
         //Arrange
-        var clock = new FakeTimeProvider();
+        var clock = new SchedulingClock();
         using var host = RetryTestData.HostWith(clock);
         host.Http.RespondWith(requestNumber => requestNumber == 1
             ? throw RetryTestData.ConnectionRefused()
-            : RetryTestData.Respond(System.Net.HttpStatusCode.OK, channel.AcceptedBody));
+            : Responses.Respond(System.Net.HttpStatusCode.OK, channel.AcceptedBody));
 
         //Act
-        var result = await RetryTestData.CompleteWithClockRunningAsync(RetryTestData.CreateAsync(host, channel), clock);
+        var pending = RetryTestData.CreateAsync(host, channel);
+        await clock.TimerCreatedAsync(1);
+        clock.Advance(TimeSpan.FromSeconds(1));
+        var result = await pending;
 
         //Assert
         Assert.IsType<PostResult.Posted>(result);

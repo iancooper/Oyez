@@ -33,9 +33,12 @@ public sealed record SentRequest(HttpMethod Method, Uri Uri, IReadOnlyDictionary
 public sealed class FakeHttpMessageHandler : HttpMessageHandler
 {
     private readonly List<SentRequest> _requests = [];
+    private readonly OccurrenceCounter _arrivals = new();
     private Func<SentRequest, HttpResponseMessage> _respond = _ => new HttpResponseMessage(HttpStatusCode.OK);
 
     public IReadOnlyList<SentRequest> Requests => _requests;
+
+    public Task RequestArrivedAsync(int count) => _arrivals.ReachedAsync(count);
 
     public void RespondWith(HttpStatusCode status, string body) =>
         _respond = _ => new HttpResponseMessage(status) { Content = new StringContent(body, Encoding.UTF8, "application/json") };
@@ -58,6 +61,7 @@ public sealed class FakeHttpMessageHandler : HttpMessageHandler
         var headers = request.Headers.ToDictionary(header => header.Key, header => string.Join(",", header.Value));
         var sent = new SentRequest(request.Method, request.RequestUri!, headers, body);
         _requests.Add(sent);
+        _arrivals.Record();
         return _respond(sent);
     }
 }
