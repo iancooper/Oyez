@@ -35,8 +35,6 @@ internal sealed class MastodonPublisher(HttpClient http, MastodonOptions options
 
     public ChannelId Channel => ChannelId.Mastodon;
 
-    public bool CreateIsIdempotent => true;
-
     public async Task<PostResult> CreateAsync(PostRequest request, CancellationToken cancellationToken)
     {
         using var message = new HttpRequestMessage(HttpMethod.Post, $"{options.Instance}/api/v1/statuses");

@@ -35,8 +35,6 @@ internal sealed class WriteAsPublisher(HttpClient http, WriteAsOptions options) 
 
     public ChannelId Channel => ChannelId.WriteAs;
 
-    public bool CreateIsIdempotent => false;
-
     public async Task<PostResult> CreateAsync(PostRequest request, CancellationToken cancellationToken)
     {
         var post = new { title = request.Rendering.Title, body = request.PostText() };

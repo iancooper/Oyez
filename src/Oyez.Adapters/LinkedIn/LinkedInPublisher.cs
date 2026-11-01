@@ -39,8 +39,6 @@ internal sealed class LinkedInPublisher(HttpClient http, LinkedInOptions options
 
     public ChannelId Channel => ChannelId.LinkedIn;
 
-    public bool CreateIsIdempotent => false;
-
     public async Task<PostResult> CreateAsync(PostRequest request, CancellationToken cancellationToken)
     {
         if (TokenHasExpired())

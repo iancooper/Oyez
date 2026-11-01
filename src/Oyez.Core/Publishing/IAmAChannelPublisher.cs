@@ -36,10 +36,6 @@ public interface IAmAChannelPublisher
     /// <value>The <see cref="ChannelId"/> of the platform.</value>
     ChannelId Channel { get; }
 
-    /// <summary>Gets whether the platform uses a post's idempotency key to avoid duplicates.</summary>
-    /// <value><c>true</c> when trying the same post again cannot make it twice.</value>
-    bool CreateIsIdempotent { get; }
-
     /// <summary>Makes a post.</summary>
     /// <param name="request">The <see cref="PostRequest"/> to carry out.</param>
     /// <param name="cancellationToken">Cancels the operation.</param>

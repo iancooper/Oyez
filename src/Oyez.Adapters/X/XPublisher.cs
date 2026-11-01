@@ -35,8 +35,6 @@ internal sealed class XPublisher(HttpClient http, XOptions options, OAuth1Signer
 
     public ChannelId Channel => ChannelId.X;
 
-    public bool CreateIsIdempotent => false;
-
     public async Task<PostResult> CreateAsync(PostRequest request, CancellationToken cancellationToken)
     {
         using var message = new HttpRequestMessage(HttpMethod.Post, $"{options.ApiBase}/2/tweets");
