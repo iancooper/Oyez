@@ -253,7 +253,6 @@ public interface IAmAPublicationRecordStore
 public interface IAmAChannelPublisher
 {
     ChannelId Channel { get; }
-    bool CreateIsIdempotent { get; }              // true when the platform honours an idempotency key
     Task<PostResult> CreateAsync(PostRequest request, CancellationToken ct);
     Task<CredentialStatus> VerifyAsync(CancellationToken ct);   // read-only call, for `oyez check`
 }
@@ -402,32 +401,49 @@ In the composition root, Brighter and Darker each scan `Oyez.Core` for their han
 
 ## 5. Adapters (`Oyez.Adapters`)
 
+`Oyez.Adapters` has a narrow public surface:
+
+- `AddOyezAdapters(Action<AdapterOptions>)`, which registers every port implementation below;
+- `AdapterOptions`, with `WriteAs`, `X`, `Mastodon` and `LinkedIn` settings (`WriteAsOptions`, `XOptions`, `MastodonOptions`, `LinkedInOptions`) and `AnnouncementsPath` (default `announcements`);
+- three seams that exist so tests can replace I/O, randomness or time: `IAmANonceSource` (X's OAuth nonce), `IAmAProcessRunner` with `ProcessResult` (running `gh`), and the `TimeProvider` registered with Core. `AddOyezAdapters` registers a default for each with `TryAdd`, so a test registers its own first.
+
+Publishers, handlers, the signer, the redactor and the file-system stores are internal and are observed through the registered ports. Tests replace the HTTP handler with `ConfigureHttpClientDefaults`, so production code needs no seam for it.
+
+The options are public settable classes so the CLI can bind them from configuration (§7). The base addresses are settable so integration tests can point Oyez at fake servers.
+
 ### 5.1 HTTP pipeline [NFR-5, NFR-6]
 
-Each publisher is a typed `HttpClient` registered through `IHttpClientFactory`, by `AddOyezAdapters`. Two internal handlers are written for Oyez, so Polly isn't needed [NFR-3]. Their behaviour is tested through the publishers:
+Each publisher is a typed `HttpClient` registered through `IHttpClientFactory` by one private `AddChannel` method, so all four have the same pipeline. The framework's own `HttpClient` logging is removed (`RemoveAllLoggers`), because it logs the full URI, query string included. Two internal handlers are written for Oyez, so Polly isn't needed [NFR-3]. Their behaviour is tested through the publishers:
 
-1. **`RetryHandler`.** It reads a per-request option, `Oyez.Idempotent` (`HttpRequestOptionsKey<bool>`):
-   - **Idempotent requests** (GETs, Mastodon creates with an `Idempotency-Key`): up to 3 retries on 5xx responses, timeouts and `HttpRequestException`, with backoff of 1, 2 and 4 seconds.
-   - **Non-idempotent creates** (X, LinkedIn and Write.as): retry only when it's certain the request had no effect. That means a 429 response, or a connection failure before the request was sent (`SocketError.ConnectionRefused` or `HostNotFound`). A 5xx response or a timeout returns an `Indeterminate` result to the publisher [AC-20].
-   - **On 429:** wait for `Retry-After` if it's 60 seconds or less. Otherwise give up, and the publisher returns `Rejected`.
-2. **`RedactingLoggingHandler`.** Logs the method, host, path and status. It never logs headers or bodies. On a 4xx response, it logs the error body after redaction.
+1. **`RetryHandler`** (outer). It reads a per-request option, `Oyez.Idempotent` (`HttpRequestOptionsKey<bool>`), which is the only place the idempotency of a request is recorded. Waits use the registered `TimeProvider`, so tests advance a fake clock instead of sleeping. There are at most 3 retries.
+   - **Idempotent requests** (the GETs that verify credentials, and Mastodon creates, which carry an `Idempotency-Key`): retry on 5xx responses, timeouts and `HttpRequestException`, with backoff of 1, 2 and 4 seconds.
+   - **Non-idempotent creates** (X, LinkedIn and Write.as): retry only when it's certain the request had no effect. That means a 429 response, or a connection failure before the request was sent (`SocketError.ConnectionRefused` or `HostNotFound`), the latter with the same 1, 2, 4 second backoff. A 5xx response or a timeout is not retried, and reaches the publisher [AC-20].
+   - **On 429:** wait for `Retry-After` if it is a delay of 60 seconds or less, then retry. A 429 with no `Retry-After`, with one as an HTTP date, or with a delay over 60 seconds is not retried, and the publisher returns `Rejected` (it names rate limiting).
+2. **`RedactingLoggingHandler`** (inner, so it logs each real attempt). It logs the method, host and path (never the query string), and the status. It never logs headers or request bodies. On a 4xx response it also logs the response body, after redaction. If the inner handler throws, it logs the exception message, after redaction, and rethrows the exception unchanged.
 
-In addition, `SecretRedactor` holds every secret value loaded at startup. The console logger's formatter applies it to every message, as a second safeguard [AC-19]. GitHub Actions also masks secrets in its logs.
+An internal `PlatformClient` (the client plus the platform's name) holds what the publishers share: sending a create and mapping the outcome, the verify call, and building the rejection reason. A 5xx response, or a timeout the caller didn't cancel, becomes `Indeterminate`; a 429 becomes `Rejected`; any other response is read by the publisher.
+
+In addition, an internal `SecretRedactor` holds every secret value in `AdapterOptions` (each options class lists its own secrets, so a new credential can't be forgotten) and replaces each with `***`. The handler applies it to everything it logs, as a second safeguard [AC-19]. The CLI's console-logger formatter will need the same redactor, so whether it becomes public is decided in the CLI phase. GitHub Actions also masks secrets in its logs.
+
+**Known gaps** (scheduled as T-27a and T-27b):
+- X, Mastodon and Write.as read their error field (`detail`, `error` and `error_msg`) strictly, so a 4xx whose body isn't JSON, or lacks the field, throws instead of returning `Rejected`. LinkedIn's reader is tolerant.
+- When a connection is refused on every retry, the `HttpRequestException` escapes from `CreateAsync`. Nothing was sent, so the result should be `Rejected`.
+- A retry resends the same request, so X's OAuth header keeps its nonce and timestamp. X may reject a replayed nonce after a 429.
 
 ### 5.2 X publisher [FR-4.1]
 
 - `POST https://api.x.com/2/tweets` with body `{"text": "…", "reply": {"in_reply_to_tweet_id": "…"}}`.
 - **Authentication: OAuth 1.0a user context.** Its tokens don't expire, which suits unattended runs in GitHub Actions [FR-4.1.2]. OAuth 2.0 with PKCE was rejected: its tokens expire after 2 hours and its refresh tokens rotate, so every run would need to write secrets back.
-- An `OAuth1Signer` written for Oyez (HMAC-SHA1) does the signing. The JSON body isn't part of the signature base string. It's tested against X's published example signature.
-- The four secrets are the consumer key and secret and the access token and secret for `@ICooper`. They are generated in the X Developer Console, so no sign-in command is needed.
-- **Response:** `data.id`. The post URL is `https://x.com/ICooper/status/{id}`. The handle comes from configuration.
+- An internal `OAuth1Signer` written for Oyez (HMAC-SHA1) does the signing, with the `TimeProvider` and an `IAmANonceSource` as its only inputs from outside. The JSON body isn't part of the signature base string. It is observed through the `Authorization` header the publisher sends. X's published example (the same key, nonce, timestamp, token and secrets, `Ls93hJiZbQ3akF3HF3x1Bz8/zU4=`) is for a form-encoded request to `1.1/statuses/update.json`, so it can't go through a JSON `POST /2/tweets`. The test therefore uses the published credentials, nonce and timestamp, and a signature for `POST /2/tweets` computed by an independent RFC 5849 implementation; that implementation reproduces the published value for the published request.
+- `XOptions` holds the four secrets (the consumer key and secret and the access token and secret for `@ICooper`), `ApiBase` and `Handle`. They are generated in the X Developer Console, so no sign-in command is needed.
+- **Response:** `data.id`. The post URL is `https://x.com/{Handle}/status/{id}`; the handle comes from configuration. In a thread, `reply.in_reply_to_tweet_id` is the previous post's ID. A 4xx becomes `Rejected` with the `detail` field. Verifying calls `GET /2/users/me`.
 
 ### 5.3 Mastodon publisher [FR-4.2]
 
 - `POST {instance}/api/v1/statuses` with `status`, `visibility=public` and optionally `in_reply_to_id`.
 - Authentication: `Authorization: Bearer {token}`. The token comes from an application created in hachyderm.io's settings, with only the `write:statuses` scope, plus `read:accounts` for `oyez check`.
-- Sends an `Idempotency-Key` header, which Mastodon honours for an hour. So `CreateIsIdempotent = true` and creates are retried safely.
-- **Response:** `id` and `url`.
+- Sends the post's `Idempotency-Key` header, which Mastodon honours for an hour. So the create is marked `Oyez.Idempotent`, and `RetryHandler` retries it safely on a 5xx response or a timeout (§5.1). The request body is JSON.
+- **Response:** `id` and `url`. A 4xx becomes `Rejected` with the `error` field. Verifying calls `GET {instance}/api/v1/accounts/verify_credentials`.
 
 ### 5.4 LinkedIn publisher [FR-4.3]
 
@@ -448,24 +464,26 @@ In addition, `SecretRedactor` holds every secret value loaded at startup. The co
   }
   ```
 - **Response:** 201, with the `x-restli-id` header holding `urn:li:share:…`. The post URL is `https://www.linkedin.com/feed/update/{urn}`.
-- The access token and the person URN come from `oyez auth linkedin` (§6). The token's expiry is stored as a GitHub Actions *variable* (`OYEZ_LINKEDIN_TOKEN_EXPIRES_AT`), so the workflow can read it. The publisher warns when the token expires within 14 days. It returns `Rejected("LinkedIn token expired on …; run oyez auth linkedin")` once the token has expired [FR-4.3.5].
+- The access token and the person URN come from `oyez auth linkedin` (§6). The token's expiry is stored as a GitHub Actions *variable* (`OYEZ_LINKEDIN_TOKEN_EXPIRES_AT`), so the workflow can read it. `LinkedInOptions` holds `AccessToken`, `PersonUrn`, `TokenExpiresAt`, `ApiBase` and `ApiVersion`. The publisher compares the expiry with the `TimeProvider`: within 14 days it logs a warning and still posts; once the token has expired it returns `Rejected("LinkedIn token expired on …; run oyez auth linkedin")` without calling LinkedIn [FR-4.3.5].
+- A 4xx becomes `Rejected` with LinkedIn's `message`, or the status code if the body has none or isn't JSON. Verifying calls `GET {apiBase}/v2/userinfo` and reports the token's expiry in `CredentialStatus.ExpiresAt`.
 - **Known limitation:** posting a URL through the API doesn't produce a link-preview card. It needs an attached article and image to do that, which is out of scope because media is out of scope.
 
 ### 5.5 Write.as publisher [FR-4.4]
 
 - `POST https://write.as/api/collections/{alias}/posts` with body `{"title": …, "body": …}`, and the header `Authorization: Token {token}`.
-- **Response:** `data.id` and `data.slug`. The post URL is `https://ian-cooper.writeas.com/{slug}`, with the base URL taken from configuration.
+- **Response:** `data.id` and `data.slug`. The post URL is `{BlogUrl}/{slug}`, with the blog URL taken from configuration (`https://ian-cooper.writeas.com`). A 4xx becomes `Rejected` with the `error_msg` field. Verifying calls `GET {apiBase}/me`.
+- `WriteAsOptions` holds `AccessToken`, `Collection`, `ApiBase` and `BlogUrl`.
 
 ### 5.6 File-system stores
 
-- **`FileSystemAnnouncementStore`** reads `announcements/*/announcement.txt` and the optional `writeas.md`.
-- **`FileSystemPublicationRecordStore`** writes `published.json` atomically: it writes a temporary file and then renames it. Its JSON is camelCase and indented, for clean diffs.
-- Both take a root path, so tests use temporary folders. That means no extra dependency for abstracting the file system.
-- **`FileSystemAnnouncementStore`** returns the raw `AnnouncementDocument`. It doesn't parse.
+Both stores are internal, registered by `AddOyezAdapters`, and rooted at `AdapterOptions.AnnouncementsPath`. An internal `AnnouncementFolders` holds the layout rule (an announcement is a sub-folder named by its ID). Tests use temporary folders, so there is no extra dependency for abstracting the file system.
+
+- **`FileSystemAnnouncementStore`** lists the sub-folders that contain `announcement.txt`, ignoring names that start with a dot, in ordinal order; a missing root lists nothing. It loads `announcement.txt` and the optional `writeas.md` as the raw `AnnouncementDocument`, and returns `null` for an announcement that doesn't exist. It doesn't parse.
+- **`FileSystemPublicationRecordStore`** reads and writes `<id>/published.json`. It writes atomically: a temporary file in the same folder, then a move over the target, so a failed save leaves the previous record intact (FR-6.3). Its JSON is camelCase and indented, for clean diffs, with enums as camelCase strings, channels keyed by their `ChannelId` value and times in ISO 8601 with an offset. Internal DTOs shape the JSON, so Core's records carry no serialisation concerns. A file with no record loads as an empty record; a file with an unknown channel key throws, because skipping it would drop data on the next save.
 
 ### 5.7 GitHub CLI adapter
 
-`IAmAGitHubSecretStore` (implemented as `GhCli`) runs `gh secret set NAME` and `gh variable set NAME`. It passes the secret value on standard input, never as an argument, so it can't leak into process listings. Tests use a fake.
+`IAmAGitHubSecretStore` is a port in Core with `SetSecretAsync(name, value)` and `SetVariableAsync(name, value)`. `GhCli` implements it by running `gh secret set NAME` and `gh variable set NAME` through the public `IAmAProcessRunner` seam, which returns a `ProcessResult` (exit code, and standard output followed by standard error). The value goes on standard input, never as an argument, so it can't leak into process listings. A non-zero exit raises an `InvalidOperationException` whose message includes `gh`'s output, never the value. The default runner (internal, using `System.Diagnostics.Process` with an argument list) isn't covered by a test, because the tests must not run the real `gh`; tests register a recording fake.
 
 ## 6. Command-line interface (`Oyez.Cli`)
 
@@ -572,14 +590,14 @@ Tests follow Brighter's conventions (see `CLAUDE.md`):
 - xUnit v3, with the built-in `Assert` (no assertion library is needed).
 - `Microsoft.Extensions.TimeProvider.Testing` for the clock.
 - `InMemory…` port implementations in `Oyez.Core`, in place of I/O.
-- A `FakeHttpMessageHandler`, written for Oyez, that records requests and returns scripted responses for each route. It's a test double for I/O only.
+- A `FakeHttpMessageHandler`, written for Oyez, that records requests and returns scripted responses, or throws a scripted exception, by request number. It's a test double for I/O only. Tests that wait on a retry delay await the fake clock's timer instead of sleeping.
 
 **Test levels**
 
 | Level | Project | How it reaches the behaviour |
 |---|---|---|
 | Core | `Oyez.Core.Tests` | Sends commands and runs queries through the real Brighter and Darker processors, built by `AddOyezApplication`, with `InMemory…` stores, in-memory publishers standing in for the platforms, and `FakeTimeProvider`. Parsing, counting, rendering and validation are observed through the `PreviewAnnouncement` and `ValidateAnnouncements` queries. Publishing is observed through `PublishDueAnnouncements`. This is the bulk of the acceptance criteria: AC-1–10 and AC-15–17. |
-| Adapter | `Oyez.Adapters.Tests` | Calls each port implementation, registered by `AddOyezAdapters`, against `FakeHttpMessageHandler`, temporary folders or a fake process runner. Checks the request shape and headers, the mapping of responses to `Posted`, `Rejected` or `Indeterminate`, the retry rules and redaction, and X's OAuth signature. The signature test uses X's published example, with a fixed clock and a fixed nonce injected through public seams. AC-11–13, AC-20. |
+| Adapter | `Oyez.Adapters.Tests` | Calls each port implementation, registered by `AddOyezAdapters`, against `FakeHttpMessageHandler`, temporary folders or a fake process runner. Checks the request shape and headers, the mapping of responses to `Posted`, `Rejected` or `Indeterminate`, the retry rules and redaction, and X's OAuth signature. The signature test uses X's published credentials, with a fixed clock and a fixed nonce injected through public seams (§5.2). AC-11–13, AC-20. |
 | End-to-end | `Oyez.Cli.Tests` | The whole CLI, run in-process against a temporary repository and fake HTTP handlers registered through DI. Covers exit codes, the job summary, preview output and log redaction. AC-14, AC-18, AC-19. |
 | Review | — | A checklist for the workflow YAML (AC-21, first part). `actionlint` runs in CI. |
 | Manual | — | The first real announcement exercises all four channels (AC-21, second part). The LinkedIn sign-in is AC-22. To smoke-test one channel at a time, use `channels:` in an announcement. |
