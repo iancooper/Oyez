@@ -32,8 +32,8 @@ internal sealed class SystemProcessRunner : IAmAProcessRunner
     public async Task<ProcessResult> RunAsync(string fileName, IReadOnlyList<string> arguments, string? standardInput, CancellationToken cancellationToken)
     {
         using var process = Start(fileName, arguments);
-        var output = ReadAsync(process.StandardOutput, cancellationToken);
-        var errors = ReadAsync(process.StandardError, cancellationToken);
+        var output = process.StandardOutput.ReadToEndAsync(cancellationToken);
+        var errors = process.StandardError.ReadToEndAsync(cancellationToken);
         await process.StandardInput.WriteAsync(standardInput.AsMemory(), cancellationToken);
         process.StandardInput.Close();
         await process.WaitForExitAsync(cancellationToken);
@@ -56,7 +56,4 @@ internal sealed class SystemProcessRunner : IAmAProcessRunner
 
         return Process.Start(info) ?? throw new InvalidOperationException($"Could not start {fileName}");
     }
-
-    private static Task<string> ReadAsync(StreamReader reader, CancellationToken cancellationToken) =>
-        reader.ReadToEndAsync(cancellationToken);
 }
