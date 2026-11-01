@@ -416,6 +416,21 @@ Every task in this phase tests a port implementation registered by `AddOyezAdapt
   - `When_gh_fails_should_raise_an_error_with_its_output`
 - **Done when:** the tests pass.
 
+### [ ] T-27a Tolerate error bodies that aren't what the platform documents
+- **Covers:** NFR-6, §5.1 (known gaps)
+- **Tests (Adapter):** LinkedIn already does this (`When_linkedin_rejects_a_post_without_a_json_body_should_still_return_rejected`).
+  - `When_x_rejects_a_post_with_a_body_that_is_not_json_should_still_return_rejected`
+  - `When_mastodon_rejects_a_post_with_a_body_that_is_not_json_should_still_return_rejected`
+  - `When_write_as_rejects_a_post_with_a_body_that_is_not_json_should_still_return_rejected`
+  - `When_a_platform_rejects_a_post_without_its_error_field_should_still_return_rejected`: X, Mastodon and Write.as, with the status code as the reason
+- **Done when:** the tests pass.
+
+### [ ] T-27b A refused connection that never recovers is a rejection
+- **Covers:** NFR-6, AC-20, §5.1 (known gaps)
+- **Tests (Adapter):** through `XPublisher` and `WriteAsPublisher`.
+  - `When_the_connection_stays_refused_should_return_rejected_after_the_retries`: nothing was sent, so the post is `Rejected`, not an exception
+- **Done when:** the tests pass.
+
 ---
 
 ## Phase 4 — Command-line interface
