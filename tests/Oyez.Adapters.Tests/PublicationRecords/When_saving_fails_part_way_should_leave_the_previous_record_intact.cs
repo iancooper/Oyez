@@ -11,6 +11,9 @@ public class FailedSavingRecordTests
     [UnsupportedOSPlatform("windows")]
     public void When_saving_fails_part_way_should_leave_the_previous_record_intact()
     {
+        Assert.SkipWhen(OperatingSystem.IsWindows(), "File permissions are not enforced the same way on Windows.");
+        Assert.SkipWhen(Environment.UserName == "root", "Root ignores file permissions.");
+
         //Arrange
         using var folder = new TemporaryFolder();
         var id = new AnnouncementId("2026-11-03-brighter-10-3-0");
@@ -25,19 +28,19 @@ public class FailedSavingRecordTests
         });
         File.SetUnixFileMode(announcementFolder, UnixFileMode.UserRead | UnixFileMode.UserExecute);
 
+        Exception? failure;
         try
         {
             //Act
-            var save = () => store.Save(id, replacement);
-
-            //Assert
-            Assert.ThrowsAny<Exception>(save);
+            failure = Record.Exception(() => store.Save(id, replacement));
         }
         finally
         {
             File.SetUnixFileMode(announcementFolder, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
         }
 
+        //Assert
+        Assert.NotNull(failure);
         PublicationRecordTestData.AssertSame(previous, store.Load(id));
         Assert.Equal(["published.json"], Directory.GetFiles(announcementFolder).Select(Path.GetFileName));
     }
