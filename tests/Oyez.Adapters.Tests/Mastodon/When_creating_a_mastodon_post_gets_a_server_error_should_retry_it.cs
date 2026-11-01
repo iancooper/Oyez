@@ -15,7 +15,7 @@ public class MastodonServerErrorTests
         //Arrange
         var clock = new FakeTimeProvider();
         using var host = new OyezAdaptersHost(MastodonTestData.Configure, services => services.AddSingleton<TimeProvider>(clock));
-        host.Http.RespondWith(request => request < 3
+        host.Http.RespondWith(requestNumber => requestNumber < 3
             ? RetryTestData.Respond(HttpStatusCode.BadGateway, """{"error":"Bad gateway"}""")
             : RetryTestData.Respond(HttpStatusCode.OK, """{"id":"1001","url":"https://hachyderm.io/@ian/1001"}"""));
 

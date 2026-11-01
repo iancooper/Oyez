@@ -13,7 +13,7 @@ public class ReadServerErrorTests
         //Arrange
         var clock = new FakeTimeProvider();
         using var host = RetryTestData.HostWith(clock);
-        host.Http.RespondWith(request => request < 3
+        host.Http.RespondWith(requestNumber => requestNumber < 3
             ? RetryTestData.Respond(HttpStatusCode.InternalServerError)
             : RetryTestData.Respond(HttpStatusCode.OK));
 

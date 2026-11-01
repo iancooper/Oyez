@@ -14,7 +14,7 @@ public class BriefRateLimitCreateTests
         //Arrange
         var clock = new FakeTimeProvider();
         using var host = RetryTestData.HostWith(clock);
-        host.Http.RespondWith(request => request == 1
+        host.Http.RespondWith(requestNumber => requestNumber == 1
             ? RetryTestData.RateLimited(retryAfterSeconds: 30)
             : RetryTestData.Respond(HttpStatusCode.OK, RetryTestData.AcceptedBodyFor(channel)));
 

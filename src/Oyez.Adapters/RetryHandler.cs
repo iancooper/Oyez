@@ -76,9 +76,10 @@ internal sealed class RetryHandler(TimeProvider clock) : DelegatingHandler
     }
 
     private static TimeSpan? DelayAfterFailure(Exception failure, bool idempotent, int retries) =>
-        idempotent || failure is HttpRequestException { InnerException: SocketException socket } && IsBeforeSend(socket)
-            ? Backoff(retries)
-            : null;
+        IsSafeToRepeat(failure, idempotent) ? Backoff(retries) : null;
+
+    private static bool IsSafeToRepeat(Exception failure, bool idempotent) =>
+        idempotent || (failure is HttpRequestException { InnerException: SocketException socket } && IsBeforeSend(socket));
 
     private static TimeSpan? DelayAfterResponse(HttpResponseMessage response, bool idempotent, int retries)
     {

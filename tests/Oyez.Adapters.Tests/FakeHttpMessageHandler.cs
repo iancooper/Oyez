@@ -40,14 +40,14 @@ public sealed class FakeHttpMessageHandler : HttpMessageHandler
     public void RespondWith(HttpStatusCode status, string body) =>
         _respond = _ => new HttpResponseMessage(status) { Content = new StringContent(body, Encoding.UTF8, "application/json") };
 
-    public void RespondWith(Func<int, HttpResponseMessage> respondToNth) =>
-        _respond = _ => respondToNth(_requests.Count);
+    public void RespondWith(Func<int, HttpResponseMessage> respondToRequestNumber) =>
+        _respond = _ => respondToRequestNumber(_requests.Count);
 
     public void Throw(Exception exception) =>
         _respond = _ => throw exception;
 
     public void RespondInSequence(params string[] okBodies) =>
-        _respond = sent => new HttpResponseMessage(HttpStatusCode.OK)
+        _respond = _ => new HttpResponseMessage(HttpStatusCode.OK)
         {
             Content = new StringContent(okBodies[_requests.Count - 1], Encoding.UTF8, "application/json")
         };
