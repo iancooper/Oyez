@@ -90,7 +90,11 @@ internal sealed class LinkedInPublisher(HttpClient http, LinkedInOptions options
         {
             return await _platform.RejectedAsync(response, "message", cancellationToken);
         }
-        var urn = response.Headers.GetValues("x-restli-id").Single();
+        if (!response.Headers.TryGetValues("x-restli-id", out var ids))
+        {
+            return new PostResult.Indeterminate("LinkedIn accepted the post but returned no id, so the post may have been made");
+        }
+        var urn = ids.Single();
         return new PostResult.Posted(new PostRef(urn, $"https://www.linkedin.com/feed/update/{urn}"));
     }
 }
