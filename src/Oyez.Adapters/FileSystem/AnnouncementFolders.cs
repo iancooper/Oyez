@@ -31,7 +31,17 @@ internal sealed class AnnouncementFolders(string root)
 {
     public string Root => root;
 
-    public string FolderOf(AnnouncementId id) => Path.Combine(root, id.Value);
+    public bool Contains(AnnouncementId id)
+    {
+        var rootPath = Path.TrimEndingDirectorySeparator(Path.GetFullPath(root));
+        var folderPath = Path.GetFullPath(Path.Combine(rootPath, id.Value));
+        return folderPath.StartsWith(rootPath + Path.DirectorySeparatorChar, StringComparison.Ordinal);
+    }
+
+    public string FolderOf(AnnouncementId id) =>
+        Contains(id)
+            ? Path.Combine(root, id.Value)
+            : throw new ArgumentException($"Announcement '{id.Value}' is outside the announcements folder.", nameof(id));
 
     public string FileOf(AnnouncementId id, string name) => Path.Combine(FolderOf(id), name);
 }

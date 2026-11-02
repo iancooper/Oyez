@@ -53,6 +53,19 @@ internal sealed class FileSystemPublicationRecordStore(AnnouncementFolders folde
         Directory.CreateDirectory(folders.FolderOf(id));
         var temporaryPath = folders.FileOf(id, $"{RECORD_FILE}.{Guid.NewGuid():N}.tmp");
         File.WriteAllText(temporaryPath, JsonSerializer.Serialize(PublicationRecordFile.From(record), JSON_OPTIONS));
-        File.Move(temporaryPath, folders.FileOf(id, RECORD_FILE), overwrite: true);
+        MoveOverRecord(temporaryPath, folders.FileOf(id, RECORD_FILE));
+    }
+
+    private static void MoveOverRecord(string temporaryPath, string recordPath)
+    {
+        try
+        {
+            File.Move(temporaryPath, recordPath, overwrite: true);
+        }
+        catch
+        {
+            File.Delete(temporaryPath);
+            throw;
+        }
     }
 }

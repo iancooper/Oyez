@@ -46,6 +46,11 @@ internal sealed class FileSystemAnnouncementStore(AnnouncementFolders folders) :
 
     public AnnouncementDocument? Load(AnnouncementId id)
     {
+        if (!folders.Contains(id))
+        {
+            return null;
+        }
+
         var textPath = folders.FileOf(id, ANNOUNCEMENT_FILE);
         return File.Exists(textPath)
             ? new AnnouncementDocument(id, File.ReadAllText(textPath), ReadMarkdown(id))
