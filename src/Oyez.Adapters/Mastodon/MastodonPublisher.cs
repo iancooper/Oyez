@@ -67,11 +67,12 @@ internal sealed class MastodonPublisher(HttpClient http, MastodonOptions options
 
     private async Task<PostResult> PostResultFromAsync(HttpResponseMessage response, CancellationToken cancellationToken)
     {
-        using var body = await PlatformClient.ReadJsonAsync(response, cancellationToken);
         if (!response.IsSuccessStatusCode)
         {
-            return _platform.RejectedBecause(response, body.RootElement.GetProperty("error").GetString());
+            return await _platform.RejectedAsync(response, "error", cancellationToken);
         }
+
+        using var body = await PlatformClient.ReadJsonAsync(response, cancellationToken);
         return new PostResult.Posted(new PostRef(body.RootElement.GetProperty("id").GetString()!, body.RootElement.GetProperty("url").GetString()!));
     }
 }

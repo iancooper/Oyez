@@ -61,11 +61,12 @@ internal sealed class XPublisher(HttpClient http, XOptions options, OAuth1Signer
 
     private async Task<PostResult> PostResultFromAsync(HttpResponseMessage response, CancellationToken cancellationToken)
     {
-        using var body = await PlatformClient.ReadJsonAsync(response, cancellationToken);
         if (!response.IsSuccessStatusCode)
         {
-            return _platform.RejectedBecause(response, body.RootElement.GetProperty("detail").GetString());
+            return await _platform.RejectedAsync(response, "detail", cancellationToken);
         }
+
+        using var body = await PlatformClient.ReadJsonAsync(response, cancellationToken);
         var id = body.RootElement.GetProperty("data").GetProperty("id").GetString()!;
         return new PostResult.Posted(new PostRef(id, $"https://x.com/{options.Handle}/status/{id}"));
     }

@@ -63,8 +63,12 @@ internal sealed class PlatformClient(HttpClient http, string platform)
     public string StatusOf(HttpResponseMessage response) =>
         $"{platform} returned {(int)response.StatusCode}";
 
-    public PostResult RejectedBecause(HttpResponseMessage response, string? reason) =>
-        new PostResult.Rejected($"{StatusOf(response)}: {reason}");
+    public async Task<PostResult> RejectedAsync(HttpResponseMessage response, string errorField, CancellationToken cancellationToken)
+    {
+        var status = StatusOf(response);
+        var reason = ErrorTextFrom(await response.Content.ReadAsStringAsync(cancellationToken), errorField);
+        return new PostResult.Rejected(reason is null ? status : $"{status}: {reason}");
+    }
 
     public static async Task<JsonDocument> ReadJsonAsync(HttpResponseMessage response, CancellationToken cancellationToken) =>
         await JsonDocument.ParseAsync(await response.Content.ReadAsStreamAsync(cancellationToken), cancellationToken: cancellationToken);
@@ -79,4 +83,21 @@ internal sealed class PlatformClient(HttpClient http, string platform)
             >= HttpStatusCode.InternalServerError => Task.FromResult<PostResult>(new PostResult.Indeterminate($"{StatusOf(response)}, so the post may have been made")),
             _ => readAccepted(response, cancellationToken)
         };
+
+    private static string? ErrorTextFrom(string body, string errorField)
+    {
+        try
+        {
+            using var json = JsonDocument.Parse(body);
+            return json.RootElement is { ValueKind: JsonValueKind.Object } root
+                   && root.TryGetProperty(errorField, out var text)
+                   && text.ValueKind == JsonValueKind.String
+                ? text.GetString()
+                : null;
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
+    }
 }

@@ -59,12 +59,12 @@ internal sealed class WriteAsPublisher(HttpClient http, WriteAsOptions options) 
 
     private async Task<PostResult> PostResultFromAsync(HttpResponseMessage response, CancellationToken cancellationToken)
     {
-        using var body = await PlatformClient.ReadJsonAsync(response, cancellationToken);
         if (!response.IsSuccessStatusCode)
         {
-            return _platform.RejectedBecause(response, body.RootElement.GetProperty("error_msg").GetString());
+            return await _platform.RejectedAsync(response, "error_msg", cancellationToken);
         }
 
+        using var body = await PlatformClient.ReadJsonAsync(response, cancellationToken);
         var data = body.RootElement.GetProperty("data");
         var slug = data.GetProperty("slug").GetString();
         return new PostResult.Posted(new PostRef(data.GetProperty("id").GetString()!, $"{options.BlogUrl}/{slug}"));

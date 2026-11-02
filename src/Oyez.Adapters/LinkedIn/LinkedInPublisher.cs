@@ -24,7 +24,6 @@ THE SOFTWARE. */
 #endregion
 
 using System.Net.Http.Json;
-using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using Oyez.Core.Channels;
 using Oyez.Core.Publishing;
@@ -89,29 +88,9 @@ internal sealed class LinkedInPublisher(HttpClient http, LinkedInOptions options
     {
         if (!response.IsSuccessStatusCode)
         {
-            return new PostResult.Rejected(await RejectionReasonAsync(response, cancellationToken));
+            return await _platform.RejectedAsync(response, "message", cancellationToken);
         }
         var urn = response.Headers.GetValues("x-restli-id").Single();
         return new PostResult.Posted(new PostRef(urn, $"https://www.linkedin.com/feed/update/{urn}"));
-    }
-
-    private async Task<string> RejectionReasonAsync(HttpResponseMessage response, CancellationToken cancellationToken)
-    {
-        var status = _platform.StatusOf(response);
-        var message = MessageFrom(await response.Content.ReadAsStringAsync(cancellationToken));
-        return message is null ? status : $"{status}: {message}";
-    }
-
-    private static string? MessageFrom(string body)
-    {
-        try
-        {
-            using var json = JsonDocument.Parse(body);
-            return json.RootElement.TryGetProperty("message", out var message) ? message.GetString() : null;
-        }
-        catch (JsonException)
-        {
-            return null;
-        }
     }
 }
