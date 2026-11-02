@@ -24,7 +24,6 @@ THE SOFTWARE. */
 #endregion
 
 using System.Net;
-using System.Net.Sockets;
 using System.Runtime.ExceptionServices;
 
 namespace Oyez.Adapters;
@@ -79,7 +78,7 @@ internal sealed class RetryHandler(TimeProvider clock) : DelegatingHandler
         IsSafeToRepeat(failure, idempotent) ? Backoff(retries) : null;
 
     private static bool IsSafeToRepeat(Exception failure, bool idempotent) =>
-        idempotent || (failure is HttpRequestException { InnerException: SocketException socket } && IsBeforeSend(socket));
+        idempotent || ConnectionFailure.IsBeforeSend(failure);
 
     private static TimeSpan? DelayAfterResponse(HttpResponseMessage response, bool idempotent, int retries)
     {
@@ -92,9 +91,6 @@ internal sealed class RetryHandler(TimeProvider clock) : DelegatingHandler
     }
 
     private static TimeSpan Backoff(int retries) => TimeSpan.FromSeconds(Math.Pow(2, retries));
-
-    private static bool IsBeforeSend(SocketException socket) =>
-        socket.SocketErrorCode is SocketError.ConnectionRefused or SocketError.HostNotFound;
 
     private static HttpResponseMessage Rethrow(Exception failure)
     {

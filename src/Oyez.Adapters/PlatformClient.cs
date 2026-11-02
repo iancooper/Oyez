@@ -45,6 +45,10 @@ internal sealed class PlatformClient(HttpClient http, string platform)
         {
             return new PostResult.Indeterminate($"{platform} did not answer in time, so the post may have been made");
         }
+        catch (HttpRequestException failure)
+        {
+            return UnreachableResult(failure);
+        }
     }
 
     public async Task<CredentialStatus> VerifyAsync(
@@ -83,6 +87,11 @@ internal sealed class PlatformClient(HttpClient http, string platform)
             >= HttpStatusCode.InternalServerError => Task.FromResult<PostResult>(new PostResult.Indeterminate($"{StatusOf(response)}, so the post may have been made")),
             _ => readAccepted(response, cancellationToken)
         };
+
+    private PostResult UnreachableResult(HttpRequestException failure) =>
+        ConnectionFailure.IsBeforeSend(failure)
+            ? new PostResult.Rejected($"{platform} could not be reached, so the post was not made")
+            : new PostResult.Indeterminate($"{platform} connection failed, so the post may have been made");
 
     private static string? ErrorTextFrom(string body, string errorField)
     {

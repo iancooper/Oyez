@@ -14,8 +14,7 @@ public class LoggingExceptionTests
         host.Http.Throw(new HttpRequestException("Connection to https://write.as/api?token=writeas-secret failed"));
 
         //Act
-        await Assert.ThrowsAsync<HttpRequestException>(() =>
-            host.PublisherFor(ChannelId.WriteAs).CreateAsync(WriteAsTestData.Article(), CancellationToken.None));
+        await host.PublisherFor(ChannelId.WriteAs).CreateAsync(WriteAsTestData.Article(), CancellationToken.None);
 
         //Assert
         var failure = Assert.Single(logs.Entries, entry => entry.Message.Contains("Connection to"));
