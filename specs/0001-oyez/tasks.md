@@ -449,7 +449,7 @@ Every task in this phase tests a port implementation registered by `AddOyezAdapt
 - **Covers:** NFR-6, §5.6
 - **Tests (Adapter):** through `IAmAnAnnouncementStore` and `IAmAPublicationRecordStore`, in temporary folders.
   - `When_an_announcement_id_escapes_the_folder_should_be_refused`: both stores
-  - `When_a_record_names_an_unknown_channel_should_report_it_and_load_the_others`: today it throws
+  - `When_a_record_names_an_unknown_channel_should_refuse_to_load_it`: characterises §5.6, where loading throws because skipping the channel would drop data on the next save; RED by a mutation that skips unknown channels
   - `When_a_save_is_interrupted_should_not_leave_a_temporary_file_behind`
 - **Done when:** the tests pass.
 
