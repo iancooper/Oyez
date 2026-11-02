@@ -438,7 +438,7 @@ Every task in this phase tests a port implementation registered by `AddOyezAdapt
   - `When_x_rate_limits_a_post_and_it_is_retried_should_sign_the_retry_with_the_current_time`
 - **Done when:** the tests pass, and the known gap is removed from ADR 0001 §5.1.
 
-### [ ] T-27d LinkedIn answers that don't match the documentation
+### [x] T-27d LinkedIn answers that don't match the documentation
 - **Covers:** NFR-6, AC-20
 - **Tests (Adapter):** through `LinkedInPublisher`.
   - `When_linkedin_accepts_a_post_without_an_id_header_should_return_indeterminate`: the post probably exists, so it must not be retried or reported as rejected
