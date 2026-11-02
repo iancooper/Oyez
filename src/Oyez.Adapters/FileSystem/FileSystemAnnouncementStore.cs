@@ -46,20 +46,20 @@ internal sealed class FileSystemAnnouncementStore(AnnouncementFolders folders) :
 
     public AnnouncementDocument? Load(AnnouncementId id)
     {
-        if (!folders.Contains(id))
+        if (!folders.TryFolderOf(id, out var folder))
         {
             return null;
         }
 
-        var textPath = folders.FileOf(id, ANNOUNCEMENT_FILE);
+        var textPath = Path.Combine(folder, ANNOUNCEMENT_FILE);
         return File.Exists(textPath)
-            ? new AnnouncementDocument(id, File.ReadAllText(textPath), ReadMarkdown(id))
+            ? new AnnouncementDocument(id, File.ReadAllText(textPath), ReadMarkdown(folder))
             : null;
     }
 
-    private string? ReadMarkdown(AnnouncementId id)
+    private static string? ReadMarkdown(string folder)
     {
-        var markdownPath = folders.FileOf(id, WRITEAS_FILE);
+        var markdownPath = Path.Combine(folder, WRITEAS_FILE);
         return File.Exists(markdownPath) ? File.ReadAllText(markdownPath) : null;
     }
 }

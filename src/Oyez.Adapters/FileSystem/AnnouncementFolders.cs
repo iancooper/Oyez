@@ -23,6 +23,7 @@ THE SOFTWARE. */
 
 #endregion
 
+using System.Diagnostics.CodeAnalysis;
 using Oyez.Core.Announcements;
 
 namespace Oyez.Adapters.FileSystem;
@@ -31,16 +32,18 @@ internal sealed class AnnouncementFolders(string root)
 {
     public string Root => root;
 
-    public bool Contains(AnnouncementId id)
+    public bool TryFolderOf(AnnouncementId id, [NotNullWhen(true)] out string? folder)
     {
         var rootPath = Path.TrimEndingDirectorySeparator(Path.GetFullPath(root));
         var folderPath = Path.GetFullPath(Path.Combine(rootPath, id.Value));
-        return folderPath.StartsWith(rootPath + Path.DirectorySeparatorChar, StringComparison.Ordinal);
+        var inside = folderPath.StartsWith(rootPath + Path.DirectorySeparatorChar, StringComparison.Ordinal);
+        folder = inside ? Path.Combine(root, id.Value) : null;
+        return inside;
     }
 
     public string FolderOf(AnnouncementId id) =>
-        Contains(id)
-            ? Path.Combine(root, id.Value)
+        TryFolderOf(id, out var folder)
+            ? folder
             : throw new ArgumentException($"Announcement '{id.Value}' is outside the announcements folder.", nameof(id));
 
     public string FileOf(AnnouncementId id, string name) => Path.Combine(FolderOf(id), name);
