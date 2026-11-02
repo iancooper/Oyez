@@ -1,0 +1,61 @@
+#region Licence
+
+/* The MIT License (MIT)
+Copyright © 2026 Ian Cooper
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE. */
+
+#endregion
+
+using System.ComponentModel;
+using Oyez.Core.Publishing;
+
+namespace Oyez.Adapters;
+
+internal sealed class GhCli(IAmAProcessRunner runner) : IAmAGitHubSecretStore
+{
+    private const string GH = "gh";
+
+    public Task SetSecretAsync(string name, string value, CancellationToken cancellationToken) =>
+        RunAsync(["secret", "set", name], value, cancellationToken);
+
+    public Task SetVariableAsync(string name, string value, CancellationToken cancellationToken) =>
+        RunAsync(["variable", "set", name], value, cancellationToken);
+
+    private async Task RunAsync(IReadOnlyList<string> arguments, string value, CancellationToken cancellationToken)
+    {
+        var result = await RunGhAsync(arguments, value, cancellationToken);
+        if (result.ExitCode != 0)
+        {
+            throw new InvalidOperationException($"gh {string.Join(' ', arguments)} failed with exit code {result.ExitCode}: {result.Output}");
+        }
+    }
+
+    private async Task<ProcessResult> RunGhAsync(IReadOnlyList<string> arguments, string value, CancellationToken cancellationToken)
+    {
+        try
+        {
+            return await runner.RunAsync(GH, arguments, value, cancellationToken);
+        }
+        catch (Win32Exception error)
+        {
+            throw new InvalidOperationException("gh is not installed or could not be started; install the GitHub CLI and make sure it is on the PATH", error);
+        }
+    }
+}

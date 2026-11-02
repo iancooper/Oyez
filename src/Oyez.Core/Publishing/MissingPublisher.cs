@@ -33,8 +33,6 @@ internal sealed class MissingPublisher(ChannelId channel) : IAmAChannelPublisher
 
     public ChannelId Channel => channel;
 
-    public bool CreateIsIdempotent => true;
-
     public Task<PostResult> CreateAsync(PostRequest request, CancellationToken cancellationToken) =>
         Task.FromResult<PostResult>(new PostResult.Rejected(Reason));
 

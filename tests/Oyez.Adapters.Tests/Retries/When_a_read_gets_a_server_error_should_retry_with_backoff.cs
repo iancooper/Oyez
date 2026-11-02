@@ -1,0 +1,30 @@
+using System.Net;
+
+namespace Oyez.Adapters.Tests.Retries;
+
+public class ReadServerErrorTests
+{
+    [Theory]
+    [MemberData(nameof(ChannelUnderTest.ALL), MemberType = typeof(ChannelUnderTest))]
+    public async Task When_a_read_gets_a_server_error_should_retry_with_backoff(ChannelUnderTest channel)
+    {
+        //Arrange
+        var clock = new SchedulingClock();
+        using var host = RetryTestData.HostWith(clock);
+        host.Http.RespondWith(requestNumber => requestNumber < 3
+            ? Responses.Respond(HttpStatusCode.InternalServerError)
+            : Responses.Respond(HttpStatusCode.OK));
+
+        //Act
+        var pending = RetryTestData.VerifyAsync(host, channel);
+        await clock.TimerCreatedAsync(1);
+        clock.Advance(TimeSpan.FromSeconds(1));
+        await clock.TimerCreatedAsync(2);
+        clock.Advance(TimeSpan.FromSeconds(2));
+        var status = await pending;
+
+        //Assert
+        Assert.True(status.IsValid);
+        Assert.Equal(3, host.Http.Requests.Count);
+    }
+}

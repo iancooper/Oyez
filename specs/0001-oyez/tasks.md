@@ -331,7 +331,7 @@ Every task in this phase sends Brighter commands, or runs Darker queries, throug
 
 Every task in this phase tests a port implementation registered by `AddOyezAdapters`. HTTP handlers, OAuth signing and JSON shapes are internal, and are observed through the publishers.
 
-### [ ] T-19 Write.as publisher, and the HTTP test fake
+### [x] T-19 Write.as publisher, and the HTTP test fake
 - **Covers:** FR-4.4.1, AC-13, §5.5
 - **Builds:** `AddOyezAdapters`, `WriteAsPublisher`, and, in the tests, `FakeHttpMessageHandler`. Removes the "zero tests" exit-code exemption from `Oyez.Adapters.Tests`.
 - **Tests (Adapter):**
@@ -341,7 +341,7 @@ Every task in this phase tests a port implementation registered by `AddOyezAdapt
   - `When_verifying_write_as_credentials_should_call_me`
 - **Done when:** the tests pass.
 
-### [ ] T-20 X publisher, with OAuth 1.0a
+### [x] T-20 X publisher, with OAuth 1.0a
 - **Covers:** FR-4.1, FR-4.1.2, AC-11, §5.2
 - **Builds:** `XPublisher`. The clock (`TimeProvider`) and the nonce source are public seams, so the signature can be tested against X's published example.
 - **Tests (Adapter):**
@@ -353,7 +353,7 @@ Every task in this phase tests a port implementation registered by `AddOyezAdapt
   - `When_verifying_x_credentials_should_call_users_me`
 - **Done when:** the tests pass.
 
-### [ ] T-21 Safe retries for posts that can't be repeated
+### [x] T-21 Safe retries for posts that can't be repeated
 - **Covers:** NFR-6, AC-20, §5.1
 - **Tests (Adapter):** through `XPublisher` and `WriteAsPublisher`.
   - `When_creating_a_post_times_out_should_return_indeterminate_without_retrying` (AC-20)
@@ -364,7 +364,7 @@ Every task in this phase tests a port implementation registered by `AddOyezAdapt
   - `When_a_read_gets_a_server_error_should_retry_with_backoff`
 - **Done when:** the tests pass.
 
-### [ ] T-22 Mastodon publisher
+### [x] T-22 Mastodon publisher
 - **Covers:** FR-4.2, AC-12, §5.3
 - **Tests (Adapter):**
   - `When_publishing_a_thread_to_mastodon_should_reply_to_the_previous_post_publicly` (AC-12)
@@ -373,7 +373,7 @@ Every task in this phase tests a port implementation registered by `AddOyezAdapt
   - `When_verifying_mastodon_credentials_should_call_verify_credentials`
 - **Done when:** the tests pass.
 
-### [ ] T-23 LinkedIn publisher
+### [x] T-23 LinkedIn publisher
 - **Covers:** FR-4.3.1, FR-4.3.5, §5.4
 - **Tests (Adapter):**
   - `When_publishing_to_linkedin_should_post_to_the_members_profile_with_the_api_version`
@@ -383,7 +383,7 @@ Every task in this phase tests a port implementation registered by `AddOyezAdapt
   - `When_verifying_linkedin_credentials_should_call_userinfo`
 - **Done when:** the tests pass.
 
-### [ ] T-24 Keep secrets out of the logs
+### [x] T-24 Keep secrets out of the logs
 - **Covers:** FR-8.2, NFR-5, AC-19 (adapter level)
 - **Tests (Adapter):** through any publisher, with logs captured.
   - `When_logging_a_request_should_never_log_headers`
@@ -391,7 +391,7 @@ Every task in this phase tests a port implementation registered by `AddOyezAdapt
   - `When_logging_an_exception_should_redact_secrets`
 - **Done when:** the tests pass.
 
-### [ ] T-25 File-system announcement store
+### [x] T-25 File-system announcement store
 - **Covers:** FR-1.1, §5.6
 - **Tests (Adapter):** in temporary folders.
   - `When_listing_announcements_should_return_each_folder_and_ignore_dot_files`
@@ -399,7 +399,7 @@ Every task in this phase tests a port implementation registered by `AddOyezAdapt
   - `When_loading_an_announcement_that_does_not_exist_should_return_nothing`
 - **Done when:** the tests pass.
 
-### [ ] T-26 File-system publication record store
+### [x] T-26 File-system publication record store
 - **Covers:** FR-6.1, FR-6.3, §4.8, §5.6
 - **Tests (Adapter):** in temporary folders.
   - `When_saving_a_record_should_write_camel_case_indented_json`
@@ -407,7 +407,7 @@ Every task in this phase tests a port implementation registered by `AddOyezAdapt
   - `When_saving_fails_part_way_should_leave_the_previous_record_intact`
 - **Done when:** the tests pass.
 
-### [ ] T-27 GitHub secret store (`gh` CLI)
+### [x] T-27 GitHub secret store (`gh` CLI)
 - **Covers:** FR-4.3.4, FR-4.4.2, §5.7
 - **Builds:** the port `IAmAGitHubSecretStore` in Core, and `GhCli` in Adapters. The process runner is a public seam, so tests can use a fake.
 - **Tests (Adapter):**
@@ -415,6 +415,49 @@ Every task in this phase tests a port implementation registered by `AddOyezAdapt
   - `When_setting_a_variable_should_call_gh_variable_set`
   - `When_gh_fails_should_raise_an_error_with_its_output`
 - **Done when:** the tests pass.
+
+### [x] T-27a Tolerate error bodies that aren't what the platform documents
+- **Covers:** NFR-6, §5.1 (known gaps)
+- **Tests (Adapter):** LinkedIn already does this (`When_linkedin_rejects_a_post_without_a_json_body_should_still_return_rejected`).
+  - `When_x_rejects_a_post_with_a_body_that_is_not_json_should_still_return_rejected`
+  - `When_mastodon_rejects_a_post_with_a_body_that_is_not_json_should_still_return_rejected`
+  - `When_write_as_rejects_a_post_with_a_body_that_is_not_json_should_still_return_rejected`
+  - `When_a_platform_rejects_a_post_without_its_error_field_should_still_return_rejected`: X, Mastodon and Write.as, with the status code as the reason
+- **Done when:** the tests pass.
+
+### [x] T-27b A refused connection that never recovers is a rejection
+- **Covers:** NFR-6, AC-20, §5.1 (known gaps)
+- **Tests (Adapter):** through `XPublisher` and `WriteAsPublisher`.
+  - `When_the_connection_stays_refused_should_return_rejected_after_the_retries`: nothing was sent, so the post is `Rejected`, not an exception
+- **Done when:** the tests pass.
+
+### [x] T-27c Sign each X attempt afresh
+- **Covers:** NFR-6, AC-20, §5.1 (known gaps)
+- **Tests (Adapter):** through `XPublisher`, with a fake `IAmANonceSource` that returns a new nonce each call.
+  - `When_x_rate_limits_a_post_and_it_is_retried_should_sign_the_retry_with_a_new_nonce`
+  - `When_x_rate_limits_a_post_and_it_is_retried_should_sign_the_retry_with_the_current_time`
+- **Done when:** the tests pass, and the known gap is removed from ADR 0001 §5.1.
+
+### [x] T-27d LinkedIn answers that don't match the documentation
+- **Covers:** NFR-6, AC-20
+- **Tests (Adapter):** through `LinkedInPublisher`.
+  - `When_linkedin_accepts_a_post_without_an_id_header_should_return_indeterminate`: the post probably exists, so it must not be retried or reported as rejected
+  - `When_linkedin_token_expires_in_exactly_14_days_should_...` and its neighbours either side of the boundary: characterise the existing rule, and take the expected values from the ADR
+- **Done when:** the tests pass.
+
+### [x] T-27e File stores that can't be fooled by their input
+- **Covers:** NFR-6, §5.6
+- **Tests (Adapter):** through `IAmAnAnnouncementStore` and `IAmAPublicationRecordStore`, in temporary folders.
+  - `When_an_announcement_id_escapes_the_folder_should_be_refused`: both stores
+  - `When_a_record_names_an_unknown_channel_should_refuse_to_load_it`: characterises §5.6, where loading throws because skipping the channel would drop data on the next save; RED by a mutation that skips unknown channels
+  - `When_a_save_is_interrupted_should_not_leave_a_temporary_file_behind`
+- **Done when:** the tests pass.
+
+### [x] T-27f Running `gh` when it isn't there
+- **Covers:** NFR-6, §5.7
+- **Tests (Adapter):** through `IAmAGitHubSecretStore`, with the real `SystemProcessRunner` and an empty `PATH`.
+  - `When_gh_is_not_installed_should_report_that_it_is_missing`: a clear failure, not an unhandled `Win32Exception`
+- **Done when:** the test passes.
 
 ---
 

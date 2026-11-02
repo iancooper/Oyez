@@ -41,8 +41,6 @@ public sealed class InMemoryChannelPublisher(ChannelId channel) : IAmAChannelPub
     public ChannelId Channel { get; } = channel;
 
     /// <inheritdoc />
-    public bool CreateIsIdempotent => true;
-
     /// <summary>Gets the requests the publisher has been given.</summary>
     /// <value>The <see cref="PostRequest"/>s, in the order they arrived.</value>
     public IReadOnlyList<PostRequest> Requests => _requests;
