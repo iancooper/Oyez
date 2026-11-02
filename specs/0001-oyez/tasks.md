@@ -445,7 +445,7 @@ Every task in this phase tests a port implementation registered by `AddOyezAdapt
   - `When_linkedin_token_expires_in_exactly_14_days_should_...` and its neighbours either side of the boundary: characterise the existing rule, and take the expected values from the ADR
 - **Done when:** the tests pass.
 
-### [ ] T-27e File stores that can't be fooled by their input
+### [x] T-27e File stores that can't be fooled by their input
 - **Covers:** NFR-6, §5.6
 - **Tests (Adapter):** through `IAmAnAnnouncementStore` and `IAmAPublicationRecordStore`, in temporary folders.
   - `When_an_announcement_id_escapes_the_folder_should_be_refused`: both stores
