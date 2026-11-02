@@ -453,7 +453,7 @@ Every task in this phase tests a port implementation registered by `AddOyezAdapt
   - `When_a_save_is_interrupted_should_not_leave_a_temporary_file_behind`
 - **Done when:** the tests pass.
 
-### [ ] T-27f Running `gh` when it isn't there
+### [x] T-27f Running `gh` when it isn't there
 - **Covers:** NFR-6, §5.7
 - **Tests (Adapter):** through `IAmAGitHubSecretStore`, with the real `SystemProcessRunner` and an empty `PATH`.
   - `When_gh_is_not_installed_should_report_that_it_is_missing`: a clear failure, not an unhandled `Win32Exception`
