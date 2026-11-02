@@ -39,6 +39,7 @@ internal sealed class XPublisher(HttpClient http, XOptions options, OAuth1Signer
     {
         using var message = new HttpRequestMessage(HttpMethod.Post, $"{options.ApiBase}/2/tweets");
         message.Content = JsonContent.Create(PostBodyFor(request));
+        message.Options.Set(RetryHandler.SIGN, Sign);
         Sign(message);
         return await _platform.SendPostAsync(message, PostResultFromAsync, cancellationToken);
     }
@@ -46,8 +47,11 @@ internal sealed class XPublisher(HttpClient http, XOptions options, OAuth1Signer
     public Task<CredentialStatus> VerifyAsync(CancellationToken cancellationToken) =>
         _platform.VerifyAsync($"{options.ApiBase}/2/users/me", Sign, null, cancellationToken);
 
-    private void Sign(HttpRequestMessage message) =>
+    private void Sign(HttpRequestMessage message)
+    {
+        message.Headers.Remove("Authorization");
         message.Headers.TryAddWithoutValidation("Authorization", signer.AuthorizationFor(message.Method, message.RequestUri!));
+    }
 
     private static Dictionary<string, object> PostBodyFor(PostRequest request)
     {

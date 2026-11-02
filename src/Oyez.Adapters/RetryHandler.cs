@@ -32,6 +32,7 @@ internal sealed class RetryHandler(TimeProvider clock) : DelegatingHandler
 {
     public static readonly HttpRequestOptionsKey<bool> IDEMPOTENT = new("Oyez.Idempotent");
 
+    public static readonly HttpRequestOptionsKey<Action<HttpRequestMessage>> SIGN = new("Oyez.Sign");
     private const int MAX_RETRIES = 3;
     private static readonly TimeSpan MAX_RETRY_AFTER = TimeSpan.FromSeconds(60);
 
@@ -49,6 +50,15 @@ internal sealed class RetryHandler(TimeProvider clock) : DelegatingHandler
             response?.Dispose();
             retries++;
             await Task.Delay(delay.Value, clock, cancellationToken);
+            SignAfresh(request);
+        }
+    }
+
+    private static void SignAfresh(HttpRequestMessage request)
+    {
+        if (request.Options.TryGetValue(SIGN, out var sign))
+        {
+            sign(request);
         }
     }
 

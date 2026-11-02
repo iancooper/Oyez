@@ -427,7 +427,7 @@ In addition, an internal `SecretRedactor` holds every secret value in `AdapterOp
 
 **Failures that aren't a response.** A create that times out becomes `Indeterminate`. A connection that is refused (or whose host isn't found) on every retry becomes `Rejected`, because nothing was sent. Any other `HttpRequestException` on a create becomes `Indeterminate`, because the request may have been sent. Every publisher reads a 4xx body tolerantly: if it isn't JSON, or lacks the platform's error field, the reason is the status code.
 
-**Known gap.** A retry resends the same request, so X's OAuth header keeps its nonce and timestamp. X may reject a replayed nonce after a 429.
+**Each attempt is signed afresh.** A request may carry a signing step (`RetryHandler.SIGN`); before each retry the handler runs it, so X's OAuth header gets a new nonce and the current timestamp rather than replaying those of the first attempt, which X may reject after a 429.
 
 ### 5.2 X publisher [FR-4.1]
 
