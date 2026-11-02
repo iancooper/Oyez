@@ -431,7 +431,7 @@ Every task in this phase tests a port implementation registered by `AddOyezAdapt
   - `When_the_connection_stays_refused_should_return_rejected_after_the_retries`: nothing was sent, so the post is `Rejected`, not an exception
 - **Done when:** the tests pass.
 
-### [ ] T-27c Sign each X attempt afresh
+### [x] T-27c Sign each X attempt afresh
 - **Covers:** NFR-6, AC-20, §5.1 (known gaps)
 - **Tests (Adapter):** through `XPublisher`, with a fake `IAmANonceSource` that returns a new nonce each call.
   - `When_x_rate_limits_a_post_and_it_is_retried_should_sign_the_retry_with_a_new_nonce`
