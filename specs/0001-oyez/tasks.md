@@ -431,6 +431,34 @@ Every task in this phase tests a port implementation registered by `AddOyezAdapt
   - `When_the_connection_stays_refused_should_return_rejected_after_the_retries`: nothing was sent, so the post is `Rejected`, not an exception
 - **Done when:** the tests pass.
 
+### [ ] T-27c Sign each X attempt afresh
+- **Covers:** NFR-6, AC-20, §5.1 (known gaps)
+- **Tests (Adapter):** through `XPublisher`, with a fake `IAmANonceSource` that returns a new nonce each call.
+  - `When_x_rate_limits_a_post_and_it_is_retried_should_sign_the_retry_with_a_new_nonce`
+  - `When_x_rate_limits_a_post_and_it_is_retried_should_sign_the_retry_with_the_current_time`
+- **Done when:** the tests pass, and the known gap is removed from ADR 0001 §5.1.
+
+### [ ] T-27d LinkedIn answers that don't match the documentation
+- **Covers:** NFR-6, AC-20
+- **Tests (Adapter):** through `LinkedInPublisher`.
+  - `When_linkedin_accepts_a_post_without_an_id_header_should_return_indeterminate`: the post probably exists, so it must not be retried or reported as rejected
+  - `When_linkedin_token_expires_in_exactly_14_days_should_...` and its neighbours either side of the boundary: characterise the existing rule, and take the expected values from the ADR
+- **Done when:** the tests pass.
+
+### [ ] T-27e File stores that can't be fooled by their input
+- **Covers:** NFR-6, §5.6
+- **Tests (Adapter):** through `IAmAnAnnouncementStore` and `IAmAPublicationRecordStore`, in temporary folders.
+  - `When_an_announcement_id_escapes_the_folder_should_be_refused`: both stores
+  - `When_a_record_names_an_unknown_channel_should_report_it_and_load_the_others`: today it throws
+  - `When_a_save_is_interrupted_should_not_leave_a_temporary_file_behind`
+- **Done when:** the tests pass.
+
+### [ ] T-27f Running `gh` when it isn't there
+- **Covers:** NFR-6, §5.7
+- **Tests (Adapter):** through `IAmAGitHubSecretStore`, with the real `SystemProcessRunner` and an empty `PATH`.
+  - `When_gh_is_not_installed_should_report_that_it_is_missing`: a clear failure, not an unhandled `Win32Exception`
+- **Done when:** the test passes.
+
 ---
 
 ## Phase 4 — Command-line interface
