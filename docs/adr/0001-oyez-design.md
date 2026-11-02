@@ -425,10 +425,9 @@ An internal `PlatformClient` (the client plus the platform's name) holds what th
 
 In addition, an internal `SecretRedactor` holds every secret value in `AdapterOptions` (each options class lists its own secrets, so a new credential can't be forgotten) and replaces each with `***`. The handler applies it to everything it logs, as a second safeguard [AC-19]. The CLI's console-logger formatter will need the same redactor, so whether it becomes public is decided in the CLI phase. GitHub Actions also masks secrets in its logs.
 
-**Known gaps** (scheduled as T-27a and T-27b):
-- X, Mastodon and Write.as read their error field (`detail`, `error` and `error_msg`) strictly, so a 4xx whose body isn't JSON, or lacks the field, throws instead of returning `Rejected`. LinkedIn's reader is tolerant.
-- When a connection is refused on every retry, the `HttpRequestException` escapes from `CreateAsync`. Nothing was sent, so the result should be `Rejected`.
-- A retry resends the same request, so X's OAuth header keeps its nonce and timestamp. X may reject a replayed nonce after a 429.
+**Failures that aren't a response.** A create that times out becomes `Indeterminate`. A connection that is refused (or whose host isn't found) on every retry becomes `Rejected`, because nothing was sent. Any other `HttpRequestException` on a create becomes `Indeterminate`, because the request may have been sent. Every publisher reads a 4xx body tolerantly: if it isn't JSON, or lacks the platform's error field, the reason is the status code.
+
+**Known gap.** A retry resends the same request, so X's OAuth header keeps its nonce and timestamp. X may reject a replayed nonce after a 429.
 
 ### 5.2 X publisher [FR-4.1]
 
