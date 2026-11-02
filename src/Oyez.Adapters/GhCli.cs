@@ -23,6 +23,7 @@ THE SOFTWARE. */
 
 #endregion
 
+using System.ComponentModel;
 using Oyez.Core.Publishing;
 
 namespace Oyez.Adapters;
@@ -39,10 +40,22 @@ internal sealed class GhCli(IAmAProcessRunner runner) : IAmAGitHubSecretStore
 
     private async Task RunAsync(IReadOnlyList<string> arguments, string value, CancellationToken cancellationToken)
     {
-        var result = await runner.RunAsync(GH, arguments, value, cancellationToken);
+        var result = await RunGhAsync(arguments, value, cancellationToken);
         if (result.ExitCode != 0)
         {
             throw new InvalidOperationException($"gh {string.Join(' ', arguments)} failed with exit code {result.ExitCode}: {result.Output}");
+        }
+    }
+
+    private async Task<ProcessResult> RunGhAsync(IReadOnlyList<string> arguments, string value, CancellationToken cancellationToken)
+    {
+        try
+        {
+            return await runner.RunAsync(GH, arguments, value, cancellationToken);
+        }
+        catch (Win32Exception error)
+        {
+            throw new InvalidOperationException("gh is not installed or could not be started; install the GitHub CLI and make sure it is on the PATH", error);
         }
     }
 }
