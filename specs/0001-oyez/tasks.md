@@ -425,7 +425,7 @@ Every task in this phase tests a port implementation registered by `AddOyezAdapt
   - `When_a_platform_rejects_a_post_without_its_error_field_should_still_return_rejected`: X, Mastodon and Write.as, with the status code as the reason
 - **Done when:** the tests pass.
 
-### [ ] T-27b A refused connection that never recovers is a rejection
+### [x] T-27b A refused connection that never recovers is a rejection
 - **Covers:** NFR-6, AC-20, §5.1 (known gaps)
 - **Tests (Adapter):** through `XPublisher` and `WriteAsPublisher`.
   - `When_the_connection_stays_refused_should_return_rejected_after_the_retries`: nothing was sent, so the post is `Rejected`, not an exception
