@@ -27,6 +27,21 @@ public static class LinkedInTestData
             options.LinkedIn.TokenExpiresAt = expiresAt;
         };
 
+    public static async Task<LinkedInPostOutcome> PostWithTokenExpiringAtAsync(DateTimeOffset expiresAt)
+    {
+        var logs = new CollectedLogs();
+        using var host = new OyezAdaptersHost(
+            ConfigureExpiringAt(expiresAt),
+            services =>
+            {
+                FixTime(services);
+                logs.CaptureIn(services);
+            });
+        host.Http.RespondWith(_ => CreatedWithId("urn:li:share:7251"));
+        var result = await host.PublisherFor(ChannelId.LinkedIn).CreateAsync(PostRequests.Build(ChannelId.LinkedIn, 3000, null, ["Brighter 10.1 is out. It adds batching."]), CancellationToken.None);
+        return new LinkedInPostOutcome(result, logs, host.Http.Requests.Count);
+    }
+
     public static void FixTime(IServiceCollection services)
     {
         var clock = new FakeTimeProvider();
