@@ -2,8 +2,8 @@
   <!-- Versions checked on NuGet on 2026-10-23. Dependabot keeps them current. -->
   <ItemGroup>
     <!-- Application layer -->
-    <PackageVersion Include="Paramore.Brighter" Version="10.8.1" />
-    <PackageVersion Include="Paramore.Brighter.Extensions.DependencyInjection" Version="10.8.1" />
+    <PackageVersion Include="Paramore.Brighter" Version="10.8.2" />
+    <PackageVersion Include="Paramore.Brighter.Extensions.DependencyInjection" Version="10.8.2" />
     <PackageVersion Include="Paramore.Darker" Version="4.1.1" />
     <PackageVersion Include="Paramore.Darker.AspNetCore" Version="4.1.1" />
     <PackageVersion Include="Paramore.Darker.QueryLogging" Version="4.1.1" />
